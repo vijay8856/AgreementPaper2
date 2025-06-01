@@ -225,7 +225,7 @@ const handleFileUpload = async () => {
     });
     setSelectedFile(res[0]);
   } catch (err) {
-    if (DocumentPicker.isCancel(err)) {
+    if (DocumentPicker.isCancle(err)) {
       console.log('User cancelled the picker');
     } else {
       console.error('Unknown error: ', err);

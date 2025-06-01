@@ -10,7 +10,13 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url 'https://jitpack.io' }
     }
+    // repositories {
+    //     google()
+    //     mavenCentral()
+    // }
     dependencies {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")

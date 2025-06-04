@@ -1,63 +1,75 @@
 
-import React, { useLayoutEffect } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { getFocusedRouteNameFromRoute, RouteProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import AIResFullReviewScreen from './AIResFullReviewScreen';
-import SupplierAgencyScreen from './SupplierAgencyScreen';
-import LawyerNetworkScreen from './LawyerNetworkScreen';
-import SettingsScreen from './SettingsScreen';
-import ESignatureScreen from './ESignatureScreen';
+// Screens
 import HomeScreen from './HomeScreen';
-
+import AIResFullReviewScreen from './AIResFullReviewScreen';
+import ESignatureScreen from './ESignatureScreen';
+import AIReviewScreen from './AIResReview';
 const Tab = createBottomTabNavigator();
 
-const DashboardScreen = ({ navigation, route }: any) => {
-
-
+const BottomTabs = () => {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName = '';
+<Tab.Navigator
+  screenOptions={({ route }) => ({
+    tabBarIcon: ({ color, size }) => {
+      let iconName = '';
+      switch (route.name) {
+        case 'HomeScreen':
+          iconName = 'home-outline';
+          break;
+        // case 'AIResFullReview':
+        //   iconName = 'file-document-outline';
+        //   break;
+        //    case 'AIReview':
+        //   iconName = 'chip';
+        //   break;
+        // case 'ESignature':
+        //   iconName = 'pen';
+        //   break;
+        default:
+          iconName = 'circle'; // fallback icon
+      }
+      return <Icon name={iconName} size={size} color={color} />;
+    },
+    tabBarActiveTintColor: 'gray',
+    tabBarInactiveTintColor: '#0E3386',
+    headerShown: true,
+    headerStyle: {
+      backgroundColor: '#0E3386',
+    },
+    headerTintColor: '#fff',
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    },
+  })}
+>
+  <Tab.Screen
+    name="HomeScreen"
+    component={HomeScreen}
+    options={{ title: 'Home' }}
+  />
+  {/* <Tab.Screen
+    name="AIResFullReview"
+    component={AIResFullReviewScreen}
+    options={{ title: 'AI-RES Full Review' }}
+  />
+    <Tab.Screen
+    name="AIReview"
+    component={AIReviewScreen}
+    options={{ title: 'AI-Review' }}
+  /> */}
+  {/* <Tab.Screen
+    name="ESignature"
+    component={ESignatureScreen}
+    options={{ title: 'E-Signature' }}
+  /> */}
 
-          switch (route.name) {
-            case 'HomeScreen':
-              iconName = 'home-outline';
-              break;
-            case 'AIResFullReview':
-              iconName = 'file-document-outline';
-              break;
-            case 'SupplierAgency':
-              iconName = 'account-group-outline';
-              break;
-            case 'LawyerNetwork':
-              iconName = 'gavel';
-              break;
-            case 'Settings':
-              iconName = 'cog-outline';
-              break;
-            case 'ESignature':
-              iconName = 'pen';
-              break;
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: 'gray',
-        tabBarInactiveTintColor: '#0E3386',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="HomeScreen" component={HomeScreen} />
-      <Tab.Screen name="AIResFullReview" component={AIResFullReviewScreen} />
-      <Tab.Screen name="SupplierAgency" component={SupplierAgencyScreen} />
-      <Tab.Screen name="LawyerNetwork" component={LawyerNetworkScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
-      <Tab.Screen name="ESignature" component={ESignatureScreen} />
-    </Tab.Navigator>
+  
+</Tab.Navigator>
   );
 };
 
-export default DashboardScreen;
+export default BottomTabs;

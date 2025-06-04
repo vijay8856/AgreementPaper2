@@ -77,7 +77,7 @@ export const LINKEDIN_HEADERS = {
 
 // use AUTH_MULTYPART_HEADERS when you have passed data with image form
 export const AUTH_MULTYPART_HEADERS = async () => {
-  const token = await AsyncStorage.getItem('access_token');
+  const token = await AsyncStorage.getItem('Token');
   return {
     headers: {
       'Content-Type': 'multipart/form-data',

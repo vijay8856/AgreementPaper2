@@ -8,7 +8,7 @@ interface LoaderContextProps {
 }
 
 const LoaderContext = createContext<LoaderContextProps | undefined>(undefined);
-
+  
 export const LoaderProvider: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {

@@ -92,23 +92,47 @@ const handleLogin = async () => {
 };
   const renderSocialButtons = () => (
     <View style={styles.socialContainer}>
-      <TouchableOpacity style={styles.socialButton}>
-        <Image
-          source={require('../assets/images/search.png')}
-          style={styles.socialIcon}
-        />
-        <Text style={styles.socialText}>Login Google</Text>
-      </TouchableOpacity>
+  <TouchableOpacity
+    style={styles.socialButton}
+    onPress={handleGoogleLogin}
+    disabled={loading}
+  >
+    <Image
+      source={require('../assets/images/search.png')}
+      style={styles.socialIcon}
+    />
+    <Text style={styles.socialText}>Login Google</Text>
+  </TouchableOpacity>
 
-      <TouchableOpacity style={styles.socialButton}>
-        <Image
-          source={require('../assets/images/linkedin.png')}
-          style={styles.socialIcon}
-        />
-        <Text style={styles.socialText}>Login LinkedIn</Text>
-      </TouchableOpacity>
-    </View>
+  <TouchableOpacity style={styles.socialButton}>
+    <Image
+      source={require('../assets/images/linkedin.png')}
+      style={styles.socialIcon}
+    />
+    <Text style={styles.socialText}>Login LinkedIn</Text>
+  </TouchableOpacity>
+</View>
+
   );
+const handleGoogleLogin = async () => {
+  setLoading(true);
+  const result = await Services.googleLogin();
+  setLoading(false);
+
+  if (result.success) {
+    Toast.show({
+      type: 'success',
+      text1: 'Login successful!',
+    });
+    navigation.navigate('Dashboard'); // Or your role-based logic
+  } else {
+    Toast.show({
+      type: 'error',
+      text1: 'Google Login Failed',
+      text2: result.error?.message || 'Something went wrong.',
+    });
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeContainer}>

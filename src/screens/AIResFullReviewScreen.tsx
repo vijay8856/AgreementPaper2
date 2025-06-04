@@ -1,16 +1,16 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
-  TextInput, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
   Image,
   Platform,
   Modal,
-    RefreshControl,
+  RefreshControl,
   ActivityIndicator,
   PermissionsAndroid,
 
@@ -20,254 +20,238 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
-import DocumentPicker from '@react-native-documents/picker';
+import DocumentPicker from 'react-native-document-picker';
+import RNFetchBlob from 'react-native-blob-util';
+import FormattedTextComp from '../components/FormatedAIResponse';
 const AIResFullReviewScreen = () => {
   const [contractType, setContractType] = useState('');
   const [businessLine, setBusinessLine] = useState('');
   const [country, setCountry] = useState('');
   const [activeTab, setActiveTab] = useState('Analysis');
   const [isPickerVisible, setPickerVisible] = useState(false);
- const [currentPicker, setCurrentPicker] = useState<string | null>(null);
+  const [currentPicker, setCurrentPicker] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-   const [refreshing, setRefreshing] = useState(false);
-const [countries, setCountries] = useState([]);
-const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [loadingButton, setLoadingButton] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  type PickerItem = {
+    label: string;
+    value: string;
+  };
+  console.log("analysisResult", analysisResult);
+
+  const contractTypes = [
+    { label: "NON-DISCLOSURE AGREEMENTS", value: "NON-DISCLOSURE AGREEMENTS" },
+    { label: "CONFIDENTIALITY AGREEMENT", value: "CONFIDENTIALITY AGREEMENT" },
+    { label: "CONSULTING AGREEMENT", value: "CONSULTING AGREEMENT" },
+    { label: "SERVICE AGREEMENT", value: "SERVICE AGREEMENT" },
+    { label: "COMMISSION AGREEMENT", value: "COMMISSION AGREEMENT" },
+    { label: "DISTRIBUTION AGREEMENTS", value: "DISTRIBUTION AGREEMENTS" },
+    {
+      label: "EMPLOYEE DEPUTATION AGREEMENTS",
+      value: "EMPLOYEE DEPUTATION AGREEMENTS",
+    },
+    { label: "SECONDMENT AGREEMENT", value: "SECONDMENT AGREEMENT" },
+    { label: "FINANCE GUARANTEE", value: "FINANCE GUARANTEE" },
+    { label: "PERFORMANCE GUARANTEE", value: "PERFORMANCE GUARANTEE" },
+    { label: "INDEMNITY BOND", value: "INDEMNITY BOND" },
+    { label: "POWER OF ATTORNEY", value: "POWER OF ATTORNEY" },
+    {
+      label: "JOINT DEVELOPMENT AGREEMENTS",
+      value: "JOINT DEVELOPMENT AGREEMENTS",
+    },
+    { label: "JOINT VENTURE AGREEMENTS", value: "JOINT VENTURE AGREEMENTS" },
+    {
+      label: "LICENSE AGREEMENTS (TECHNOLOGY OR IPR)",
+      value: "LICENSE AGREEMENTS (TECHNOLOGY OR IPR)",
+    },
+    {
+      label: "PURCHASE AND SALE AGREEMENTS",
+      value: "PURCHASE AND SALE AGREEMENTS",
+    },
+    {
+      label: "SHARES PURCHASE AND SALE AGREEMENTS",
+      value: "SHARES PURCHASE AND SALE AGREEMENTS",
+    },
+    {
+      label: "SALE AND PURCHASE OF EQUIPMENT",
+      value: "SALE AND PURCHASE OF EQUIPMENT",
+    },
+    {
+      label: "INSTALLATION AGREEMENT OF THE EQUIPMENT",
+      value: "INSTALLATION AGREEMENT OF THE EQUIPMENT",
+    },
+    {
+      label: "SERVICE AGREEMENT OF THE EQUIPMENT",
+      value: "SERVICE AGREEMENT OF THE EQUIPMENT",
+    },
+    { label: "EPC CONTRACT", value: "EPC CONTRACT" },
+    {
+      label: "POWER PURCHASE AGREEMENT (OPEN ACCESS, TRADING ETC.)",
+      value: "POWER PURCHASE AGREEMENT (OPEN ACCESS, TRADING ETC.)",
+    },
+    { label: "WARRANTY DOCUMENTS", value: "WARRANTY DOCUMENTS" },
+    {
+      label: "ADVERTISING SERVICE AGREEMENT",
+      value: "ADVERTISING SERVICE AGREEMENT",
+    },
+    { label: "MEDIA SERVICE AGREEMENT", value: "MEDIA SERVICE AGREEMENT" },
+    {
+      label: "TECHNOLOGY COLLABORATION AGREEMENT",
+      value: "TECHNOLOGY COLLABORATION AGREEMENT",
+    },
+    { label: "LOGISTICS AGREEMENT", value: "LOGISTICS AGREEMENT" },
+    { label: "TRANSPORT AGREEMENT", value: "TRANSPORT AGREEMENT" },
+    { label: "FREIGHT AGREEMENT", value: "FREIGHT AGREEMENT" },
+    {
+      label: "RAW MATERIALS SUPPLY AGREEMENTS (INDIGENOUS OR IMPORTS)",
+      value: "RAW MATERIALS SUPPLY AGREEMENTS (INDIGENOUS OR IMPORTS)",
+    },
+    { label: "PRIVATE LABEL AGREEMENTS", value: "PRIVATE LABEL AGREEMENTS" },
+    { label: "BROKER AGREEMENTS", value: "BROKER AGREEMENTS" },
+    { label: "DEEDS", value: "DEEDS" },
+    { label: "EASEMENTS", value: "EASEMENTS" },
+    { label: "LEASES", value: "LEASES" },
+    { label: "OPTION AGREEMENTS", value: "OPTION AGREEMENTS" },
+    { label: "SETTLEMENT AGREEMENTS", value: "SETTLEMENT AGREEMENTS" },
+    { label: "SEVERANCE AGREEMENTS", value: "SEVERANCE AGREEMENTS" },
+    { label: "SUBCONTRACT AGREEMENTS", value: "SUBCONTRACT AGREEMENTS" },
+    { label: "JOB WORK AGREEMENTS", value: "JOB WORK AGREEMENTS" },
+    { label: "CONTRACT MANUFACTURING", value: "CONTRACT MANUFACTURING" },
+    {
+      label: "BUYING AND SELLING OF IMMOVABLE PROPERTY",
+      value: "BUYING AND SELLING OF IMMOVABLE PROPERTY",
+    },
+    { label: "BANKING FACILITY AGREEMENT", value: "BANKING FACILITY AGREEMENT" },
+    { label: "LEAVE & LICENSE AGREEMENT", value: "LEAVE & LICENSE AGREEMENT" },
+    { label: "LEASE AGREEMENT", value: "LEASE AGREEMENT" },
+    { label: "RENT AGREEMENT", value: "RENT AGREEMENT" },
+    {
+      label: "OVERRIDING COMMISSION AGREEMENT",
+      value: "OVERRIDING COMMISSION AGREEMENT",
+    },
+    {
+      label: "ANNUAL RATED CONTRACT (MRO CONTRACTS)",
+      value: "ANNUAL RATED CONTRACT (MRO CONTRACTS)",
+    },
+  ];
 
 
 
+  const businessLines = [
+    { value: "REAL ESTATE", label: "Real estate" },
+    { value: "INDIA", label: "Procurement" },
+    { value: "SALES", label: " Sales" },
+    { value: "FINANCE ACCOUNTING", label: "Finance & Accounting" },
+    { value: "HR", label: " Human Resources" },
+    { value: "PRODUCTION", label: "Production" },
+    { value: "QUALITY ASSURANCE", label: "Quality Assurance" },
+    { value: "MAINTENANCE", label: "Maintenance" },
+    { value: "VENDOR MANAGEMENT", label: "Vendor Management" },
+    { value: "INVENTORY MANAGEMENT", label: "Inventory Management" },
+    { value: "LOGISTICS WAREHOUSING", label: "Logistics & Warehousing" },
+    { value: "SUPPLY CHAIN MANAGEMENT", label: "Supply Chain Management" },
+    { value: "MARKETING", label: "Marketing" },
+    { value: "COSTING", label: "Costing" },
+    { value: "PAYROLL", label: "Payroll" },
+    { value: "ITERP MANAGEMENT", label: "IT & ERP Management" },
+    { value: "LEGAL COMPLIANCE", label: "Legal & Compliance" },
+    { value: "HSE", label: "Health, Safety & Environment (HSE)" },
+    { value: "RESEARCH DEVELOPMENT", label: "Research & Development (R&D)" },
+    { value: "BUSINESS STRATEGY", label: "Business Strategy" },
+    { value: "CUSTOMER SERVICE", label: "Customer Service" },
+    { value: "OTHERS", label: "Others" },
+  ];
 
 
-type PickerItem = {
-  label: string;
-  value: string;
-};
-
-   const contractTypes = [
-  { label: "NON-DISCLOSURE AGREEMENTS", value: "NON-DISCLOSURE AGREEMENTS" },
-  { label: "CONFIDENTIALITY AGREEMENT", value: "CONFIDENTIALITY AGREEMENT" },
-  { label: "CONSULTING AGREEMENT", value: "CONSULTING AGREEMENT" },
-  { label: "SERVICE AGREEMENT", value: "SERVICE AGREEMENT" },
-  { label: "COMMISSION AGREEMENT", value: "COMMISSION AGREEMENT" },
-  { label: "DISTRIBUTION AGREEMENTS", value: "DISTRIBUTION AGREEMENTS" },
-  {
-    label: "EMPLOYEE DEPUTATION AGREEMENTS",
-    value: "EMPLOYEE DEPUTATION AGREEMENTS",
-  },
-  { label: "SECONDMENT AGREEMENT", value: "SECONDMENT AGREEMENT" },
-  { label: "FINANCE GUARANTEE", value: "FINANCE GUARANTEE" },
-  { label: "PERFORMANCE GUARANTEE", value: "PERFORMANCE GUARANTEE" },
-  { label: "INDEMNITY BOND", value: "INDEMNITY BOND" },
-  { label: "POWER OF ATTORNEY", value: "POWER OF ATTORNEY" },
-  {
-    label: "JOINT DEVELOPMENT AGREEMENTS",
-    value: "JOINT DEVELOPMENT AGREEMENTS",
-  },
-  { label: "JOINT VENTURE AGREEMENTS", value: "JOINT VENTURE AGREEMENTS" },
-  {
-    label: "LICENSE AGREEMENTS (TECHNOLOGY OR IPR)",
-    value: "LICENSE AGREEMENTS (TECHNOLOGY OR IPR)",
-  },
-  {
-    label: "PURCHASE AND SALE AGREEMENTS",
-    value: "PURCHASE AND SALE AGREEMENTS",
-  },
-  {
-    label: "SHARES PURCHASE AND SALE AGREEMENTS",
-    value: "SHARES PURCHASE AND SALE AGREEMENTS",
-  },
-  {
-    label: "SALE AND PURCHASE OF EQUIPMENT",
-    value: "SALE AND PURCHASE OF EQUIPMENT",
-  },
-  {
-    label: "INSTALLATION AGREEMENT OF THE EQUIPMENT",
-    value: "INSTALLATION AGREEMENT OF THE EQUIPMENT",
-  },
-  {
-    label: "SERVICE AGREEMENT OF THE EQUIPMENT",
-    value: "SERVICE AGREEMENT OF THE EQUIPMENT",
-  },
-  { label: "EPC CONTRACT", value: "EPC CONTRACT" },
-  {
-    label: "POWER PURCHASE AGREEMENT (OPEN ACCESS, TRADING ETC.)",
-    value: "POWER PURCHASE AGREEMENT (OPEN ACCESS, TRADING ETC.)",
-  },
-  { label: "WARRANTY DOCUMENTS", value: "WARRANTY DOCUMENTS" },
-  {
-    label: "ADVERTISING SERVICE AGREEMENT",
-    value: "ADVERTISING SERVICE AGREEMENT",
-  },
-  { label: "MEDIA SERVICE AGREEMENT", value: "MEDIA SERVICE AGREEMENT" },
-  {
-    label: "TECHNOLOGY COLLABORATION AGREEMENT",
-    value: "TECHNOLOGY COLLABORATION AGREEMENT",
-  },
-  { label: "LOGISTICS AGREEMENT", value: "LOGISTICS AGREEMENT" },
-  { label: "TRANSPORT AGREEMENT", value: "TRANSPORT AGREEMENT" },
-  { label: "FREIGHT AGREEMENT", value: "FREIGHT AGREEMENT" },
-  {
-    label: "RAW MATERIALS SUPPLY AGREEMENTS (INDIGENOUS OR IMPORTS)",
-    value: "RAW MATERIALS SUPPLY AGREEMENTS (INDIGENOUS OR IMPORTS)",
-  },
-  { label: "PRIVATE LABEL AGREEMENTS", value: "PRIVATE LABEL AGREEMENTS" },
-  { label: "BROKER AGREEMENTS", value: "BROKER AGREEMENTS" },
-  { label: "DEEDS", value: "DEEDS" },
-  { label: "EASEMENTS", value: "EASEMENTS" },
-  { label: "LEASES", value: "LEASES" },
-  { label: "OPTION AGREEMENTS", value: "OPTION AGREEMENTS" },
-  { label: "SETTLEMENT AGREEMENTS", value: "SETTLEMENT AGREEMENTS" },
-  { label: "SEVERANCE AGREEMENTS", value: "SEVERANCE AGREEMENTS" },
-  { label: "SUBCONTRACT AGREEMENTS", value: "SUBCONTRACT AGREEMENTS" },
-  { label: "JOB WORK AGREEMENTS", value: "JOB WORK AGREEMENTS" },
-  { label: "CONTRACT MANUFACTURING", value: "CONTRACT MANUFACTURING" },
-  {
-    label: "BUYING AND SELLING OF IMMOVABLE PROPERTY",
-    value: "BUYING AND SELLING OF IMMOVABLE PROPERTY",
-  },
-  { label: "BANKING FACILITY AGREEMENT", value: "BANKING FACILITY AGREEMENT" },
-  { label: "LEAVE & LICENSE AGREEMENT", value: "LEAVE & LICENSE AGREEMENT" },
-  { label: "LEASE AGREEMENT", value: "LEASE AGREEMENT" },
-  { label: "RENT AGREEMENT", value: "RENT AGREEMENT" },
-  {
-    label: "OVERRIDING COMMISSION AGREEMENT",
-    value: "OVERRIDING COMMISSION AGREEMENT",
-  },
-  {
-    label: "ANNUAL RATED CONTRACT (MRO CONTRACTS)",
-    value: "ANNUAL RATED CONTRACT (MRO CONTRACTS)",
-  },
-];
+  const Clauses = [
+    { value: "MISSING_CLAUSES", label: "Analyze" },
+    { value: "SUMMARISE_CONTRACT", label: " Summary" },
+    { value: "FRAUD_DETECTION", label: " Fraud Detection" },
+  ];
 
 
-
-const businessLines = [
-  { value: "REAL ESTATE", label: "Real estate" },
-  { value: "INDIA", label: "Procurement" },
-  { value: "SALES", label: " Sales" },
-  { value: "FINANCE ACCOUNTING", label: "Finance & Accounting" },
-  { value: "HR", label: " Human Resources" },
-  { value: "PRODUCTION", label: "Production" },
-  { value: "QUALITY ASSURANCE", label: "Quality Assurance" },
-  { value: "MAINTENANCE", label: "Maintenance" },
-  { value: "VENDOR MANAGEMENT", label: "Vendor Management" },
-  { value: "INVENTORY MANAGEMENT", label: "Inventory Management" },
-  { value: "LOGISTICS WAREHOUSING", label: "Logistics & Warehousing" },
-  { value: "SUPPLY CHAIN MANAGEMENT", label: "Supply Chain Management" },
-  { value: "MARKETING", label: "Marketing" },
-  { value: "COSTING", label: "Costing" },
-  { value: "PAYROLL", label: "Payroll" },
-  { value: "ITERP MANAGEMENT", label: "IT & ERP Management" },
-  { value: "LEGAL COMPLIANCE", label: "Legal & Compliance" },
-  { value: "HSE", label: "Health, Safety & Environment (HSE)" },
-  { value: "RESEARCH DEVELOPMENT", label: "Research & Development (R&D)" },
-  { value: "BUSINESS STRATEGY", label: "Business Strategy" },
-  { value: "CUSTOMER SERVICE", label: "Customer Service" },
-  { value: "OTHERS", label: "Others" },
-];
+  const renderPickerItems = (items: PickerItem[]) => {
+    return items.map((item, index) => (
+      <Picker.Item label={item.label} value={item.value} key={index} />
+    ));
+  };
 
 
-  
+  const openPicker = (pickerType: 'contractType' | 'businessLine' | 'country') => {
+    setCurrentPicker(pickerType);
+    setPickerVisible(true);
+  };
 
-const requestStoragePermission = async () => {
-  if (Platform.OS === 'android') {
+
+  const handleFileUpload = async () => {
     try {
-      if (Platform.Version <= 32) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } else {
-        const grantedImage = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-        );
-        const grantedVideo = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO
-        );
-        const grantedAudio = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO
-        );
-        return (
-          grantedImage === PermissionsAndroid.RESULTS.GRANTED ||
-          grantedVideo === PermissionsAndroid.RESULTS.GRANTED ||
-          grantedAudio === PermissionsAndroid.RESULTS.GRANTED
-        );
-      }
+      const res = await DocumentPicker.pick({
+        type: [DocumentPicker.types.pdf],
+        allowMultiSelection: false,
+      });
+
+      const file = res[0];
+
+      setSelectedFile({
+        name: file.name,
+        type: file.type,
+        uri: file.uri,
+        size: file.size
+      });
     } catch (err) {
-      console.warn(err);
-      return false;
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User cancelled file picker');
+      } else {
+        console.error('DocumentPicker Error:', err);
+        Toast.show({
+          type: 'error',
+          text1: 'File Selection Failed',
+          text2: 'Please try again',
+          position: 'top',
+        });
+      }
     }
-  }
-  return true;
-};
+  };
 
-const renderPickerItems = (items: PickerItem[]) => {
-  return items.map((item, index) => (
-    <Picker.Item label={item.label} value={item.value} key={index} />
-  ));
-};
+  const handleSelect = (value: string) => {
+    switch (currentPicker) {
+      case 'contractType': setContractType(value); break;
+      case 'businessLine': setBusinessLine(value); break;
+      case 'country': setCountry(value); break;
+    }
+    setPickerVisible(false);
+  };
 
 
- const openPicker = (pickerType: 'contractType' | 'businessLine' | 'country') => {
-  setCurrentPicker(pickerType);
-  setPickerVisible(true);
-};
+  const fetchCountries = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    else setRefreshing(true);
 
-const handleFileUpload = async () => {
-  const hasPermission = await requestStoragePermission();
-  if (!hasPermission) {
-    console.log("Permission not granted");
-    return;
-  }
+    const response = await Services.getCountryList({ limit: 1, offset: 0 });
+    console.log('response', response);
 
-  try {
-    const res = await DocumentPicker.pick({
-      type: [DocumentPicker.types.allFiles],
-    });
-    setSelectedFile(res[0]);
-  } catch (err) {
-    if (DocumentPicker.isCancle(err)) {
-      console.log('User cancelled the picker');
+    if (response.success) {
+      const formattedCountries = response.data.map((country: any) => ({
+        label: country.name,
+        value: country.id,
+      }));
+      setCountries(formattedCountries);
     } else {
-      console.error('Unknown error: ', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to load countries',
+        text2: response.error?.message || 'Something went wrong',
+        position: 'top',
+      });
     }
-  }
-};
 
-const handleSelect = (value: string) => {
-  switch (currentPicker) {
-    case 'contractType': setContractType(value); break;
-    case 'businessLine': setBusinessLine(value); break;
-    case 'country': setCountry(value); break;
-  }
-  setPickerVisible(false);
-};
-
- 
-const fetchCountries = async (isRefresh = false) => {
-  if (!isRefresh) setLoading(true);
-  else setRefreshing(true);
-
-  const response = await Services.getCountryList({ limit: 1, offset: 0 });
-  console.log('response', response);
-
-  if (response.success) {
-    const formattedCountries = response.data.map((country : any) => ({
-      label: country.name,
-      value: country.id,
-    }));
-    setCountries(formattedCountries);
-  } else {
-    Toast.show({
-      type: 'error',
-      text1: 'Failed to load countries',
-      text2: response.error?.message || 'Something went wrong',
-      position: 'top',
-    });
-  }
-
-  setLoading(false);
-  setRefreshing(false);
-};
+    setLoading(false);
+    setRefreshing(false);
+  };
   useEffect(() => {
     fetchCountries();
   }, []);
@@ -275,22 +259,77 @@ const fetchCountries = async (isRefresh = false) => {
     fetchCountries(true);
   }, []);
 
-//  if (loading) {
-//     return (
-//       <View style={styles.loaderContainer}>
-//         <ActivityIndicator size="large" color="#000078" />
-//       </View>
-//     );
-//   }
+   if (loading) {
+      return (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#000078" />
+        </View>
+      );
+    }
+
+  const submitContract = async (clauseType: string) => {
+    if (!contractType || !businessLine || !country || !selectedFile) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Information',
+        text2: 'Please fill all fields and upload a file',
+        position: 'top',
+      });
+      return;
+    }
+
+    setLoadingButton(clauseType);
+
+    try {
+      const formData = new FormData();
+
+      formData.append('prompt_type', clauseType);
+
+      formData.append('file', {
+        uri: selectedFile.uri,
+        name: selectedFile.name,
+        type: selectedFile.type || 'application/pdf',
+      });
+      console.log("formData", formData);
+
+      const response = await Services.analysisContractByAi(formData);
+      console.log("response analysisContractByAi", response);
+      if (response.success) {
+        setAnalysisResult(response.data);
+        Toast.show({
+          type: 'success',
+          text1: 'Analysis Complete',
+          text2: `Clause: ${clauseType} analyzed successfully`,
+          position: 'top',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Analysis Failed',
+          text2: response.error || 'Something went wrong',
+          position: 'top',
+        });
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'An unexpected error occurred',
+        position: 'top',
+      });
+    } finally {
+      setLoadingButton(null);
+    }
+  };
 
 
   return (
     <View style={styles.container}>
-     
+
       <ScrollView contentContainerStyle={styles.scrollContainer} refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }  >
-        {/* Header */}
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }  >
         <LinearGradient
           colors={['#0E3386', '#1A3B8B']}
           style={styles.header}
@@ -299,94 +338,95 @@ const fetchCountries = async (isRefresh = false) => {
         >
           <Text style={styles.headerTitle}>Upload Contract</Text>
           <Text style={styles.headerSubtitle}>
-            Please upload contract to review in IP/IP format
+            Please upload contract to review in (PDF) format
           </Text>
         </LinearGradient>
 
-        {/* Questions Section */}
         <View style={styles.card}>
-          <QuestionItem 
+          <QuestionItem
             label="1. What type of contract is it?"
             value={contractType}
             onPress={() => openPicker('contractType')}
           />
-          
-          <QuestionItem 
+
+          <QuestionItem
             label="2. Line of business?"
             value={businessLine}
             onPress={() => openPicker('businessLine')}
           />
-          
-       <QuestionItem
-  label="3. Select your country?"
-  value={getLabelFromValue(countries, country)} 
-  onPress={() => openPicker('country')} 
-/>
+
+          <QuestionItem
+            label="3. Select your country?"
+            value={getLabelFromValue(countries, country)}
+            onPress={() => openPicker('country')}
+          />
 
 
           <View style={styles.addButtonQues} > <Text style={styles.sectionTitle}>Selected Questions</Text> <TouchableOpacity><Text style={styles.tabItem1}>Add Questions</Text></TouchableOpacity> </View>
-         
-          
-         <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
-  <Icon name="cloud-upload" size={24} color="white" />
-  <Text style={styles.uploadButtonText}>Upload</Text>
-</TouchableOpacity>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleFileUpload}
+          >
+            <Icon name="cloud-upload" size={24} color="white" />
+            <Text style={styles.uploadButtonText}>
+              {selectedFile ? 'Change File' : 'Upload'}
+            </Text>
+          </TouchableOpacity>
 
-{selectedFile && (
-  <Text style={styles.selectedFileText}>
-    Selected: {selectedFile.name}
-  </Text>
-)}
+          {selectedFile && (
+            <View style={styles.fileInfoContainer}>
+              <Icon name="description" size={20} color="#0E3386" />
+              <Text style={styles.selectedFileText}>
+                {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+              </Text>
+            </View>
+          )}
+
+
         </View>
 
-        {/* Risk Summary Section */}
+     
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Full Risk Summary:</Text>
-          {/* <View style={styles.riskBadge}>
-            <Text style={styles.riskText}>RISK</Text>
-          </View>
-           */}
-          <Text style={styles.subSectionTitle}>All Response</Text>
-          <Text style={styles.summaryText}>
-           
-AI - AIRES can make mistakes. Check important info with your legal team as well. This doesnt replace legal services and advice provided is only for guidance
-          </Text>
+          <Text style={styles.sectionTitle}>AI Response</Text>
+    
+        <View style={styles.noteCard}>
+                  <Text style={styles.noteText}>
+                    Note* - AI - AIRES can make mistakes. Check important info with your legal team as well.
+                    This doesn't replace legal services and advice provided is only for guidance
+                  </Text>
+                </View>
+
+          {analysisResult && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Analysis Result:</Text>
+              <FormattedTextComp text={analysisResult} />
+            </View>
+          )}
+
         </View>
       </ScrollView>
 
-      {/* Bottom Actions */}
-      {/* <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.mainActionButton}>
-          <Text style={styles.mainActionText}>Please upload Contract</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.secondaryActionButton}>
-          <Text style={styles.secondaryActionText}>Add More Question</Text>
-        </TouchableOpacity>
-      </View> */}
 
-      {/* Bottom Navigation */}
-   <View style={styles.tabContainer}>
-      {['Analysis', 'Summary', 'Fraud Detection'].map((tab) => (
-        <TouchableOpacity
-          key={tab}
-          style={[
-            styles.tabItem,
-            activeTab === tab && styles.activeTab,
-          ]}
-          onPress={() => setActiveTab(tab)}
-        >
-          <Text style={[
-            styles.tabText,
-            activeTab === tab && styles.activeTabText,
-          ]}>
-            {tab}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+      <View style={styles.tabContainer}>
+        {Clauses.map((claus) => (
+          <TouchableOpacity
+            key={claus.value}
+            style={[
+              styles.tabItem,
+              loadingButton === claus.value && styles.loadingTab,
+            ]}
+            onPress={() => submitContract(claus.value)}
+            disabled={loadingButton !== null}
+          >
+            {loadingButton === claus.value ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.tabText}>{claus.label}</Text>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      {/* Custom Picker Modal */}
       <Modal
         visible={isPickerVisible}
         transparent={true}
@@ -399,38 +439,32 @@ AI - AIRES can make mistakes. Check important info with your legal team as well.
               {currentPicker === 'businessLine' && 'Business Line'}
               {currentPicker === 'country' && 'Select Country'}
             </Text>
-            
-      {currentPicker && (
-  <Picker
-    selectedValue={
-      currentPicker === 'contractType'
-        ? contractType
-        : currentPicker === 'businessLine'
-        ? businessLine
-        : country
-    }
-    onValueChange={handleSelect}
-    style={styles.picker}
-  >
-    {renderPickerItems(
-      currentPicker === 'contractType'
-        ? contractTypes
-        : currentPicker === 'businessLine'
-        ? businessLines
-        : currentPicker === 'country'
-        ? countries
-        : []
-    )}
-  </Picker>
-)}
 
-            
+            {currentPicker && (
+              <Picker
+                selectedValue={
+                  currentPicker === 'contractType'
+                    ? contractType
+                    : currentPicker === 'businessLine'
+                      ? businessLine
+                      : country
+                }
+                onValueChange={handleSelect}
+                style={styles.picker}
+              >
+                {renderPickerItems(
+                  currentPicker === 'contractType'
+                    ? contractTypes
+                    : currentPicker === 'businessLine'
+                      ? businessLines
+                      : currentPicker === 'country'
+                        ? countries
+                        : []
+                )}
+              </Picker>
+            )}
 
-
-
-
-
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.pickerCloseButton}
               onPress={() => setPickerVisible(false)}
             >
@@ -465,7 +499,17 @@ const QuestionItem: React.FC<QuestionItemProps> = ({ label, value, onPress }) =>
 );
 
 const styles = StyleSheet.create({
-    loaderContainer: {
+  loadingTab: {
+    backgroundColor: '#0E3386',
+    opacity: 0.7,
+  },
+  resultContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -497,8 +541,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     borderRadius: 16,
-    margin: 16,
-    padding: 20,
+    margin: 10,
+    padding: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -523,28 +567,28 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   valueText: {
-    marginLeft:15,
+    marginLeft: 15,
     fontSize: 10,
     color: '#666',
   },
-  addButtonQues:{
-    flex:1,
-    flexDirection:'row',
-    justifyContent:'space-between'
+  addButtonQues: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
-  sectionTitleButton:{
- fontSize: 10,
- borderWidth:1,
+  sectionTitleButton: {
+    fontSize: 10,
+    borderWidth: 1,
     fontWeight: '700',
-        marginTop: 10,
+    marginTop: 10,
     marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
     color: '#2A5BDA',
-    paddingHorizontal:15,
-    borderRadius:10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     marginTop: 10,
     marginBottom: 15,
   },
@@ -565,11 +609,11 @@ const styles = StyleSheet.create({
   },
 
   selectedFileText: {
-  marginTop: 8,
-  fontSize: 14,
-  color: '#333',
-  textAlign: 'center',
-},
+    marginTop: 6,
+    fontSize: 12,
+    color: '#333',
+    textAlign: 'center',
+  },
   riskBadge: {
     backgroundColor: '#FF5252',
     borderRadius: 6,
@@ -578,21 +622,25 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 15,
   },
-  riskText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+
+    noteCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 16,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#C41E3A',
   },
-  subSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
+  noteText: {
+    fontSize: 12,
+    color: '#C41E3A',
+    lineHeight: 18,
   },
   summaryText: {
+    paddingHorizontal: 17,
     fontSize: 10,
-    color: '#666',
-    lineHeight: 10,
+    color: '#C41E3A',
+    lineHeight: 13,
   },
   bottomActions: {
     position: 'absolute',
@@ -635,7 +683,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingHorizontal: 10,
   },
-   tabItem1: {
+  tabItem1: {
     fontSize: 10,
     color: '#fff',
     paddingVertical: 5,
@@ -643,14 +691,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#000078',
-  backgroundColor: '#0E3386',
+    backgroundColor: '#0E3386',
     marginHorizontal: 5,
-    marginTop:8,
+    marginTop: 8,
 
   },
   tabItem: {
+    maxWidth:150,
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#000078',
@@ -668,33 +717,7 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#fff',
   },
-  // tabContainer: {
-  //   position: 'absolute',
-  //   bottom: 0,
-  //   left: 0,
-  //   right: 0,
-  //   flexDirection: 'row',
-  //   backgroundColor: 'white',
-  //  borderWidth:1,
-  //   borderColor: 'red',
-  // },
-  // tabItem: {
-  //   flex: 1,
-  //   alignItems: 'center',
-  //   paddingVertical: 16,
-  // },
-  // activeTab: {
-  //   borderTopWidth: 3,
-  //   borderTopColor: '#2A5BDA',
-  // },
-  // tabText: {
-  //   fontSize: 14,
-  //   fontWeight: '600',
-  //   color: '#999',
-  // },
-  // activeTabText: {
-  //   color: '#2A5BDA',
-  // },
+
   pickerModal: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -728,6 +751,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  fileInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    padding: 12,
+    backgroundColor: '#F0F4FF',
+    borderRadius: 8,
+  },
+
 });
 
 export default AIResFullReviewScreen;

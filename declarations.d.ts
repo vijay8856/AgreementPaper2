@@ -20,3 +20,7 @@ declare module 'react-native-vector-icons/MaterialIcons' {
   const content: typeof Icon;
   export default content;
 }
+
+declare module '@env' {
+  export const GOOGLE_WEB_CLIENT_ID: string;
+}

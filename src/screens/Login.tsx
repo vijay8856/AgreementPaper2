@@ -26,15 +26,9 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Checkbox from '../components/CommanCheckbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GOOGLE_WEB_CLIENT_ID } from '@env';
+
 import { CommonActions } from '@react-navigation/native';
-// type RootStackParamList = {
-//   Login: undefined;
-//   SignUp: undefined;
-//   Dashboard: undefined;
-//   VerifyEmail: undefined;
-//   AuthLoading: undefined;
-//   MyProfile:undefined;
-// };
+
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -49,319 +43,165 @@ const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: GOOGLE_WEB_CLIENT_ID,
-      offlineAccess: true,
-    });
-  }, []);
 
 
+useEffect(() => {
+  GoogleSignin.configure({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    offlineAccess: true,
+    forceCodeForRefreshToken: true,
+  });
+}, []);
   const handleSignup = () => {
 
     navigation.navigate('SignUp');
   };
 
 
-  const handleLogin = async (loginType: 'google' | 'email') => {
-    try {
-      setLoading(true);
 
-      // -------- Google Login flow ----------
-      if (loginType === 'google') {
-        await GoogleSignin.hasPlayServices();
+const handleLogin = async (loginType: 'google' | 'email') => {
+  try {
+    setLoading(true);
+
+    // -------- Google Login flow ----------
+    if (loginType === 'google') {
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signOut();
+      const userInfo = await GoogleSignin.signIn();
+      const tokens = await GoogleSignin.getTokens();
+
+      const accessToken = tokens?.accessToken;
+      const idToken = tokens?.idToken;
+console.log("accessToken",accessToken);
+console.log("tokens",tokens);
+
+console.log("userInfo",userInfo);
+
+      if (!accessToken) {
         await GoogleSignin.signOut();
-        const userInfo = await GoogleSignin.signIn();
-        const tokens = await GoogleSignin.getTokens(); 
+        setLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Google Login Failed',
+          text2: 'No access token received. Please try again.',
+          position: 'top',
+        });
+        return;
+      }
 
-        const accessToken = tokens?.accessToken;  
-        const idToken = tokens?.idToken;
-
-        if (!accessToken) {
-          await GoogleSignin.signOut();
-          setLoading(false);
-          Toast.show({
-            type: 'error',
-            text1: 'Google Login Failed',
-            text2: 'No access token received. Please try again.',
-            position: 'top',
-          });
-          return;
-        }
-
-        // Send access token to backend
-        const tokenResult = await Services.sendAccessToken(accessToken);
-
-        if (!tokenResult.success) {
-          setLoading(false);
-          Toast.show({
-            type: 'error',
-            text1: 'Login Failed',
-            text2: tokenResult.error?.non_field_errors || 'Server rejected Google token.',
-            position: 'top',
-          });
-          return;
-        }
-
-        const user = tokenResult?.data?.user;
-
-       
-        await AsyncStorage.setItem('first_Name', user?.first_name || '');
-        await AsyncStorage.setItem('last_Name', user?.last_name || '');
-        await AsyncStorage.setItem('email', user?.email || '');
-        await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-        await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
-        await AsyncStorage.setItem('hasLoggedIn', 'true');
+      // Send access token to backend for login
+      let tokenResult = await Services.googleSignup(accessToken);
+console.log("tokenResult tokenResult",tokenResult);
 
 
+if (!tokenResult.success) {
+  setLoading(false);
+  Toast.show({
+    type: 'error',
+    text1: 'Google Auth Failed',
+    text2: tokenResult.error || 'Could not authenticate with Google',
+    position: 'top',
+  });
+  return;
+}
+
+
+
+      const user = tokenResult?.data?.user;
+
+      await AsyncStorage.setItem('first_Name', user?.first_name || '');
+      await AsyncStorage.setItem('last_Name', user?.last_name || '');
+      await AsyncStorage.setItem('email', user?.email || '');
+      await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+      await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
+      await AsyncStorage.setItem('hasLoggedIn', 'true');
+
+      Toast.show({
+        type: 'success',
+        text1: 'Login successful!',
+        position: 'top',
+      });
+
+      setTimeout(() => {
+        setLoading(false);
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Dashboard' }],
+          })
+        );
+      }, 1000);
+    }
+
+    // -------- Email Login flow ----------
+    else if (loginType === 'email') {
+      if (!email || !password) {
+        Toast.show({
+          type: 'error',
+          text1: 'Missing Input',
+          text2: 'Please enter both email and password.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!agreeTerms) {
+        Toast.show({
+          type: 'error',
+          text1: 'Terms Not Accepted',
+          text2: 'You must agree to the terms and conditions.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const result = await Services.login(email, password);
+
+      if (result.status === 200) {
         Toast.show({
           type: 'success',
           text1: 'Login successful!',
           position: 'top',
         });
 
+        await AsyncStorage.setItem('Token', result.data?.key || '');
+        await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
+        await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
+        await AsyncStorage.setItem('email', result.data?.data?.email || '');
+        await AsyncStorage.setItem('hasLoggedIn', 'true');
+
         setTimeout(() => {
           setLoading(false);
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'Dashboard' }],
-            })
-          );
+          navigation.navigate('Dashboard');
         }, 1000);
+      } else {
+        setLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: result.error?.message || 'Invalid credentials',
+          position: 'top',
+        });
       }
-
-      // -------- Email Login flow ----------
-      else if (loginType === 'email') {
-        if (!email || !password) {
-          Toast.show({
-            type: 'error',
-            text1: 'Missing Input',
-            text2: 'Please enter both email and password.',
-          });
-          setLoading(false);
-          return;
-        }
-
-        if (!agreeTerms) {
-          Toast.show({
-            type: 'error',
-            text1: 'Terms Not Accepted',
-            text2: 'You must agree to the terms and conditions.',
-          });
-          setLoading(false);
-          return;
-        }
-
-        const result = await Services.login(email, password);
-
-        if (result.status === 200) {
-          Toast.show({
-            type: 'success',
-            text1: 'Login successful!',
-            position: 'top',
-          });
-
-          await AsyncStorage.setItem('Token', result.data?.key || '');
-          await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
-          await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
-          await AsyncStorage.setItem('email', result.data?.data?.email || '');
-          await AsyncStorage.setItem('hasLoggedIn', 'true');
-
-
-
-
-          setTimeout(() => {
-            setLoading(false);
-            navigation.navigate('Dashboard');
-          }, 1000);
-          console.log("result.error?.message", result.error?.message);
-
-        } else {
-          setLoading(false);
-          Toast.show({
-            type: 'error',
-            text1: 'Login Failed',
-            text2: result.error?.message || 'Invalid credentials',
-            position: 'top',
-          });
-        }
-      }
-    } catch (err: any) {
-      setLoading(false);
-
-      const errorMessage = err?.message || 'Something went wrong during login';
-      const errorCode = err?.code || 'No code';
-      const fullError = JSON.stringify(err, null, 2);
-
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: `${errorCode}: ${errorMessage}`,
-      });
-
-      console.log('🛑 Google login failed:');
-      console.log('➡️ Code:', errorCode);
-      console.log('➡️ Message:', errorMessage);
-      console.log('➡️ Full Error:', fullError);
     }
-  };
-// const handleLogin = async (loginType: 'google' | 'email') => {
-//   try {
-//     setLoading(true);
+  } catch (err: any) {
+    setLoading(false);
+    const errorMessage = err?.message || 'Something went wrong during login';
+    const errorCode = err?.code || 'No code';
+    const fullError = JSON.stringify(err, null, 2);
 
-//     // -------- Google Login flow ----------
-//     if (loginType === 'google') {
-//       await GoogleSignin.hasPlayServices();
-//       await GoogleSignin.signOut();
-//       const userInfo = await GoogleSignin.signIn();
-//       const tokens = await GoogleSignin.getTokens();
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: `${errorCode}: ${errorMessage}`,
+    });
 
-//       const accessToken = tokens?.accessToken;
-//       const idToken = tokens?.idToken;
-
-//       if (!accessToken) {
-//         await GoogleSignin.signOut();
-//         setLoading(false);
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Google Login Failed',
-//           text2: 'No access token received. Please try again.',
-//           position: 'top',
-//         });
-//         return;
-//       }
-
-//       // Send access token to backend for login
-//       let tokenResult = await Services.sendAccessToken(accessToken);
-
-//       // If login fails with "No Account Found", attempt signup
-//       if (!tokenResult.success) {
-//         const errorMsg = tokenResult.error?.non_field_errors?.[0];
-
-//         if (errorMsg === 'No Account Found! Please Sign Up First.') {
-//           // Attempt Google Sign-Up
-//           const signupResult = await Services.googleSignup(idToken);
-
-//           if (!signupResult.success) {
-//             setLoading(false);
-//             Toast.show({
-//               type: 'error',
-//               text1: 'Signup Failed',
-//               text2: signupResult.error?.message || 'Could not create account.',
-//               position: 'top',
-//             });
-//             return;
-//           }
-
-//           tokenResult = signupResult; // Treat signup result like login
-//         } else {
-//           setLoading(false);
-//           Toast.show({
-//             type: 'error',
-//             text1: 'Login Failed',
-//             text2: tokenResult.error?.non_field_errors || 'Server rejected Google token.',
-//             position: 'top',
-//           });
-//           return;
-//         }
-//       }
-
-//       const user = tokenResult?.data?.user;
-
-//       await AsyncStorage.setItem('first_Name', user?.first_name || '');
-//       await AsyncStorage.setItem('last_Name', user?.last_name || '');
-//       await AsyncStorage.setItem('email', user?.email || '');
-//       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-//       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
-//       await AsyncStorage.setItem('hasLoggedIn', 'true');
-
-//       Toast.show({
-//         type: 'success',
-//         text1: 'Login successful!',
-//         position: 'top',
-//       });
-
-//       setTimeout(() => {
-//         setLoading(false);
-//         navigation.dispatch(
-//           CommonActions.reset({
-//             index: 0,
-//             routes: [{ name: 'Dashboard' }],
-//           })
-//         );
-//       }, 1000);
-//     }
-
-//     // -------- Email Login flow ----------
-//     else if (loginType === 'email') {
-//       if (!email || !password) {
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Missing Input',
-//           text2: 'Please enter both email and password.',
-//         });
-//         setLoading(false);
-//         return;
-//       }
-
-//       if (!agreeTerms) {
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Terms Not Accepted',
-//           text2: 'You must agree to the terms and conditions.',
-//         });
-//         setLoading(false);
-//         return;
-//       }
-
-//       const result = await Services.login(email, password);
-
-//       if (result.status === 200) {
-//         Toast.show({
-//           type: 'success',
-//           text1: 'Login successful!',
-//           position: 'top',
-//         });
-
-//         await AsyncStorage.setItem('Token', result.data?.key || '');
-//         await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
-//         await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
-//         await AsyncStorage.setItem('email', result.data?.data?.email || '');
-//         await AsyncStorage.setItem('hasLoggedIn', 'true');
-
-//         setTimeout(() => {
-//           setLoading(false);
-//           navigation.navigate('Dashboard');
-//         }, 1000);
-//       } else {
-//         setLoading(false);
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Login Failed',
-//           text2: result.error?.message || 'Invalid credentials',
-//           position: 'top',
-//         });
-//       }
-//     }
-//   } catch (err: any) {
-//     setLoading(false);
-//     const errorMessage = err?.message || 'Something went wrong during login';
-//     const errorCode = err?.code || 'No code';
-//     const fullError = JSON.stringify(err, null, 2);
-
-//     Toast.show({
-//       type: 'error',
-//       text1: 'Error',
-//       text2: `${errorCode}: ${errorMessage}`,
-//     });
-
-//     console.log('🛑 Google login failed:');
-//     console.log('➡️ Code:', errorCode);
-//     console.log('➡️ Message:', errorMessage);
-//     console.log('➡️ Full Error:', fullError);
-//   }
-// };
+    console.log('🛑 Google login failed:');
+    console.log('➡️ Code:', errorCode);
+    console.log('➡️ Message:', errorMessage);
+    console.log('➡️ Full Error:', fullError);
+  }
+};
 
 
   const renderSocialButtons = () => (

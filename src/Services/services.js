@@ -53,79 +53,179 @@ const Services = {
       };
     }
   },
-googleSignup: async (access_token) => {
-  console.log("access_token",access_token);
+// googleSignup: async (access_token) => {
+//   console.log("access_token",access_token);
   
-  try {
-    console.log("intry");
-    const response = await axios.post(
+//   try {
+//     console.log("intry");
+//     const response = await axios.post(
 
-      API_ENDPOINTS.GOOGLESIGNUP,
-      { access_token }, 
+//       API_ENDPOINTS.GOOGLESIGNUP,
+//       { access_token }, 
+//       {
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//       }
+//     );
+//   console.log("responseresponse",response);
+
+//     return { success: true, data: response.data };
+//   } catch (error) {
+//       console.log('❌ Google Signup Full Error:', error.response?.data);
+
+//     return {
+//       success: false,
+
+//       error: error.response?.data || { message: 'Signup failed' },
+//     };
+//   }
+// },
+// googleSignup: async (access_token) => {
+//   console.log("googleSignup 22",access_token);
+//   try {
+//     const response = await axiosInstance.post(
+//       API_ENDPOINTS.SENDACCESSTOKEN,
+//         {
+//         access_token,
+//         user_type: 'INDIVIDUAL_USER',
+//       },
+//       {
+//         headers: { 'Content-Type': 'application/json' },
+//       }
+//     );
+
+//     return {
+//       success: true,
+//       data: response.data,
+//       status: response.status,
+//     };
+
+//   } catch (error) {
+//     console.log('error config', error.config);
+//     console.log('error request', error.request);
+//     console.log('error response', error.response);
+//     console.log('error message', error.message);
+
+//     return {
+//       success: false,
+//       error: error.response?.data?.non_field_errors?.[0] || 'Google signup failed',
+//       status: error.response?.status || 500,
+//     };
+//   }
+// },
+
+
+googleSignup: async (access_token) => {
+  try {
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.SENDACCESSTOKEN, 
       {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        access_token,
+        user_type: 'INDIVIDUAL_USER', 
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
       }
     );
-  console.log("responseresponse",response);
-
-    return { success: true, data: response.data };
-  } catch (error) {
-      console.log('❌ Google Signup Full Error:', error.response?.data);
+console.log("googleSignup response",response);
 
     return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error) {
+    return {
       success: false,
-
-      error: error.response?.data || { message: 'Signup failed' },
+      error: error?.response?.data?.non_field_errors?.[0] || 'Google signup/login failed',
+      status: error?.response?.status || 500,
     };
   }
 },
 
 
-  sendAccessToken: async (access_token) => {
-    try {
-      const response = await axiosInstance.post(
-        API_ENDPOINTS.SENDACCESSTOKEN,
-        { access_token },
-        console.log("access_token", access_token),
-
-        {
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
 
 
-      const userData = response?.data?.data;
-      console.log("sendAccessToken userData ", userData);
+
+  // sendAccessToken: async (access_token) => {
+  //   try {
+  //     const response = await axiosInstance.post(
+  //       API_ENDPOINTS.SENDACCESSTOKEN,
+  //       { access_token },
+  //       console.log("access_token", access_token),
+
+  //       {
+  //         headers: { 'Content-Type': 'application/json' },
+  //       }
+  //     );
 
 
-      if (userData?.first_name && userData?.last_name) {
-        await AsyncStorage.setItem('first_Name', userData?.first_name);
-        await AsyncStorage.setItem('last_Name', userData?.last_name);
-        await AsyncStorage.setItem('Token', response.data.key);
+  //     const userData = response?.data?.data;
+  //     console.log("sendAccessToken userData ", userData);
 
+
+  //     if (userData?.first_name && userData?.last_name) {
+  //       await AsyncStorage.setItem('first_Name', userData?.first_name);
+  //       await AsyncStorage.setItem('last_Name', userData?.last_name);
+  //       await AsyncStorage.setItem('Token', response.data.key);
+
+  //     }
+  //       console.log("response 23",response);
+
+  //     return {
+        
+  //       success: true,
+  //       data: response.data,
+  //       status: response.status,
+  //     };
+  //   } catch (error) {
+
+
+  //     console.log('error config', error.config);
+  //     console.log('error request', error.request);
+  //     console.log('error response', error.response);
+  //     console.log('error message', error.message);
+
+  //     return {
+  //       success: false,
+  //       error: error.response?.data || 'Failed to log in',
+  //       status: error.response?.status || 500,
+  //     };
+  //   }
+  // },
+sendAccessToken: async (access_token) => {
+  try {
+    console.log("trying sendAccessToken");
+    
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.SENDACCESSTOKEN,
+      { access_token },
+      {
+        headers: { 'Content-Type': 'application/json' },
       }
-      return {
-        success: true,
-        data: response.data,
-        status: response.status,
-      };
-    } catch (error) {
+    );
+console.log("response  response",response);
 
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
 
-      console.log('error config', error.config);
-      console.log('error request', error.request);
-      console.log('error response', error.response);
-      console.log('error message', error.message);
+  } catch (error) {
+    console.log('error config', error.config);
+    console.log('error request', error.request);
+    console.log('error response', error.response);
+    console.log('error message', error.message);
 
-      return {
-        success: false,
-        error: error.response?.data || 'Failed to log in',
-        status: error.response?.status || 500,
-      };
-    }
-  },
+    return {
+      success: false,
+      error: error.response?.data?.non_field_errors?.[0] || 'Google authentication failed',
+      status: error.response?.status || 500,
+    };
+  }
+},
 
   getLawyerNetworkList: async data => {
     try {
@@ -406,6 +506,7 @@ console.log("response12",response);
       };
     }
   },
+
 
 
 

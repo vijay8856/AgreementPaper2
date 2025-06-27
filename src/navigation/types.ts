@@ -15,6 +15,19 @@ export type DashboardTabParamList = {
 };
 
 export type RootStackParamList = {
-  Login: undefined;
+ Login: undefined;
+  SignUp: undefined;
   Dashboard: undefined;
+  VerifyEmail: undefined;
+  AuthLoading: undefined;
+  MyProfile:undefined;
+};
+export type AuthStackParamList = {
+  Login: undefined;
+  SignUp: undefined;
+  VerifyEmail: undefined;
+};
+export type AppStackParamList = {
+  Dashboard: undefined;
+  MyProfile: undefined;
 };

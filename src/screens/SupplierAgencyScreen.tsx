@@ -19,6 +19,7 @@ import { Picker } from '@react-native-picker/picker';
 
 type Supplier = {
   id: string;
+  user:number,
   company_name: string;
   email: string;
   country_name: string;
@@ -48,7 +49,7 @@ const SupplierAgencyScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
-console.log("selectedSupplier",selectedSupplier);
+  const [message, setMessage] = useState(''); 
 
   const ratings = [
     { label: "All Ratings", value: "" },
@@ -77,6 +78,7 @@ console.log("selectedSupplier",selectedSupplier);
         // Transform API response to match our Supplier type
         const formattedSuppliers = response.data.map((supplier: any) => ({
           id: supplier.id,
+          user:supplier.user,
           company_name: supplier.company_name,
           email: supplier.user_detail?.email || supplier.email,
           country_name: supplier.country_name,
@@ -131,7 +133,7 @@ console.log("selectedSupplier",selectedSupplier);
     // Safely extract values or fallback to empty string
     const companyName = supplier.company_name?.toLowerCase() || '';
     const email = supplier.email?.toLowerCase() || '';
-
+const user =supplier.user;
     const matchesSearch =
       companyName.includes(searchQuery.toLowerCase()) ||
       email.includes(searchQuery.toLowerCase());
@@ -142,8 +144,71 @@ console.log("selectedSupplier",selectedSupplier);
       !locationFilter ||
       supplier.country_name === locationFilter;
 
-    return matchesSearch && matchesRating && matchesLocation;
+    return matchesSearch && matchesRating && matchesLocation &&user;
   });
+
+const handleSendConnection =()=>{
+sendConnection()
+}
+
+
+const sendConnection = async (isRefresh = false) => {
+  if (!isRefresh) setLoading(true);
+  else setRefreshing(true);
+
+  const payload = {
+    to_user: selectedSupplier?.user,
+    message: message?.trim() || '',
+  };
+
+  try {
+    const response = await Services.sendConnectionSupplier(payload);
+
+    if (response.success === true) {
+      setConnectModalVisible(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Connection sent successfully',
+        position: 'top',
+      });
+
+    } else if (
+      response.status === 400 &&
+      response.error?.message === 'Connection request pending'&&
+      setConnectModalVisible(false)
+    ) {
+      Toast.show({
+        type: 'info',
+        text1: 'Connection Already Pending',
+        text2: 'You have already sent a connection request.',
+        position: 'top',
+      });
+
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to send connection',
+        text2: response.error?.message || 'Something went wrong',
+        position: 'top',
+      });
+    }
+
+  } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1: 'Unexpected error',
+      text2: 'Please try again later',
+      position: 'top',
+    });
+  }
+
+  setLoading(false);
+  setRefreshing(false);
+};
+
+ 
+
+
 
 
   const handleConnect = (supplier: Supplier) => {
@@ -438,10 +503,12 @@ const DetailItem: React.FC<{
                     numberOfLines={4}
                     placeholder="Type your message here..."
                     placeholderTextColor="#999"
+                     value={message}
+    onChangeText={setMessage}
                   />
                 </View>
 
-                <TouchableOpacity style={styles.connectActionButton}>
+                <TouchableOpacity style={styles.connectActionButton} onPress={handleSendConnection}>
                   <Text style={styles.connectActionButtonText}>Send Connection Request</Text>
                 </TouchableOpacity>
 

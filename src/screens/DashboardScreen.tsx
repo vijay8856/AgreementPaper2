@@ -20,15 +20,7 @@ const BottomTabs = () => {
         case 'HomeScreen':
           iconName = 'home-outline';
           break;
-        // case 'AIResFullReview':
-        //   iconName = 'file-document-outline';
-        //   break;
-        //    case 'AIReview':
-        //   iconName = 'chip';
-        //   break;
-        // case 'ESignature':
-        //   iconName = 'pen';
-        //   break;
+     
         default:
           iconName = 'circle'; // fallback icon
       }
@@ -51,21 +43,7 @@ const BottomTabs = () => {
     component={HomeScreen}
     options={{ title: 'Home' }}
   />
-  {/* <Tab.Screen
-    name="AIResFullReview"
-    component={AIResFullReviewScreen}
-    options={{ title: 'AI-RES Full Review' }}
-  />
-    <Tab.Screen
-    name="AIReview"
-    component={AIReviewScreen}
-    options={{ title: 'AI-Review' }}
-  /> */}
-  {/* <Tab.Screen
-    name="ESignature"
-    component={ESignatureScreen}
-    options={{ title: 'E-Signature' }}
-  /> */}
+
 
   
 </Tab.Navigator>

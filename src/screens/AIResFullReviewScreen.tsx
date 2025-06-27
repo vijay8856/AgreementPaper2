@@ -13,6 +13,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   PermissionsAndroid,
+  FlatList,
 
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -36,12 +37,13 @@ const AIResFullReviewScreen = () => {
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [loadingButton, setLoadingButton] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
-
+  const [searchText, setSearchText] = useState('');
+  const [tempSearchText, setTempSearchText] = useState('');
+  const [filteredCountries, setFilteredCountries] = useState<PickerItem[]>([]);
   type PickerItem = {
     label: string;
     value: string;
   };
-  console.log("analysisResult", analysisResult);
 
   const contractTypes = [
     { label: "NON-DISCLOSURE AGREEMENTS", value: "NON-DISCLOSURE AGREEMENTS" },
@@ -174,19 +176,24 @@ const AIResFullReviewScreen = () => {
   ];
 
 
-  const renderPickerItems = (items: PickerItem[]) => {
-    return items.map((item, index) => (
-      <Picker.Item label={item.label} value={item.value} key={index} />
-    ));
-  };
 
 
   const openPicker = (pickerType: 'contractType' | 'businessLine' | 'country') => {
     setCurrentPicker(pickerType);
+    setTempSearchText('');
+    setSearchText('');
     setPickerVisible(true);
   };
+  useEffect(() => {
+    setFilteredCountries(countries);
+  }, [countries]);
 
-
+  useEffect(() => {
+    const filtered = countries.filter((item: PickerItem) =>
+      item.label.toLowerCase().includes(searchText.toLowerCase())
+    );
+    setFilteredCountries(filtered);
+  }, [searchText, countries]);
   const handleFileUpload = async () => {
     try {
       const res = await DocumentPicker.pick({
@@ -216,14 +223,17 @@ const AIResFullReviewScreen = () => {
       }
     }
   };
-
+  const closePicker = () => {
+    setPickerVisible(false);
+    setTempSearchText(''); 
+  };
   const handleSelect = (value: string) => {
     switch (currentPicker) {
       case 'contractType': setContractType(value); break;
       case 'businessLine': setBusinessLine(value); break;
       case 'country': setCountry(value); break;
     }
-    setPickerVisible(false);
+    closePicker(); 
   };
 
 
@@ -232,7 +242,6 @@ const AIResFullReviewScreen = () => {
     else setRefreshing(true);
 
     const response = await Services.getCountryList({ limit: 1, offset: 0 });
-    console.log('response', response);
 
     if (response.success) {
       const formattedCountries = response.data.map((country: any) => ({
@@ -259,13 +268,13 @@ const AIResFullReviewScreen = () => {
     fetchCountries(true);
   }, []);
 
-   if (loading) {
-      return (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#000078" />
-        </View>
-      );
-    }
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#000078" />
+      </View>
+    );
+  }
 
   const submitContract = async (clauseType: string) => {
     if (!contractType || !businessLine || !country || !selectedFile) {
@@ -290,10 +299,10 @@ const AIResFullReviewScreen = () => {
         name: selectedFile.name,
         type: selectedFile.type || 'application/pdf',
       });
-      console.log("formData", formData);
 
       const response = await Services.analysisContractByAi(formData);
-      console.log("response analysisContractByAi", response);
+      console.log("response23",response);
+      
       if (response.success) {
         setAnalysisResult(response.data);
         Toast.show({
@@ -323,7 +332,11 @@ const AIResFullReviewScreen = () => {
     }
   };
 
-
+  const getFilteredItems = (items: PickerItem[], search: string) => {
+    return items.filter(item =>
+      item.label.toLowerCase().includes(search.toLowerCase())
+    );
+  };
   return (
     <View style={styles.container}>
 
@@ -337,9 +350,7 @@ const AIResFullReviewScreen = () => {
           end={{ x: 2, y: 0 }}
         >
           <Text style={styles.headerTitle}>Upload Contract</Text>
-          <Text style={styles.headerSubtitle}>
-            Please upload contract to review in (PDF) format
-          </Text>
+          <Text style={styles.headerSubtitle}>Please upload contract to review in (PDF) format</Text>
         </LinearGradient>
 
         <View style={styles.card}>
@@ -385,16 +396,16 @@ const AIResFullReviewScreen = () => {
 
         </View>
 
-     
+
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>AI Response</Text>
-    
-        <View style={styles.noteCard}>
-                  <Text style={styles.noteText}>
-                    Note* - AI - AIRES can make mistakes. Check important info with your legal team as well.
-                    This doesn't replace legal services and advice provided is only for guidance
-                  </Text>
-                </View>
+
+          <View style={styles.noteCard}>
+            <Text style={styles.noteText}>
+              Note* - AI - AIRES can make mistakes. Check important info with your legal team as well.
+              This doesn't replace legal services and advice provided is only for guidance
+            </Text>
+          </View>
 
           {analysisResult && (
             <View style={styles.card}>
@@ -427,46 +438,52 @@ const AIResFullReviewScreen = () => {
         ))}
       </View>
 
+    
       <Modal
         visible={isPickerVisible}
         transparent={true}
         animationType="slide"
+        onRequestClose={closePicker} 
       >
         <View style={styles.pickerModal}>
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerTitle}>
-              {currentPicker === 'contractType' && 'Contract Type'}
-              {currentPicker === 'businessLine' && 'Business Line'}
+              {currentPicker === 'contractType' && 'Select Contract Type'}
+              {currentPicker === 'businessLine' && 'Select Business Line'}
               {currentPicker === 'country' && 'Select Country'}
             </Text>
 
-            {currentPicker && (
-              <Picker
-                selectedValue={
-                  currentPicker === 'contractType'
-                    ? contractType
-                    : currentPicker === 'businessLine'
-                      ? businessLine
-                      : country
-                }
-                onValueChange={handleSelect}
-                style={styles.picker}
-              >
-                {renderPickerItems(
-                  currentPicker === 'contractType'
-                    ? contractTypes
-                    : currentPicker === 'businessLine'
-                      ? businessLines
-                      : currentPicker === 'country'
-                        ? countries
-                        : []
-                )}
-              </Picker>
-            )}
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search..."
+              value={tempSearchText}
+              onChangeText={setTempSearchText}
+              autoFocus={true}
+            />
+
+            <FlatList
+              data={
+                currentPicker === 'contractType'
+                  ? getFilteredItems(contractTypes, tempSearchText)
+                  : currentPicker === 'businessLine'
+                    ? getFilteredItems(businessLines, tempSearchText)
+                    : getFilteredItems(countries, tempSearchText)
+              }
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => handleSelect(item.value)}
+                  style={styles.listItem}
+                >
+                  <Text style={styles.itemLabel}>{item.label}</Text>
+                </TouchableOpacity>
+              )}
+              keyboardShouldPersistTaps="handled"
+            />
 
             <TouchableOpacity
               style={styles.pickerCloseButton}
-              onPress={() => setPickerVisible(false)}
+              onPress={closePicker}
             >
               <Text style={styles.pickerCloseText}>Done</Text>
             </TouchableOpacity>
@@ -499,6 +516,48 @@ const QuestionItem: React.FC<QuestionItemProps> = ({ label, value, onPress }) =>
 );
 
 const styles = StyleSheet.create({
+
+  pickerModal: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  searchInput: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  listItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  itemLabel: {
+    fontSize: 16,
+  },
+  pickerCloseButton: {
+    backgroundColor: '#0E3386',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  pickerCloseText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
   loadingTab: {
     backgroundColor: '#0E3386',
     opacity: 0.7,
@@ -623,7 +682,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-    noteCard: {
+  noteCard: {
     backgroundColor: 'white',
     borderRadius: 16,
     margin: 16,
@@ -697,7 +756,7 @@ const styles = StyleSheet.create({
 
   },
   tabItem: {
-    maxWidth:150,
+    maxWidth: 150,
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 20,
@@ -718,17 +777,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  pickerModal: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  pickerContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-  },
+
   pickerTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -737,20 +786,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   picker: {
-    height: 180,
+    height: 100,
   },
-  pickerCloseButton: {
-    backgroundColor: '#0E3386',
-    borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  pickerCloseText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
   fileInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',

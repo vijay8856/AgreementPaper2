@@ -89,7 +89,6 @@ export const AUTH_MULTYPART_HEADERS = async () => {
 // use AUTH_HEADERS when you have passed data with json and normal data object
 export const AUTH_HEADERS = async () => {
   const token = await AsyncStorage.getItem('Token');
-  console.log("token",token);
   
   return {
     headers: {

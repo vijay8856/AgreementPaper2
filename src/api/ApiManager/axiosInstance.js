@@ -3,10 +3,9 @@ import {API_URL, HEADERS} from '../../Axios/axiosData';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 30000,
+  timeout: 100000,
   headers: HEADERS.headers,
 });
-console.log('BASE URL ===>', API_URL);
 
 // Response interceptor
 axiosInstance.interceptors.response.use(

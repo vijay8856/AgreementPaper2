@@ -7,7 +7,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { RootStackParamList, DashboardTabParamList } from '../navigation/types';
-
+import { BackHandler, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -24,22 +25,58 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const fName = await AsyncStorage.getItem('first_name');
-        const lName = await AsyncStorage.getItem('last_name');
-        if (fName) setFirstName(fName);
-        if (lName) setLastName(lName);
-      } catch (e) {
-        console.log('Error fetching user data:', e);
-      }
+
+useFocusEffect(
+  React.useCallback(() => {
+    const onBackPress = () => {
+      Alert.alert('Exit App', 'Are you sure you want to exit?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Yes', onPress: () => BackHandler.exitApp() },
+      ]);
+      return true; 
     };
 
-    fetchUserData();
-  }, []);
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-  // Grid items configuration
+    return () => subscription.remove(); 
+  }, [])
+);
+
+
+
+useEffect(() => {
+  const fetchUserData = async () => {
+  try {
+  const fName = await AsyncStorage.getItem('first_Name');
+  const lName = await AsyncStorage.getItem('last_Name');
+  if (fName) setFirstName(fName);
+  if (lName) setLastName(lName);
+
+} catch (e) {
+  console.log('Error fetching user data:', e);
+}
+  };
+
+  fetchUserData();
+
+  // Set header title and icon
+  navigation.setOptions({
+    title: 'Home',
+    headerRight: () => (
+      <TouchableOpacity onPress={() => navigation.navigate('MyProfile')} style={{ marginRight: 15 }}>
+        <Icon name="account-circle" size={28} color="#fff" />
+      </TouchableOpacity>
+    ),
+    headerStyle: {
+      backgroundColor: '#0E3386',
+    },
+    headerTintColor: '#fff',
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    },
+  });
+}, [navigation]);
+
   const gridItems = [
     {
       id: 1,
@@ -123,9 +160,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
-      {/* Grid Title */}
-      
-      {/* 4x2 Grid */}
+    
       <View style={styles.gridContainer}>
         {gridItems.map((item:any) => (
           <TouchableOpacity 

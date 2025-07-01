@@ -6,9 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import Services from '../Services/services';
+import Toast from 'react-native-toast-message';
 
 const InviteResourceScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -17,10 +20,50 @@ const InviteResourceScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTagged, setIsTagged] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    // Handle form submission
+const handleSubmit = async () => {
+  // Simple validation (you can expand this)
+  if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    Toast.show({ type: 'error', text1: 'Please fill all fields' });
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    Toast.show({ type: 'error', text1: 'Passwords do not match' });
+    return;
+  }
+
+  const payload = {
+    first_name: firstName,
+    last_name: lastName,
+    email: email,
+    password: password,
+    user_type: 'RESOURCE_USER',
+    is_authorized: isTagged, // true if tagged, false otherwise
   };
+
+  try {
+     setLoading(true);
+    const res = await Services.inviteUsers(payload);
+    setLoading(false); 
+    if (res.success) {
+      Toast.show({ type: 'success', text1: 'Resource invited successfully' });
+      // Reset form or navigate back
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setIsTagged(false);
+    } else {
+      Toast.show({ type: 'error', text1: res?.error?.message || 'Invite failed' });
+    }
+  } catch (error) {
+    Toast.show({ type: 'error', text1: 'Something went wrong' });
+  }
+};
+
 
   return (
     <View style={styles.container}>
@@ -88,12 +131,17 @@ const InviteResourceScreen = () => {
       </ScrollView>
 
       {/* Submit Button */}
-      <TouchableOpacity 
-        style={styles.submitButton}
-        onPress={handleSubmit}
-      >
-        <Text style={styles.submitButtonText}>Invite Resource</Text>
-      </TouchableOpacity>
+    <TouchableOpacity 
+  style={styles.submitButton}
+  onPress={handleSubmit}
+  disabled={loading}
+>
+  {loading ? (
+    <ActivityIndicator color="#fff" />
+  ) : (
+    <Text style={styles.submitButtonText}>Invite Resource</Text>
+  )}
+</TouchableOpacity>
     </View>
   );
 };

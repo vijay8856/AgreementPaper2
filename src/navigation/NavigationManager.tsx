@@ -13,6 +13,7 @@ import AuthLoadingScreen from '../screens/AuthLoadingScreen';
 import MyProfile from '../screens/MyProfile';
 import SignWebViewScreen from '../screens/SignWebViewScreen';
 import ESignatureScreen from '../screens/ESignatureScreen';
+import WebViewScreen from '../components/WebViewScreen';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -25,6 +26,7 @@ export type RootStackParamList = {
   MyProfile:undefined;
 SignWebViewScreen: { url: string };
   ESignatureScreen:undefined
+   WebViewScreen: { url: string };
 };
 
 const NavigationManager = () => {
@@ -77,6 +79,8 @@ const NavigationManager = () => {
           options={{ headerShown: false }} 
       
         />
+        
+<RootStack.Screen name="WebViewScreen" component={WebViewScreen} />
       </RootStack.Navigator>
     </>
   );

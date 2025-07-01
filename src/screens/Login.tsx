@@ -14,6 +14,7 @@ import {
   Platform,
   ScrollView,
   Linking,
+  Modal,
 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -43,11 +44,16 @@ const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-
+ const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [resetStep, setResetStep] = useState(1);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
 useEffect(() => {
   GoogleSignin.configure({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
+    webClientId:"601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
+    //  GOOGLE_WEB_CLIENT_ID,
     offlineAccess: true,
     forceCodeForRefreshToken: true,
   });
@@ -56,9 +62,174 @@ useEffect(() => {
 
     navigation.navigate('SignUp');
   };
+// useEffect(() => {
+//   Alert.alert(
+//     'Account Not Found',
+//     'No account was found with your Google account. Would you like to Google sign up instead?',
+//     [
+//       {
+//         text: 'Cancel',
+//         style: 'cancel',
+//         onPress: () => console.log('Cancel Pressed'),
+//       },
+//       {
+//         text: 'Google Sign Up',
+//         onPress: () => console.log('Google Signup Pressed'),
+//       },
+//     ],
+//     { cancelable: false }
+//   );
+// }, []);
 
 
 
+// const handleLogin = async (loginType: 'google' | 'email') => {
+//   try {
+//     setLoading(true);
+
+//     // -------- Google Login flow ----------
+//     if (loginType === 'google') {
+//       await GoogleSignin.hasPlayServices();
+//       await GoogleSignin.signOut();
+//       const userInfo = await GoogleSignin.signIn();
+//       const tokens = await GoogleSignin.getTokens();
+
+//       const accessToken = tokens?.accessToken;
+//       const idToken = tokens?.idToken;
+// console.log("accessToken",accessToken);
+// console.log("tokens",tokens);
+
+// console.log("userInfo",userInfo);
+
+//       if (!accessToken) {
+//         await GoogleSignin.signOut();
+//         setLoading(false);
+//         Toast.show({
+//           type: 'error',
+//           text1: 'Google Login Failed',
+//           text2: 'No access token received. Please try again.',
+//           position: 'top',
+//         });
+//         return;
+//       }
+
+//       // Send access token to backend for login
+//       let tokenResult = await Services.sendAccessToken(accessToken);
+// console.log("tokenResult tokenResult",tokenResult);
+
+//  let tokenResult2 = await Services.googleSignup(accessToken);
+// console.log("tokenResult tokenResult",tokenResult);
+
+
+
+// if (!tokenResult.success) {
+//   setLoading(false);
+//   Toast.show({
+//     type: 'error',
+//     text1: 'Google Auth Failed',
+//     text2: tokenResult.error || 'Could not authenticate with Google',
+//     position: 'top',
+//   });
+//   return;
+// }
+
+
+
+//       const user = tokenResult?.data?.user;
+
+//       await AsyncStorage.setItem('first_Name', user?.first_name || '');
+//       await AsyncStorage.setItem('last_Name', user?.last_name || '');
+//       await AsyncStorage.setItem('email', user?.email || '');
+//       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+//       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
+//       await AsyncStorage.setItem('hasLoggedIn', 'true');
+
+//       Toast.show({
+//         type: 'success',
+//         text1: 'Login successful!',
+//         position: 'top',
+//       });
+
+//       setTimeout(() => {
+//         setLoading(false);
+//         navigation.dispatch(
+//           CommonActions.reset({
+//             index: 0,
+//             routes: [{ name: 'Dashboard' }],
+//           })
+//         );
+//       }, 1000);
+//     }
+
+//     // -------- Email Login flow ----------
+//     else if (loginType === 'email') {
+//       if (!email || !password) {
+//         Toast.show({
+//           type: 'error',
+//           text1: 'Missing Input',
+//           text2: 'Please enter both email and password.',
+//         });
+//         setLoading(false);
+//         return;
+//       }
+
+//       if (!agreeTerms) {
+//         Toast.show({
+//           type: 'error',
+//           text1: 'Terms Not Accepted',
+//           text2: 'You must agree to the terms and conditions.',
+//         });
+//         setLoading(false);
+//         return;
+//       }
+
+//       const result = await Services.login(email, password);
+
+//       if (result.status === 200) {
+//         Toast.show({
+//           type: 'success',
+//           text1: 'Login successful!',
+//           position: 'top',
+//         });
+
+//         await AsyncStorage.setItem('Token', result.data?.key || '');
+//         await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
+//         await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
+//         await AsyncStorage.setItem('email', result.data?.data?.email || '');
+//         await AsyncStorage.setItem('hasLoggedIn', 'true');
+
+//         setTimeout(() => {
+//           setLoading(false);
+//           navigation.navigate('Dashboard');
+//         }, 1000);
+//       } else {
+//         setLoading(false);
+//         Toast.show({
+//           type: 'error',
+//           text1: 'Login Failed',
+//           text2: result.error?.message || 'Invalid credentials',
+//           position: 'top',
+//         });
+//       }
+//     }
+//   } catch (err: any) {
+//     setLoading(false);
+//     const errorMessage = err?.message || 'Something went wrong during login';
+//     const errorCode = err?.code || 'No code';
+//     const fullError = JSON.stringify(err, null, 2);
+
+//     Toast.show({
+//       type: 'error',
+//       text1: 'Error',
+//       text2: `${errorCode}: ${errorMessage}`,
+//     });
+
+//     console.log('🛑 Google login failed:');
+//     console.log('➡️ Code:', errorCode);
+//     console.log('➡️ Message:', errorMessage);
+//     console.log('➡️ Full Error:', fullError);
+//   }
+// };
 const handleLogin = async (loginType: 'google' | 'email') => {
   try {
     setLoading(true);
@@ -66,16 +237,16 @@ const handleLogin = async (loginType: 'google' | 'email') => {
     // -------- Google Login flow ----------
     if (loginType === 'google') {
       await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signOut();
+      await GoogleSignin.signOut(); // optional, but ensures fresh login
       const userInfo = await GoogleSignin.signIn();
       const tokens = await GoogleSignin.getTokens();
 
       const accessToken = tokens?.accessToken;
       const idToken = tokens?.idToken;
-console.log("accessToken",accessToken);
-console.log("tokens",tokens);
 
-console.log("userInfo",userInfo);
+      console.log("accessToken", accessToken);
+      console.log("tokens", tokens);
+      console.log("userInfo", userInfo);
 
       if (!accessToken) {
         await GoogleSignin.signOut();
@@ -89,24 +260,114 @@ console.log("userInfo",userInfo);
         return;
       }
 
-      // Send access token to backend for login
-      let tokenResult = await Services.googleSignup(accessToken);
-console.log("tokenResult tokenResult",tokenResult);
+      // Try login with access token
+      let tokenResult = await Services.sendAccessToken(accessToken);
+      console.log("sendAccessToken result", tokenResult);
 
+      // If login failed due to account not found, try signup
+      // if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+      //   let tokenResult2 = await Services.googleSignup(accessToken);
+      //   console.log("googleSignup result", tokenResult2);
 
-if (!tokenResult.success) {
-  setLoading(false);
-  Toast.show({
-    type: 'error',
-    text1: 'Google Auth Failed',
-    text2: tokenResult.error || 'Could not authenticate with Google',
-    position: 'top',
-  });
+      //   if (!tokenResult2.success) {
+      //     setLoading(false);
+      //     Toast.show({
+      //       type: 'error',
+      //       text1: 'Google Signup Failed',
+      //       text2: tokenResult2.error || 'Could not sign up with Google',
+      //       position: 'top',
+      //     });
+      //     return;
+      //   }
+
+      //   tokenResult = tokenResult2; // use signup result
+      // } 
+      if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+  setLoading(false); // Stop loader before showing alert
+
+  Alert.alert(
+    'Account Not Found',
+    'No account was found with your Google account. Would you like to Google sign up instead?',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Google Sign Up',
+        onPress: async () => {
+          try {
+            setLoading(true); // Show loader again on signup
+            const tokenResult2 = await Services.googleSignup(accessToken);
+            console.log("googleSignup result", tokenResult2);
+
+            if (!tokenResult2.success) {
+              setLoading(false);
+              Toast.show({
+                type: 'error',
+                text1: 'Google Signup Failed',
+                text2: tokenResult2.error || 'Could not sign up with Google',
+                position: 'top',
+              });
+              return;
+            }
+
+            // Success: Save user data and navigate
+            const user = tokenResult2?.data?.user;
+
+            await AsyncStorage.setItem('first_Name', user?.first_name || '');
+            await AsyncStorage.setItem('last_Name', user?.last_name || '');
+            await AsyncStorage.setItem('email', user?.email || '');
+            await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+            await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
+            await AsyncStorage.setItem('hasLoggedIn', 'true');
+
+            Toast.show({
+              type: 'success',
+              text1: 'Signup successful!',
+              position: 'top',
+            });
+
+            setTimeout(() => {
+              setLoading(false);
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'Dashboard' }],
+                })
+              );
+            }, 1000);
+          } catch (signupErr: any) {
+            setLoading(false);
+            Toast.show({
+              type: 'error',
+              text1: 'Signup Error',
+              text2: signupErr.message || 'Something went wrong during signup',
+              position: 'top',
+            });
+          }
+        }
+      }
+    ],
+    { cancelable: false }
+  );
+
   return;
 }
 
+      else if (!tokenResult.success) {
+        // Other login failure (not "Account not found")
+        setLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Google Login Failed',
+          text2: tokenResult.error || 'Could not authenticate with Google',
+          position: 'top',
+        });
+        return;
+      }
 
-
+      // Save user data and navigate to Dashboard
       const user = tokenResult?.data?.user;
 
       await AsyncStorage.setItem('first_Name', user?.first_name || '');
@@ -228,7 +489,55 @@ if (!tokenResult.success) {
     </View>
 
   );
+   const handleSendResetCode = async () => {
+    setLoading(true)
+    const res = await Services.forgetPassword({ email: otpEmail });
+    
+    if (res.success) {
+      setResetStep(2);
+    setLoading(false)
 
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to send code',
+        text2:res.error.email
+      });
+    }
+  };
+
+const handleResetPassword = async () => {
+  const formData = new FormData();
+  formData.append('code', otpCode); // or token, as per your API
+  formData.append('password', newPassword);
+
+  try {
+    setLoading(true)
+
+    const res = await Services.forgetPasswordReset(formData); // API call with FormData
+    setLoading(false)
+
+    if (res.success) {
+      setPasswordModalVisible(false);
+      setResetStep(1);
+      Toast.show({
+        type: 'success',
+        text1: 'Password updated',
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: res.data.code || 'Failed to reset password',
+      });
+    }
+  } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1: 'An unexpected error occurred',
+    });
+    console.log('Reset error:', error);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -283,7 +592,7 @@ if (!tokenResult.success) {
 
 
 
-          <TouchableOpacity>
+          <TouchableOpacity  onPress={() => setPasswordModalVisible(true)}>
             <Text style={styles.forgotPassword}>Forgot password</Text>
           </TouchableOpacity>
 
@@ -327,6 +636,104 @@ if (!tokenResult.success) {
             )}
           </TouchableOpacity>
         </View>
+
+{/* <Modal visible={passwordModalVisible} animationType="slide" transparent>
+  <View style={{ flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.90)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
+
+
+          {resetStep === 1 ? (
+            <>
+              <TextInput
+                placeholder="Enter your email"
+                value={otpEmail}
+                onChangeText={setOtpEmail}
+                style={styles.input1}
+              />
+              <TouchableOpacity style={styles.button2} onPress={handleSendResetCode}>
+                <Text style={styles.buttonText}>Send OTP</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TextInput
+                placeholder="Enter OTP"
+                value={otpCode}
+                onChangeText={setOtpCode}
+                style={styles.input1}
+              />
+              <TextInput
+                placeholder="New Password"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                style={styles.input1}
+              />
+              <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
+                <Text style={styles.buttonText}>Reset Password</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              setPasswordModalVisible(false);
+              setResetStep(1);
+            }}
+            style={styles.buttonlink}
+          >
+            <Text style={styles.link2}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal> */}
+
+<Modal visible={passwordModalVisible} animationType="slide" transparent={true}>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      {resetStep === 1 ? (
+        <>
+          <TextInput
+            placeholder="Enter your email"
+            value={otpEmail}
+            onChangeText={setOtpEmail}
+            style={styles.input1}
+          />
+          <TouchableOpacity style={styles.button2} onPress={handleSendResetCode}>
+            <Text style={styles.buttonText}>Send OTP</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <TextInput
+            placeholder="Enter OTP"
+            value={otpCode}
+            onChangeText={setOtpCode}
+            style={styles.input1}
+          />
+          <TextInput
+            placeholder="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+            style={styles.input1}
+          />
+          <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
+            <Text style={styles.buttonText}>Reset Password</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      <TouchableOpacity
+        onPress={() => {
+          setPasswordModalVisible(false);
+          setResetStep(1);
+        }}
+        style={styles.buttonlink}
+      >
+        <Text style={styles.link2}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+
 
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -492,6 +899,51 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000078',
   },
+modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.4)', // optional dim background
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+modalContent: {
+  width: '90%',
+  backgroundColor: '#fff', // solid white box
+  borderRadius: 12,
+  padding: 20,
+  alignItems: 'center',
+},
+
+  input1:{
+ borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 8, width: '94%', marginVertical: 8,
+  },
+  resetbutton:{
+     backgroundColor: '#000078', 
+    padding: 10, 
+    borderRadius: 8, 
+      paddingHorizontal:'29%', 
+    marginTop: 10, 
+    alignItems: 'center' 
+},
+  button2: { 
+    backgroundColor: '#000078', 
+    padding: 10, 
+    borderRadius: 8, 
+      paddingHorizontal:'35%', 
+    marginTop: 10, 
+    alignItems: 'center' 
+  },
+    buttonlink: { 
+    backgroundColor: '#000078', 
+    padding: 10,
+    paddingHorizontal:'40%', 
+    borderRadius: 8, 
+    marginTop: 10, 
+    alignItems: 'center' 
+  },
+  link2: { color: '#fff', fontWeight: 'bold' },
+
 });
 
 export default LoginScreen;

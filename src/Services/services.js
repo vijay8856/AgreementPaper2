@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '../api/ApiManager/axiosInstance';
 import { API_ENDPOINTS } from '../api/ApiManager/endpoint';
-import { AUTH_HEADERS, AUTH_MULTYPART_HEADERS, HEADERS } from '../Axios/axiosData';
+import { AUTH_HEADERS, AUTH_MULTYPART_HEADERS, HEADERS, MULTYPART_HEADERS } from '../Axios/axiosData';
 import { authorize } from 'react-native-app-auth';
 
 const Services = {
@@ -117,6 +117,8 @@ const Services = {
 
 
 googleSignup: async (access_token) => {
+  console.log("........access_token",access_token);
+  
   try {
     const response = await axiosInstance.post(
       API_ENDPOINTS.SENDACCESSTOKEN, 
@@ -136,10 +138,13 @@ console.log("googleSignup response",response);
       status: response.status,
     };
   } catch (error) {
+      console.log(",,,,,,,error",error);
+
     return {
       success: false,
       error: error?.response?.data?.non_field_errors?.[0] || 'Google signup/login failed',
       status: error?.response?.status || 500,
+      
     };
   }
 },
@@ -508,7 +513,193 @@ console.log("response12",response);
   },
 
 
+  getUserProfileDetails: async data => {
+    try {
+      const headers = await AUTH_HEADERS();
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.USERPROFILE,
+        headers,
+      );
+      console.log("List",response);
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+
+      
+    } catch (error) {
+
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch Countries List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
 
 
+    updateUserProfileDetails: async (payload) => {
+    try {
+      const headers = await AUTH_MULTYPART_HEADERS();
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.UPDATEUSERPROFILE,
+        payload,
+           headers,
+      );
+      console.log('updateUserProfileDetails', response);
+      if (response.status === 200) {
+        // await AsyncStorage.setItem("first_Name", response.data.payload.first_name || "");
+        // await AsyncStorage.setItem("last_Name", response.data.payload.last_name || "");
+        // await AsyncStorage.setItem("email", response.data.payload.email || "");
+        // await AsyncStorage.setItem("Token", response.data.key || "");
+
+      }
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to send connection',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+  forgetPassword: async (payload) => {
+    try {
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.FORGETEPASSWORD,
+        payload,
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      console.log('verifyCode response', response);
+      if (response.status === 200) {
+        // await AsyncStorage.setItem("first_Name", response.data.payload.first_name || "");
+        // await AsyncStorage.setItem("last_Name", response.data.payload.last_name || "");
+        // await AsyncStorage.setItem("email", response.data.payload.email || "");
+        // await AsyncStorage.setItem("Token", response.data.key || "");
+
+      }
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to send connection',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+   forgetPasswordReset: async (payload) => {
+    
+    try {
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.FORGETPASSWORDRESET,
+        payload,
+        {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }
+      );
+      console.log('verifyCode response', response);
+      if (response.status === 200) {
+        // await AsyncStorage.setItem("first_Name", response.data.payload.first_name || "");
+        // await AsyncStorage.setItem("last_Name", response.data.payload.last_name || "");
+        // await AsyncStorage.setItem("email", response.data.payload.email || "");
+        // await AsyncStorage.setItem("Token", response.data.key || "");
+
+      }
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to send connection',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+inviteUsers: async (payload) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    const response = await axiosInstance.post(API_ENDPOINTS.INVITEUSER, payload, headers);
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || 'Failed to send connection',
+      status: error.response?.status || 500,
+    };
+  }
+},
+  getLanguagesList: async data => {
+    try {
+      const headers = await AUTH_HEADERS();
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.GETLANGUAGES,
+        headers,
+      );
+      // console.log('getLanguagesList response', response);
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch Countries List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
 };
 export default Services;

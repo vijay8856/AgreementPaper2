@@ -7,6 +7,10 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+    KeyboardAvoidingView,
+     Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import Services from '../Services/services';
 
@@ -22,6 +26,9 @@ const SignUpScreen: React.FC = () => {
   const [password1, setPassword1] = useState('');
   const [password2, setpassword2] = useState('');
   const [error, setError] = useState('');
+  const [showPassword1, setShowPassword1] = useState(false);
+const [showPassword2, setShowPassword2] = useState(false);
+
 
 const handleSignUp = async () => {
   if (password1 !== password2) {
@@ -53,81 +60,198 @@ const handleSignUp = async () => {
   }
 };
 
-  return (
-    
-    <ScrollView contentContainerStyle={styles.container}>
-  <View style={styles.SignupIconContainer}>
-  <Image
-    source={require('../assets/images/IndividualSignup.png')}
-    style={styles.SignupIcon}
-  />
-</View>
+//   return (
+//     <KeyboardAvoidingView
+//   style={{ flex: 1 }}
+//   behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+//   keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+// >
+//   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+//           <View style={{ flex: 1 }}>
+//     <ScrollView
+//       contentContainerStyle={styles.container}
+//       keyboardShouldPersistTaps="handled"
+//       showsVerticalScrollIndicator={false}
+//     >
+//   <View style={styles.SignupIconContainer}>
+//   <Image
+//     source={require('../assets/images/IndividualSignup.png')}
+//     style={styles.SignupIcon}
+//   />
+// </View>
       
-      <Text style={styles.header}>Register As Individual Buyer</Text>
+//       <Text style={styles.header}>Register As Individual Buyer</Text>
 
-      <View style={styles.row}>
-        <TextInput
-          style={[styles.input1, { marginRight: 20 }]}
-          placeholder="Enter first name *"
-          value={firstName}
-          onChangeText={setFirstName}
-        />
-        <TextInput
-          style={styles.input1}
-          placeholder="Enter last name *"
-          value={lastName}
-          onChangeText={setLastName}
-        />
-      </View>
+//       <View style={styles.row}>
+//         <TextInput
+//           style={[styles.input1, { marginRight: 20 }]}
+//           placeholder="Enter first name *"
+//           value={firstName}
+//           onChangeText={setFirstName}
+//         />
+//         <TextInput
+//           style={styles.input1}
+//           placeholder="Enter last name *"
+//           value={lastName}
+//           onChangeText={setLastName}
+//         />
+//       </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter email address *"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+//       <TextInput
+//         style={styles.input}
+//         placeholder="Enter email address *"
+//         value={email}
+//         onChangeText={setEmail}
+//         keyboardType="email-address"
+//       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter password *"
-        value={password1}
-        onChangeText={setPassword1}
-        secureTextEntry
-      />
+//       <View style={styles.passwordContainer}>
+//   <TextInput
+//     style={styles.passwordInput}
+//     placeholder="Enter password *"
+//     value={password1}
+//     onChangeText={setPassword1}
+//     secureTextEntry={!showPassword1}
+//   />
+//   <TouchableOpacity onPress={() => setShowPassword1(!showPassword1)}>
+//     <Text style={styles.toggleText}>{showPassword1 ? 'Hide' : 'Show'}</Text>
+//   </TouchableOpacity>
+// </View>
 
-      <TextInput
-        style={[styles.input, error ? styles.errorInput : null]}
-        placeholder="Enter confirm password *"
-        value={password2}
-        onChangeText={setpassword2}
-        secureTextEntry
-      />
+// <View style={styles.passwordContainer}>
+//   <TextInput
+//     style={[styles.passwordInput, error ? styles.errorInput : null]}
+//     placeholder="Enter confirm password *"
+//     value={password2}
+//     onChangeText={setpassword2}
+//     secureTextEntry={!showPassword2}
+//   />
+//   <TouchableOpacity onPress={() => setShowPassword2(!showPassword2)}>
+//     <Text style={styles.toggleText}>{showPassword2 ? 'Hide' : 'Show'}</Text>
+//   </TouchableOpacity>
+// </View>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+//       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Register As Individual Buyer</Text>
-      </TouchableOpacity>
+//       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+//         <Text style={styles.buttonText}>Register As Individual Buyer</Text>
+//       </TouchableOpacity>
 
-      <View style={styles.loginBox}>
-        <Text style={styles.signup}>Already have an account? </Text>
-        <TouchableOpacity>
-          <Text style={styles.link}>Log In</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
+//       <View style={styles.loginBox}>
+//         <Text style={styles.signup}>Already have an account? </Text>
+//       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+//       <Text style={styles.link}>Log In</Text>
+//     </TouchableOpacity>
+//       </View>
+//     </ScrollView>
+//     </View>
+//       </TouchableWithoutFeedback>
+// </KeyboardAvoidingView>
+//   );
+
+
+return (
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+  >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          <View style={styles.SignupIconContainer}>
+            <Image
+              source={require('../assets/images/IndividualSignup.png')}
+              style={styles.SignupIcon}
+            />
+          </View>
+
+          <Text style={styles.header}>Register As Individual Buyer</Text>
+
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input1, { marginRight: 20 }]}
+              placeholder="Enter first name *"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+            <TextInput
+              style={styles.input1}
+              placeholder="Enter last name *"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Enter email address *"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Enter password *"
+              value={password1}
+              onChangeText={setPassword1}
+              secureTextEntry={!showPassword1}
+            />
+            <TouchableOpacity onPress={() => setShowPassword1(!showPassword1)}>
+              <Text style={styles.toggleText}>{showPassword1 ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.passwordInput, error ? styles.errorInput : null]}
+              placeholder="Enter confirm password *"
+              value={password2}
+              onChangeText={setpassword2}
+              secureTextEntry={!showPassword2}
+            />
+            <TouchableOpacity onPress={() => setShowPassword2(!showPassword2)}>
+              <Text style={styles.toggleText}>{showPassword2 ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Register As Individual Buyer</Text>
+          </TouchableOpacity>
+
+          <View style={styles.loginBox}>
+            <Text style={styles.signup}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.link}>Log In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </TouchableWithoutFeedback>
+  </KeyboardAvoidingView>
+);
+
+
+
 };
 
 export default SignUpScreen;
 const styles = StyleSheet.create({
+
   container: {
-    flexGrow: 1, 
-    padding: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-  },
+  flexGrow: 1,
+  padding: 20,
+  justifyContent: 'center',
+  backgroundColor: '#fff',
+},
+
   header: {
     fontSize: 18,
     fontWeight: '600',
@@ -149,7 +273,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   input1:{
-width:160,
+width:150,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 6,
@@ -176,6 +300,26 @@ width:160,
     marginBottom: 10,
     marginLeft: 5,
   },
+
+  passwordContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 5,
+  marginBottom: 15,
+  paddingRight: 10,
+},
+passwordInput: {
+  flex: 1,
+  height: 50,
+  paddingHorizontal: 10,
+},
+toggleText: {
+  color: '#0E3386',
+  fontWeight: '600',
+},
+
   button: {
     backgroundColor: '#000078',
     padding: 15,

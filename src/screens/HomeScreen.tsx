@@ -120,12 +120,12 @@ useEffect(() => {
       label: 'Invite Resource',
       screen: 'InviteResource',
     },
-    {
-      id: 8,
-      icon: 'pen',
-      label: 'E-Signature',
-      screen: 'ESignature',
-    },
+    // {
+    //   id: 8,
+    //   icon: 'pen',
+    //   label: 'E-Signature',
+    //   screen: 'ESignature',
+    // },
   ];
 
   return (
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   gridItem: {
-    width: (screenWidth - 48) / 4, // 16px padding * 2 + 16px spacing
+    width: (screenWidth - 48) / 3, // 16px padding * 2 + 16px spacing
     alignItems: 'center',
     marginBottom: 24,
   },

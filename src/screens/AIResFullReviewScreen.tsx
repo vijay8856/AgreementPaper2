@@ -40,6 +40,7 @@ const AIResFullReviewScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [tempSearchText, setTempSearchText] = useState('');
   const [filteredCountries, setFilteredCountries] = useState<PickerItem[]>([]);
+  
   type PickerItem = {
     label: string;
     value: string;
@@ -170,13 +171,30 @@ const AIResFullReviewScreen = () => {
 
 
   const Clauses = [
-    { value: "MISSING_CLAUSES", label: "Analyze" },
     { value: "SUMMARISE_CONTRACT", label: " Summary" },
     { value: "FRAUD_DETECTION", label: " Fraud Detection" },
+    { value: "MISSING_CLAUSES", label: "Analyze" },
+
   ];
 
 
-
+ useEffect(() => {
+    if (countries.length > 0) {
+      // Set default contract type
+      setContractType('SERVICE AGREEMENT OF THE EQUIPMENT');
+      
+      // Set default business line
+      setBusinessLine('REAL ESTATE');
+      
+      // Find and set Australia as default country
+      const australia = countries.find(
+        (c: PickerItem) => c.label === 'Australia'
+      );
+      if (australia) {
+        setCountry(australia.value);
+      }
+    }
+  }, [countries]);
 
   const openPicker = (pickerType: 'contractType' | 'businessLine' | 'country') => {
     setCurrentPicker(pickerType);

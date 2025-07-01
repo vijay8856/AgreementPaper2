@@ -13,6 +13,10 @@ INVITEUSER:'/accounts/invite-user/create/',
 SENDACCESSTOKEN:"/accounts/dj-rest-auth/google/",
 ESIGNDOCLIST:"esign/document/",
 GOOGLESIGNUP:'/auth/google/signup/',
-
+UPDATEUSERPROFILE:'accounts/user-profile/',
+USERPROFILE:'accounts/user-profile/',
+FORGETEPASSWORD:'accounts/forget-password/?resend=true',
+FORGETPASSWORDRESET:'accounts/forget-password-reset/',
+GETLANGUAGES:'accounts/languages/'
   // Add other endpoints here
 };

@@ -10,17 +10,19 @@ export type DashboardTabParamList = {
   InviteAgency: undefined;
   InviteResource: undefined;
   AIReview: undefined,
-
-
+SubscriptionPlan:undefined
+  SubscriptionHistoryScreen:undefined,
 };
 
 export type RootStackParamList = {
- Login: undefined;
+  Login: undefined;
   SignUp: undefined;
   Dashboard: undefined;
   VerifyEmail: undefined;
   AuthLoading: undefined;
   MyProfile:undefined;
+  LinkedInLoginScreen: undefined;
+    SubscriptionHistoryScreen:undefined,
 };
 export type AuthStackParamList = {
   Login: undefined;
@@ -31,3 +33,4 @@ export type AppStackParamList = {
   Dashboard: undefined;
   MyProfile: undefined;
 };
+

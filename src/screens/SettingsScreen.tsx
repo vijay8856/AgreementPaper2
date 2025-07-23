@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,9 @@ import {
   TextInput,
   Switch,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import Services from '../Services/services';
+import Toast from 'react-native-toast-message';
 
 const SettingsScreen = () => {
   const [activeTab, setActiveTab] = useState<'permission' | 'email' | 'addQuestion'>('permission');
@@ -22,13 +23,14 @@ const SettingsScreen = () => {
     sendResourceProfile: true,
     emailContent: "Enter email content here",
   });
-  
+
   const [password, setPassword] = useState({
     old: '',
     new: '',
     confirm: '',
   });
-  
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [privacySettings, setPrivacySettings] = useState({
     showContact: false,
     showEmail: true,
@@ -38,7 +40,7 @@ const SettingsScreen = () => {
     shareCV: false,
     shareRate: false,
   });
-  
+
   const [newQuestion, setNewQuestion] = useState({
     sectionName: '',
     uniqueKey: '',
@@ -46,22 +48,114 @@ const SettingsScreen = () => {
   });
 
   // Toggle privacy setting
-  const togglePrivacy = (setting: keyof typeof privacySettings) => {
-    setPrivacySettings(prev => ({
-      ...prev,
-      [setting]: !prev[setting]
-    }));
+  // const togglePrivacy = (setting: keyof typeof privacySettings) => {
+  //   setPrivacySettings(prev => ({
+  //     ...prev,
+  //     [setting]: !prev[setting]
+  //   }));
+  // };
+const togglePrivacy = (setting: keyof typeof privacySettings) => {
+  // Optimistically update UI
+  const newSettings = {
+    ...privacySettings,
+    [setting]: !privacySettings[setting]
   };
-
+  
+  setPrivacySettings(newSettings);
+  
+  // Send update to server
+  updatePrivacySettings();
+};
   // Handle email privacy settings
   const toggleEmailSetting = (setting: keyof typeof emailPrivacySettings) => {
     if (setting === 'emailContent') return;
-    
+
     setEmailPrivacySettings(prev => ({
       ...prev,
       [setting]: !prev[setting]
     }));
   };
+
+const updatePrivacySettings = async () => {
+  try {
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Map component state to API fields
+    formData.append('show_contact_number', privacySettings.showContact.toString());
+    formData.append('show_email', privacySettings.showEmail.toString());
+    formData.append('show_address', privacySettings.showAddress.toString());
+    formData.append('show_city', "true"); // Default to true if not in UI
+    formData.append('show_rate', privacySettings.shareRate.toString());
+    formData.append('show_cv', privacySettings.shareCV.toString());
+    formData.append('show_experience', privacySettings.showExperience.toString());
+    formData.append('show_linkedin_url', privacySettings.showLinkedIn.toString());
+
+    // Call the update service
+    const response = await Services.updatePrivacySettings(formData);
+    console.log("updatePrivacySettings",formData);
+    console.log("updatePrivacySettings response",response);
+    
+    if (response.success) {
+      Toast.show({
+        type: 'success',
+        text1: 'Privacy settings updated',
+        position: 'top',
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Update failed',
+        text2: response.error || 'Please try again',
+        position: 'top',
+      });
+    }
+  } catch (error) {
+    Toast.show({
+      type: 'error',
+      text1: 'Update failed',
+      text2: 'An unexpected error occurred',
+      position: 'top',
+    });
+  }
+};
+
+
+  const PrivacySettings = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    else setRefreshing(true);
+
+    const response = await Services.getPrivacySettings();
+
+    if (response.success) {
+      // Map API response fields to state properties
+      setPrivacySettings({
+        showContact: response.data.show_contact_number,
+        showEmail: response.data.show_email,
+        showAddress: response.data.show_address,
+        showExperience: response.data.show_experience,
+        showLinkedIn: response.data.show_linkedin_url,
+        shareCV: response.data.show_cv,
+        shareRate: response.data.show_rate,
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to load PrivacySettings',
+        text2: response.error?.message || 'Something went wrong',
+        position: 'top',
+      });
+    }
+
+    setLoading(false);
+    setRefreshing(false);
+  };
+  useEffect(() => {
+
+    PrivacySettings();
+  }, []);
+
+  console.log("privacySettings", privacySettings);
 
   return (
     <View style={styles.container}>
@@ -77,7 +171,7 @@ const SettingsScreen = () => {
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'permission' && styles.activeTab]}
           onPress={() => setActiveTab('permission')}
         >
@@ -85,8 +179,8 @@ const SettingsScreen = () => {
             Permission
           </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'email' && styles.activeTab]}
           onPress={() => setActiveTab('email')}
         >
@@ -94,8 +188,8 @@ const SettingsScreen = () => {
             Email Privacy
           </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'addQuestion' && styles.activeTab]}
           onPress={() => setActiveTab('addQuestion')}
         >
@@ -108,7 +202,7 @@ const SettingsScreen = () => {
       {/* Content Area */}
       <ScrollView style={styles.contentContainer}>
         {activeTab === 'permission' && (
-          <PermissionSection 
+          <PermissionSection
             isPasswordMode={isPermissionMode === 'password'}
             toggleMode={() => setIsPermissionMode(
               isPermissionMode === 'privacy' ? 'password' : 'privacy'
@@ -119,20 +213,20 @@ const SettingsScreen = () => {
             setPassword={setPassword}
           />
         )}
-        
+
         {activeTab === 'email' && (
-          <EmailPrivacySection 
+          <EmailPrivacySection
             settings={emailPrivacySettings}
             toggleSetting={toggleEmailSetting}
-            setEmailContent={(text:string) => setEmailPrivacySettings(prev => ({
+            setEmailContent={(text: string) => setEmailPrivacySettings(prev => ({
               ...prev,
               emailContent: text
             }))}
           />
         )}
-        
+
         {activeTab === 'addQuestion' && (
-          <AddQuestionSection 
+          <AddQuestionSection
             question={newQuestion}
             setQuestion={setNewQuestion}
           />
@@ -143,17 +237,17 @@ const SettingsScreen = () => {
 };
 
 // Permission Section Component
-const PermissionSection = ({ 
-  isPasswordMode, 
-  toggleMode, 
-  privacySettings, 
+const PermissionSection = ({
+  isPasswordMode,
+  toggleMode,
+  privacySettings,
   togglePrivacy,
   password,
   setPassword
-}:any) => (
+}: any) => (
   <View style={styles.sectionCard}>
     <View style={styles.modeToggleContainer}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.modeButton, !isPasswordMode && styles.activeModeButton]}
         onPress={toggleMode}
       >
@@ -161,7 +255,7 @@ const PermissionSection = ({
           Data Privacy
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.modeButton, isPasswordMode && styles.activeModeButton]}
         onPress={toggleMode}
       >
@@ -170,7 +264,7 @@ const PermissionSection = ({
         </Text>
       </TouchableOpacity>
     </View>
-    
+
     {!isPasswordMode ? (
       <>
         <Text style={styles.sectionTitle}>Permissions/Data Privacy</Text>
@@ -178,60 +272,60 @@ const PermissionSection = ({
           <Text style={styles.tableHeaderText}>Permission/Data Privacy</Text>
           <Text style={styles.tableHeaderText}>Yes/No</Text>
         </View>
-        
-        <PermissionRow 
-          label="Show my Contact number" 
-          value={privacySettings.showContact} 
-          onToggle={() => togglePrivacy('showContact')} 
+
+        <PermissionRow
+          label="Show my Contact number"
+          value={privacySettings.showContact}
+          onToggle={() => togglePrivacy('showContact')}
         />
-        <PermissionRow 
-          label="Show my Email address" 
-          value={privacySettings.showEmail} 
-          onToggle={() => togglePrivacy('showEmail')} 
+        <PermissionRow
+          label="Show my Email address"
+          value={privacySettings.showEmail}
+          onToggle={() => togglePrivacy('showEmail')}
         />
-        <PermissionRow 
-          label="Show my Address" 
-          value={privacySettings.showAddress} 
-          onToggle={() => togglePrivacy('showAddress')} 
+        <PermissionRow
+          label="Show my Address"
+          value={privacySettings.showAddress}
+          onToggle={() => togglePrivacy('showAddress')}
         />
-        <PermissionRow 
-          label="Show my Experience" 
-          value={privacySettings.showExperience} 
-          onToggle={() => togglePrivacy('showExperience')} 
+        <PermissionRow
+          label="Show my Experience"
+          value={privacySettings.showExperience}
+          onToggle={() => togglePrivacy('showExperience')}
         />
-        <PermissionRow 
-          label="Show my LinkedIn URL" 
-          value={privacySettings.showLinkedIn} 
-          onToggle={() => togglePrivacy('showLinkedIn')} 
+        <PermissionRow
+          label="Show my LinkedIn URL"
+          value={privacySettings.showLinkedIn}
+          onToggle={() => togglePrivacy('showLinkedIn')}
         />
-        <PermissionRow 
-          label="Share my CV/Resume" 
-          value={privacySettings.shareCV} 
-          onToggle={() => togglePrivacy('shareCV')} 
+        <PermissionRow
+          label="Share my CV/Resume"
+          value={privacySettings.shareCV}
+          onToggle={() => togglePrivacy('shareCV')}
         />
-        <PermissionRow 
-          label="Share my Rate" 
-          value={privacySettings.shareRate} 
-          onToggle={() => togglePrivacy('shareRate')} 
+        <PermissionRow
+          label="Share my Rate"
+          value={privacySettings.shareRate}
+          onToggle={() => togglePrivacy('shareRate')}
         />
       </>
     ) : (
       <>
         <Text style={styles.sectionTitle}>Change Password</Text>
-        <PasswordField 
-          label="Old Password *" 
-          value={password.old} 
-          onChangeText={(text:string) => setPassword((prev :any) => ({...prev, old: text}))} 
+        <PasswordField
+          label="Old Password *"
+          value={password.old}
+          onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, old: text }))}
         />
-        <PasswordField 
-          label="New Password *" 
-          value={password.new} 
-          onChangeText={(text:string) => setPassword((prev :any) => ({...prev, new: text}))} 
+        <PasswordField
+          label="New Password *"
+          value={password.new}
+          onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, new: text }))}
         />
-        <PasswordField 
-          label="Confirm New Password *" 
-          value={password.confirm} 
-          onChangeText={(text:string) => setPassword((prev :any) => ({...prev, confirm: text}))} 
+        <PasswordField
+          label="Confirm New Password *"
+          value={password.confirm}
+          onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, confirm: text }))}
         />
       </>
     )}
@@ -239,35 +333,35 @@ const PermissionSection = ({
 );
 
 // Email Privacy Section Component
-const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }:any) => (
+const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }: any) => (
   <View style={styles.sectionCard}>
     <Text style={styles.sectionTitle}>Email Privacy Settings</Text>
-    
-    <EmailSettingRow 
-      label="Send Organisation MBA details email" 
-      value={settings.sendMBA} 
-      onToggle={() => toggleSetting('sendMBA')} 
+
+    <EmailSettingRow
+      label="Send Organisation MBA details email"
+      value={settings.sendMBA}
+      onToggle={() => toggleSetting('sendMBA')}
     />
-    <EmailSettingRow 
-      label="Send Organisation 80W details email" 
-      value={settings.send80W} 
-      onToggle={() => toggleSetting('send80W')} 
+    <EmailSettingRow
+      label="Send Organisation 80W details email"
+      value={settings.send80W}
+      onToggle={() => toggleSetting('send80W')}
     />
-    
-    <EmailSettingRow 
-      label="Send Invoice details email" 
-      value={settings.sendInvoice} 
-      onToggle={() => toggleSetting('sendInvoice')} 
+
+    <EmailSettingRow
+      label="Send Invoice details email"
+      value={settings.sendInvoice}
+      onToggle={() => toggleSetting('sendInvoice')}
     />
-    <EmailSettingRow 
-      label="Send Agency Profile details email" 
-      value={settings.sendAgencyProfile} 
-      onToggle={() => toggleSetting('sendAgencyProfile')} 
+    <EmailSettingRow
+      label="Send Agency Profile details email"
+      value={settings.sendAgencyProfile}
+      onToggle={() => toggleSetting('sendAgencyProfile')}
     />
-    <EmailSettingRow 
-      label="Send Resource Profile details email" 
-      value={settings.sendResourceProfile} 
-      onToggle={() => toggleSetting('sendResourceProfile')} 
+    <EmailSettingRow
+      label="Send Resource Profile details email"
+      value={settings.sendResourceProfile}
+      onToggle={() => toggleSetting('sendResourceProfile')}
     />
     <Text style={styles.emailContentLabel}>Email Content</Text>
     <TextInput
@@ -282,60 +376,60 @@ const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }:any) =
 );
 
 // Add Question Section Component
-const AddQuestionSection = ({ question, setQuestion }:any) => (
+const AddQuestionSection = ({ question, setQuestion }: any) => (
   <View style={styles.sectionCard}>
     <Text style={styles.sectionTitle}>Add New Question</Text>
-    
+
     <QuestionCategory title="Legal & Compliance">
       <BulletPoint text="Governing Law – Which jurisdictions laws will apply?" />
       <BulletPoint text="Regulatory Requirements – Any industry-specific regulations that must be addressed?" />
       <BulletPoint text="Dispute Resolution – Should disputes be settled through arbitration, mediation, or courts?" />
     </QuestionCategory>
-    
+
     <QuestionCategory title="Parties involved">
       <BulletPoint text="Party Type – Is the recipient an individual, small business, or enterprise?" />
       <BulletPoint text="Contract Duration – Is it a fixed-term, auto-renewal, or indefinite contract?" />
       <BulletPoint text="Termination Conditions – Under what conditions can either party terminate the contract?" />
     </QuestionCategory>
-    
+
     <QuestionCategory title="Financial Terms">
       <BulletPoint text="Payment Terms – What are the payment milestones, methods, and currency?" />
       <BulletPoint text="Tax Implications – Who is responsible for local/international taxes?" />
       <BulletPoint text="Penalties & Late Fees – Are there any penalties for late payments or non-compliance?" />
     </QuestionCategory>
-    
+
     <QuestionCategory title="Scope & Obligations">
       <BulletPoint text="Scope of Work/Services – What specific deliverables or services are covered?" />
       <BulletPoint text="Confidentiality Requirements – Should an NDA or confidentiality clause be included?" />
       <BulletPoint text="Intellectual Property (IP) Ownership – Who owns the IP of work produced?" />
       <BulletPoint text="Liability & Indemnity – Who is responsible for damages, breaches, or legal disputes?" />
     </QuestionCategory>
-    
+
     <QuestionCategory title="Execution & Signatures">
       <BulletPoint text="Signatory Authority – Who has the legal authority to sign on behalf of each party?" />
       <BulletPoint text="Signature Structure – Will it be signed digitally (HINA Index IT Act) or physically?" />
     </QuestionCategory>
-    
+
     <View style={styles.formGroup}>
       <Text style={styles.inputLabel}>Enter Section Name</Text>
       <TextInput
         style={styles.input}
         value={question.sectionName}
-        onChangeText={(text) => setQuestion((prev :any) => ({...prev, sectionName: text}))}
+        onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, sectionName: text }))}
         placeholder="Section name"
       />
     </View>
-    
+
     <View style={styles.formGroup}>
       <Text style={styles.inputLabel}>Enter Unique Key</Text>
       <TextInput
         style={styles.input}
         value={question.uniqueKey}
-        onChangeText={(text) => setQuestion((prev :any) => ({...prev, uniqueKey: text}))}
+        onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, uniqueKey: text }))}
         placeholder="Unique key identifier"
       />
     </View>
-    
+
     <View style={styles.formGroup}>
       <Text style={styles.inputLabel}>Enter Question</Text>
       <TextInput
@@ -343,11 +437,11 @@ const AddQuestionSection = ({ question, setQuestion }:any) => (
         multiline
         numberOfLines={3}
         value={question.question}
-        onChangeText={(text) => setQuestion((prev :any) => ({...prev, question: text}))}
+        onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, question: text }))}
         placeholder="Enter your question here"
       />
     </View>
-    
+
     <TouchableOpacity style={styles.addButton}>
       <Text style={styles.addButtonText}>Add More Question</Text>
     </TouchableOpacity>
@@ -355,7 +449,7 @@ const AddQuestionSection = ({ question, setQuestion }:any) => (
 );
 
 // Reusable Components
-const PermissionRow = ({ label, value, onToggle }:any) => (
+const PermissionRow = ({ label, value, onToggle }: any) => (
   <View style={styles.permissionRow}>
     <Text style={styles.permissionLabel}>{label}</Text>
     <View style={styles.toggleContainer}>
@@ -370,7 +464,7 @@ const PermissionRow = ({ label, value, onToggle }:any) => (
   </View>
 );
 
-const EmailSettingRow = ({ label, value, onToggle }:any) => (
+const EmailSettingRow = ({ label, value, onToggle }: any) => (
   <View style={styles.emailSettingRow}>
     <Text style={styles.emailSettingLabel}>{label}</Text>
     <Switch
@@ -382,7 +476,7 @@ const EmailSettingRow = ({ label, value, onToggle }:any) => (
   </View>
 );
 
-const PasswordField = ({ label, value, onChangeText }:any) => (
+const PasswordField = ({ label, value, onChangeText }: any) => (
   <View style={styles.formGroup}>
     <Text style={styles.inputLabel}>{label}</Text>
     <TextInput
@@ -395,7 +489,7 @@ const PasswordField = ({ label, value, onChangeText }:any) => (
   </View>
 );
 
-const QuestionCategory = ({ title, children }:any) => (
+const QuestionCategory = ({ title, children }: any) => (
   <View style={styles.questionCategory}>
     <Text style={styles.categoryTitle}>{title}</Text>
     <View style={styles.divider} />
@@ -405,7 +499,7 @@ const QuestionCategory = ({ title, children }:any) => (
   </View>
 );
 
-const BulletPoint = ({ text }:any) => (
+const BulletPoint = ({ text }: any) => (
   <View style={styles.bulletPoint}>
     <Text style={styles.bullet}>•</Text>
     <Text style={styles.bulletText}>{text}</Text>

@@ -17,7 +17,7 @@ import {
   Modal,
 
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import Services from '../Services/services';
@@ -26,7 +26,7 @@ import { ActivityIndicator } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Checkbox from '../components/CommanCheckbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GOOGLE_WEB_CLIENT_ID } from '@env';
+// import { GOOGLE_WEB_CLIENT_ID } from '@env';
 
 import { CommonActions } from '@react-navigation/native';
 
@@ -38,7 +38,8 @@ const { width } = Dimensions.get('window');
 
 
 const LoginScreen: React.FC = () => {
-  const navigation = useNavigation<LoginScreenNavigationProp>();
+const navigation = useNavigation<LoginScreenNavigationProp>();
+
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,174 +63,7 @@ useEffect(() => {
 
     navigation.navigate('SignUp');
   };
-// useEffect(() => {
-//   Alert.alert(
-//     'Account Not Found',
-//     'No account was found with your Google account. Would you like to Google sign up instead?',
-//     [
-//       {
-//         text: 'Cancel',
-//         style: 'cancel',
-//         onPress: () => console.log('Cancel Pressed'),
-//       },
-//       {
-//         text: 'Google Sign Up',
-//         onPress: () => console.log('Google Signup Pressed'),
-//       },
-//     ],
-//     { cancelable: false }
-//   );
-// }, []);
 
-
-
-// const handleLogin = async (loginType: 'google' | 'email') => {
-//   try {
-//     setLoading(true);
-
-//     // -------- Google Login flow ----------
-//     if (loginType === 'google') {
-//       await GoogleSignin.hasPlayServices();
-//       await GoogleSignin.signOut();
-//       const userInfo = await GoogleSignin.signIn();
-//       const tokens = await GoogleSignin.getTokens();
-
-//       const accessToken = tokens?.accessToken;
-//       const idToken = tokens?.idToken;
-// console.log("accessToken",accessToken);
-// console.log("tokens",tokens);
-
-// console.log("userInfo",userInfo);
-
-//       if (!accessToken) {
-//         await GoogleSignin.signOut();
-//         setLoading(false);
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Google Login Failed',
-//           text2: 'No access token received. Please try again.',
-//           position: 'top',
-//         });
-//         return;
-//       }
-
-//       // Send access token to backend for login
-//       let tokenResult = await Services.sendAccessToken(accessToken);
-// console.log("tokenResult tokenResult",tokenResult);
-
-//  let tokenResult2 = await Services.googleSignup(accessToken);
-// console.log("tokenResult tokenResult",tokenResult);
-
-
-
-// if (!tokenResult.success) {
-//   setLoading(false);
-//   Toast.show({
-//     type: 'error',
-//     text1: 'Google Auth Failed',
-//     text2: tokenResult.error || 'Could not authenticate with Google',
-//     position: 'top',
-//   });
-//   return;
-// }
-
-
-
-//       const user = tokenResult?.data?.user;
-
-//       await AsyncStorage.setItem('first_Name', user?.first_name || '');
-//       await AsyncStorage.setItem('last_Name', user?.last_name || '');
-//       await AsyncStorage.setItem('email', user?.email || '');
-//       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-//       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
-//       await AsyncStorage.setItem('hasLoggedIn', 'true');
-
-//       Toast.show({
-//         type: 'success',
-//         text1: 'Login successful!',
-//         position: 'top',
-//       });
-
-//       setTimeout(() => {
-//         setLoading(false);
-//         navigation.dispatch(
-//           CommonActions.reset({
-//             index: 0,
-//             routes: [{ name: 'Dashboard' }],
-//           })
-//         );
-//       }, 1000);
-//     }
-
-//     // -------- Email Login flow ----------
-//     else if (loginType === 'email') {
-//       if (!email || !password) {
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Missing Input',
-//           text2: 'Please enter both email and password.',
-//         });
-//         setLoading(false);
-//         return;
-//       }
-
-//       if (!agreeTerms) {
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Terms Not Accepted',
-//           text2: 'You must agree to the terms and conditions.',
-//         });
-//         setLoading(false);
-//         return;
-//       }
-
-//       const result = await Services.login(email, password);
-
-//       if (result.status === 200) {
-//         Toast.show({
-//           type: 'success',
-//           text1: 'Login successful!',
-//           position: 'top',
-//         });
-
-//         await AsyncStorage.setItem('Token', result.data?.key || '');
-//         await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
-//         await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
-//         await AsyncStorage.setItem('email', result.data?.data?.email || '');
-//         await AsyncStorage.setItem('hasLoggedIn', 'true');
-
-//         setTimeout(() => {
-//           setLoading(false);
-//           navigation.navigate('Dashboard');
-//         }, 1000);
-//       } else {
-//         setLoading(false);
-//         Toast.show({
-//           type: 'error',
-//           text1: 'Login Failed',
-//           text2: result.error?.message || 'Invalid credentials',
-//           position: 'top',
-//         });
-//       }
-//     }
-//   } catch (err: any) {
-//     setLoading(false);
-//     const errorMessage = err?.message || 'Something went wrong during login';
-//     const errorCode = err?.code || 'No code';
-//     const fullError = JSON.stringify(err, null, 2);
-
-//     Toast.show({
-//       type: 'error',
-//       text1: 'Error',
-//       text2: `${errorCode}: ${errorMessage}`,
-//     });
-
-//     console.log('🛑 Google login failed:');
-//     console.log('➡️ Code:', errorCode);
-//     console.log('➡️ Message:', errorMessage);
-//     console.log('➡️ Full Error:', fullError);
-//   }
-// };
 const handleLogin = async (loginType: 'google' | 'email') => {
   try {
     setLoading(true);
@@ -240,6 +74,7 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       await GoogleSignin.signOut(); // optional, but ensures fresh login
       const userInfo = await GoogleSignin.signIn();
       const tokens = await GoogleSignin.getTokens();
+console.log("userinfouser",userInfo);
 
       const accessToken = tokens?.accessToken;
       const idToken = tokens?.idToken;
@@ -264,24 +99,6 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       let tokenResult = await Services.sendAccessToken(accessToken);
       console.log("sendAccessToken result", tokenResult);
 
-      // If login failed due to account not found, try signup
-      // if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
-      //   let tokenResult2 = await Services.googleSignup(accessToken);
-      //   console.log("googleSignup result", tokenResult2);
-
-      //   if (!tokenResult2.success) {
-      //     setLoading(false);
-      //     Toast.show({
-      //       type: 'error',
-      //       text1: 'Google Signup Failed',
-      //       text2: tokenResult2.error || 'Could not sign up with Google',
-      //       position: 'top',
-      //     });
-      //     return;
-      //   }
-
-      //   tokenResult = tokenResult2; // use signup result
-      // } 
       if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
   setLoading(false); // Stop loader before showing alert
 
@@ -465,6 +282,12 @@ const handleLogin = async (loginType: 'google' | 'email') => {
 };
 
 
+const handleLinkedinLogin = () => {
+  navigation.navigate('LinkedInLoginScreen');
+};
+
+
+
   const renderSocialButtons = () => (
     <View style={styles.socialContainer}>
       <TouchableOpacity
@@ -479,7 +302,9 @@ const handleLogin = async (loginType: 'google' | 'email') => {
         <Text style={styles.socialText}>Login Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.socialButton}>
+      <TouchableOpacity style={styles.socialButton}
+      onPress={handleLinkedinLogin}
+      >
         <Image
           source={require('../assets/images/linkedin.png')}
           style={styles.socialIcon}

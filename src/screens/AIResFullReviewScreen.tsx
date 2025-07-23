@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -33,20 +33,22 @@ const AIResFullReviewScreen = () => {
   const [currentPicker, setCurrentPicker] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [countries, setCountries] = useState([]);
+  const [countries, setCountries] = useState<PickerItem[]>([]);
+
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [loadingButton, setLoadingButton] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [searchText, setSearchText] = useState('');
   const [tempSearchText, setTempSearchText] = useState('');
   const [filteredCountries, setFilteredCountries] = useState<PickerItem[]>([]);
-  
+
   type PickerItem = {
     label: string;
     value: string;
   };
 
   const contractTypes = [
+    { label: " SECTION-32", value: "SECTION-32" },
     { label: "NON-DISCLOSURE AGREEMENTS", value: "NON-DISCLOSURE AGREEMENTS" },
     { label: "CONFIDENTIALITY AGREEMENT", value: "CONFIDENTIALITY AGREEMENT" },
     { label: "CONSULTING AGREEMENT", value: "CONSULTING AGREEMENT" },
@@ -170,22 +172,37 @@ const AIResFullReviewScreen = () => {
   ];
 
 
-  const Clauses = [
-    { value: "SUMMARISE_CONTRACT", label: " Summary" },
-    { value: "FRAUD_DETECTION", label: " Fraud Detection" },
-    { value: "MISSING_CLAUSES", label: "Analyze" },
+  // const Clauses = [
+  //   { value: "SUMMARISE_CONTRACT", label: " Summary" },
+  //   { value: "FRAUD_DETECTION", label: " Fraud Detection" },
+  //   { value: "MISSING_CLAUSES", label: "Analyze" },
+  //   { value: "SECTION_32_REVIEW", label: "Analyze" },
 
-  ];
+  // ];
 
+  const Clauses = useMemo(() => {
+    const baseClauses = [
+      { value: "SUMMARISE_CONTRACT", label: " Summary" },
+      { value: "FRAUD_DETECTION", label: " Fraud Detection" },
+    ];
 
- useEffect(() => {
+    // Add conditional Analyze button based on contract type
+    if (contractType === 'SECTION-32') {
+      return [...baseClauses, { value: "SECTION_32_REVIEW", label: "Analyze" }];
+    } else {
+      return [...baseClauses, { value: "MISSING_CLAUSES", label: "Analyze" }];
+    }
+  }, [contractType]);
+  // SECTION_32_REVIEW
+
+  useEffect(() => {
     if (countries.length > 0) {
       // Set default contract type
-      setContractType('SERVICE AGREEMENT OF THE EQUIPMENT');
-      
+      setContractType('SECTION-32');
+
       // Set default business line
       setBusinessLine('REAL ESTATE');
-      
+
       // Find and set Australia as default country
       const australia = countries.find(
         (c: PickerItem) => c.label === 'Australia'
@@ -243,7 +260,7 @@ const AIResFullReviewScreen = () => {
   };
   const closePicker = () => {
     setPickerVisible(false);
-    setTempSearchText(''); 
+    setTempSearchText('');
   };
   const handleSelect = (value: string) => {
     switch (currentPicker) {
@@ -251,8 +268,37 @@ const AIResFullReviewScreen = () => {
       case 'businessLine': setBusinessLine(value); break;
       case 'country': setCountry(value); break;
     }
-    closePicker(); 
+    closePicker();
   };
+
+
+
+
+  // Risk Level
+  const getRiskLevel = (score: number) => {
+    if (score <= 2) return 'LOW';
+    if (score === 3) return 'MEDIUM';
+    if (score === 4) return 'HIGH';
+    return 'HIGH';
+  };
+  const getRiskColor = (level: string) => {
+    switch (level) {
+      case 'LOW': return '#4CAF50'; // Green
+      case 'MEDIUM': return '#FFC107'; // Yellow
+      case 'HIGH': return '#F44336'; // Orange
+      // case 'RISK': return '#F44336'; // Red
+      default: return '#9E9E9E'; // Grey
+    }
+  };
+
+  const extractRiskScore = (result: string) => {
+    const match = result.match(/Risk Score: (\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+
+// End Risk Level
+
 
 
   const fetchCountries = async (isRefresh = false) => {
@@ -281,9 +327,11 @@ const AIResFullReviewScreen = () => {
   };
   useEffect(() => {
     fetchCountries();
+  
   }, []);
   const onRefresh = useCallback(() => {
     fetchCountries(true);
+
   }, []);
 
   if (loading) {
@@ -317,10 +365,11 @@ const AIResFullReviewScreen = () => {
         name: selectedFile.name,
         type: selectedFile.type || 'application/pdf',
       });
+      console.log("formData", formData);
 
       const response = await Services.analysisContractByAi(formData);
-      console.log("response23",response);
-      
+      console.log("response23", response);
+
       if (response.success) {
         setAnalysisResult(response.data);
         Toast.show({
@@ -427,8 +476,51 @@ const AIResFullReviewScreen = () => {
 
           {analysisResult && (
             <View style={styles.card}>
+
+
+ 
+
+
               <Text style={styles.sectionTitle}>Analysis Result:</Text>
               <FormattedTextComp text={analysisResult} />
+
+
+
+
+               <View style={styles.riskContainer}>
+            {['LOW', 'MEDIUM', 'HIGH', ].map((level) => {
+              const riskScore = extractRiskScore(analysisResult);
+              const currentLevel = getRiskLevel(riskScore);
+              const isActive = level === currentLevel;
+              
+              return (
+                <View key={level} style={styles.riskLevelWrapper}>
+                  <View 
+                    style={[
+                      styles.riskLevel,
+                      { 
+                        backgroundColor: isActive 
+                          ? getRiskColor(level) 
+                          : '#E0E0E0' 
+                      }
+                    ]}
+                  >
+                    <Text 
+                      style={[
+                        styles.riskLevelText,
+                        { color: isActive ? 'white' : '#9E9E9E' }
+                      ]}
+                    >
+                      {level}
+                    </Text>
+                  </View>
+                  {/* {level !== 'RISK' && (
+                    <View style={styles.riskConnector} />
+                  )} */}
+                </View>
+              );
+            })}
+          </View>
             </View>
           )}
 
@@ -456,12 +548,12 @@ const AIResFullReviewScreen = () => {
         ))}
       </View>
 
-    
+
       <Modal
         visible={isPickerVisible}
         transparent={true}
         animationType="slide"
-        onRequestClose={closePicker} 
+        onRequestClose={closePicker}
       >
         <View style={styles.pickerModal}>
           <View style={styles.pickerContainer}>
@@ -814,6 +906,35 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#F0F4FF',
     borderRadius: 8,
+  },
+   riskContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 15,
+  },
+  riskLevelWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  riskLevel: {
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  riskLevelText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  riskConnector: {
+    flex: 1,
+    height: 2,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 2,
   },
 
 });

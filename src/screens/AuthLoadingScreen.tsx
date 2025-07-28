@@ -16,7 +16,7 @@ const AuthLoadingScreen = () => {
     const checkToken = async () => {
       const token = await AsyncStorage.getItem('Token');
       const idToken = await AsyncStorage.getItem('idToken');
-      const hasLoggedIn = await AsyncStorage.getItem('hasLoggedIn'); // <-- new
+      const hasLoggedIn = await AsyncStorage.getItem('hasLoggedIn'); 
 
       if (token || idToken) {
         navigation.dispatch(

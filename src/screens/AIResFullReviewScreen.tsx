@@ -514,9 +514,6 @@ const AIResFullReviewScreen = () => {
                       {level}
                     </Text>
                   </View>
-                  {/* {level !== 'RISK' && (
-                    <View style={styles.riskConnector} />
-                  )} */}
                 </View>
               );
             })}

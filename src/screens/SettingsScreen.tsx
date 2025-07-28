@@ -155,7 +155,6 @@ const updatePrivacySettings = async () => {
     PrivacySettings();
   }, []);
 
-  console.log("privacySettings", privacySettings);
 
   return (
     <View style={styles.container}>
@@ -237,98 +236,147 @@ const updatePrivacySettings = async () => {
 };
 
 // Permission Section Component
+// const PermissionSection = ({
+//   isPasswordMode,
+//   toggleMode,
+//   privacySettings,
+//   togglePrivacy,
+//   password,
+//   setPassword
+// }: any) => (
+//   <View style={styles.sectionCard}>
+//     <View style={styles.modeToggleContainer}>
+//       <TouchableOpacity
+//         style={[styles.modeButton, !isPasswordMode && styles.activeModeButton]}
+//         onPress={toggleMode}
+//       >
+//         <Text style={[styles.modeButtonText, !isPasswordMode && styles.activeModeButtonText]}>
+//           Data Privacy
+//         </Text>
+//       </TouchableOpacity>
+//       <TouchableOpacity
+//         style={[styles.modeButton, isPasswordMode && styles.activeModeButton]}
+//         onPress={toggleMode}
+//       >
+//         <Text style={[styles.modeButtonText, isPasswordMode && styles.activeModeButtonText]}>
+//           Change Password
+//         </Text>
+//       </TouchableOpacity>
+//     </View>
+
+//     {!isPasswordMode ? (
+//       <>
+//         <Text style={styles.sectionTitle}>Permissions/Data Privacy</Text>
+//         <View style={styles.tableHeader}>
+//           <Text style={styles.tableHeaderText}>Permission/Data Privacy</Text>
+//           <Text style={styles.tableHeaderText}>Yes/No</Text>
+//         </View>
+
+//         <PermissionRow
+//           label="Show my Contact number"
+//           value={privacySettings.showContact}
+//           onToggle={() => togglePrivacy('showContact')}
+//         />
+//         <PermissionRow
+//           label="Show my Email address"
+//           value={privacySettings.showEmail}
+//           onToggle={() => togglePrivacy('showEmail')}
+//         />
+//         <PermissionRow
+//           label="Show my Address"
+//           value={privacySettings.showAddress}
+//           onToggle={() => togglePrivacy('showAddress')}
+//         />
+//         <PermissionRow
+//           label="Show my Experience"
+//           value={privacySettings.showExperience}
+//           onToggle={() => togglePrivacy('showExperience')}
+//         />
+//         <PermissionRow
+//           label="Show my LinkedIn URL"
+//           value={privacySettings.showLinkedIn}
+//           onToggle={() => togglePrivacy('showLinkedIn')}
+//         />
+//         <PermissionRow
+//           label="Share my CV/Resume"
+//           value={privacySettings.shareCV}
+//           onToggle={() => togglePrivacy('shareCV')}
+//         />
+//         <PermissionRow
+//           label="Share my Rate"
+//           value={privacySettings.shareRate}
+//           onToggle={() => togglePrivacy('shareRate')}
+//         />
+//       </>
+//     ) : (
+//       <>
+//         <Text style={styles.sectionTitle}>Change Password</Text>
+//         <PasswordField
+//           label="Old Password *"
+//           value={password.old}
+//           onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, old: text }))}
+//         />
+//         <PasswordField
+//           label="New Password *"
+//           value={password.new}
+//           onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, new: text }))}
+//         />
+//         <PasswordField
+//           label="Confirm New Password *"
+//           value={password.confirm}
+//           onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, confirm: text }))}
+//         />
+//       </>
+//     )}
+//   </View>
+// );
 const PermissionSection = ({
-  isPasswordMode,
-  toggleMode,
   privacySettings,
   togglePrivacy,
-  password,
-  setPassword
 }: any) => (
   <View style={styles.sectionCard}>
-    <View style={styles.modeToggleContainer}>
-      <TouchableOpacity
-        style={[styles.modeButton, !isPasswordMode && styles.activeModeButton]}
-        onPress={toggleMode}
-      >
-        <Text style={[styles.modeButtonText, !isPasswordMode && styles.activeModeButtonText]}>
-          Data Privacy
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.modeButton, isPasswordMode && styles.activeModeButton]}
-        onPress={toggleMode}
-      >
-        <Text style={[styles.modeButtonText, isPasswordMode && styles.activeModeButtonText]}>
-          Change Password
-        </Text>
-      </TouchableOpacity>
+    <Text style={styles.sectionTitle}>Permissions / Data Privacy</Text>
+
+    <View style={styles.tableHeader}>
+      <Text style={styles.tableHeaderText}>Permission/Data Privacy</Text>
+      <Text style={styles.tableHeaderText}>Yes/No</Text>
     </View>
 
-    {!isPasswordMode ? (
-      <>
-        <Text style={styles.sectionTitle}>Permissions/Data Privacy</Text>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderText}>Permission/Data Privacy</Text>
-          <Text style={styles.tableHeaderText}>Yes/No</Text>
-        </View>
-
-        <PermissionRow
-          label="Show my Contact number"
-          value={privacySettings.showContact}
-          onToggle={() => togglePrivacy('showContact')}
-        />
-        <PermissionRow
-          label="Show my Email address"
-          value={privacySettings.showEmail}
-          onToggle={() => togglePrivacy('showEmail')}
-        />
-        <PermissionRow
-          label="Show my Address"
-          value={privacySettings.showAddress}
-          onToggle={() => togglePrivacy('showAddress')}
-        />
-        <PermissionRow
-          label="Show my Experience"
-          value={privacySettings.showExperience}
-          onToggle={() => togglePrivacy('showExperience')}
-        />
-        <PermissionRow
-          label="Show my LinkedIn URL"
-          value={privacySettings.showLinkedIn}
-          onToggle={() => togglePrivacy('showLinkedIn')}
-        />
-        <PermissionRow
-          label="Share my CV/Resume"
-          value={privacySettings.shareCV}
-          onToggle={() => togglePrivacy('shareCV')}
-        />
-        <PermissionRow
-          label="Share my Rate"
-          value={privacySettings.shareRate}
-          onToggle={() => togglePrivacy('shareRate')}
-        />
-      </>
-    ) : (
-      <>
-        <Text style={styles.sectionTitle}>Change Password</Text>
-        <PasswordField
-          label="Old Password *"
-          value={password.old}
-          onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, old: text }))}
-        />
-        <PasswordField
-          label="New Password *"
-          value={password.new}
-          onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, new: text }))}
-        />
-        <PasswordField
-          label="Confirm New Password *"
-          value={password.confirm}
-          onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, confirm: text }))}
-        />
-      </>
-    )}
+    <PermissionRow
+      label="Show my Contact number"
+      value={privacySettings.showContact}
+      onToggle={() => togglePrivacy('showContact')}
+    />
+    <PermissionRow
+      label="Show my Email address"
+      value={privacySettings.showEmail}
+      onToggle={() => togglePrivacy('showEmail')}
+    />
+    <PermissionRow
+      label="Show my Address"
+      value={privacySettings.showAddress}
+      onToggle={() => togglePrivacy('showAddress')}
+    />
+    <PermissionRow
+      label="Show my Experience"
+      value={privacySettings.showExperience}
+      onToggle={() => togglePrivacy('showExperience')}
+    />
+    <PermissionRow
+      label="Show my LinkedIn URL"
+      value={privacySettings.showLinkedIn}
+      onToggle={() => togglePrivacy('showLinkedIn')}
+    />
+    <PermissionRow
+      label="Share my CV/Resume"
+      value={privacySettings.shareCV}
+      onToggle={() => togglePrivacy('shareCV')}
+    />
+    <PermissionRow
+      label="Share my Rate"
+      value={privacySettings.shareRate}
+      onToggle={() => togglePrivacy('shareRate')}
+    />
   </View>
 );
 

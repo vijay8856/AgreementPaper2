@@ -683,15 +683,15 @@ const Services = {
       };
     }
   },
-    getSubscriptionPlanDetails: async data => {
+  getSubscriptionPlanDetails: async data => {
     try {
       const headers = await AUTH_HEADERS();
       const response = await axiosInstance.get(
-        API_ENDPOINTS.SUBSCRIPTIONPLANDETAIL ,
+        API_ENDPOINTS.SUBSCRIPTIONPLANDETAIL,
         headers,
       );
-      console.log("getSubscriptionPlanDetails",response);
-      
+      console.log("getSubscriptionPlanDetails", response);
+
       return {
         success: true,
         data: response.data,
@@ -711,155 +711,186 @@ const Services = {
     }
   },
 
- initiatepaymentsub: async (payload) => {
-  console.log("initiatepaymentsub payload", payload);
+  initiatepaymentsub: async (payload) => {
+    console.log("initiatepaymentsub payload", payload);
 
-  try {
-    const { headers } = await AUTH_HEADERS();
-    const response = await axiosInstance.post(
-      API_ENDPOINTS.SUBSCRIPTIONINITIATEPAYMENT,
-      payload,
-      { headers } // ✅ Correct format
+    try {
+      const { headers } = await AUTH_HEADERS();
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.SUBSCRIPTIONINITIATEPAYMENT,
+        payload,
+        { headers } // ✅ Correct format
+      );
+
+      console.log("initiatepaymentsub ressss", response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log("error11111", error);
+      console.log("error response", error.response);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to send connection',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+  getSubscriptionStatus: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+      const response = await axiosInstance.get(API_ENDPOINTS.SUBSCRIPTIONSTATUS, headers);
+
+      console.log('getSubscriptionStatus', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+  cancelSubscription: async () => {
+    try {
+      const { headers } = await AUTH_HEADERS();
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.SUBSCRIPTIONCANCEL,
+        {},
+        { headers }
+      );
+
+      console.log('cancelSubscription response', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to cancel subscription',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+  getHaspremiumdetails: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+      const response = await axiosInstance.get(API_ENDPOINTS.HASPREMIUMDETAILS, headers);
+
+      console.log('getHaspremiumdetails1', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+  getOrderdetails: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      const response = await axiosInstance.get(API_ENDPOINTS.USERORDERDETAILS, headers);
+
+      console.log('getOrderdetails', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+  getPaymentdetails: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      const response = await axiosInstance.get(API_ENDPOINTS.PAYMENTDETAILS, headers);
+
+      console.log('getPaymentdetails', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+   deleteUserAccount: async (deletePassword) => {
+    console.log("deletePassword",deletePassword);
+    
+    try {
+      const headers = await AUTH_HEADERS();
+
+  const response = await axiosInstance.post(
+      API_ENDPOINTS.DELETEUSERACCOUNT,
+      { password: deletePassword }, 
+      headers
     );
 
-    console.log("initiatepaymentsub ressss", response);
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    console.log("error11111", error);
-    console.log("error response", error.response);
-    return {
-      success: false,
-      error: error.response?.data || 'Failed to send connection',
-      status: error.response?.status || 500,
-    };
-  }
-},
-getSubscriptionStatus: async () => {
-  try {
-    const headers = await AUTH_HEADERS();
-    const response = await axiosInstance.get(API_ENDPOINTS.SUBSCRIPTIONSTATUS, headers);
 
-    console.log('getSubscriptionStatus', response);
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    console.log('error config', error.config);
-    console.log('error request', error.request);
-    console.log('error response', error.response);
-    console.log('error message', error.message);
-    return {
-      success: false,
-      error: error.response?.data || 'Failed to fetch subscription status',
-      status: error.response?.status || 500,
-    };
-  }
-},
-cancelSubscription: async () => {
-  try {
-    const { headers } = await AUTH_HEADERS();
-    const response = await axiosInstance.post(
-      API_ENDPOINTS.SUBSCRIPTIONCANCEL,
-      {},
-      { headers }
-    );
-
-    console.log('cancelSubscription response', response);
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    console.log('error config', error.config);
-    console.log('error request', error.request);
-    console.log('error response', error.response);
-    console.log('error message', error.message);
-    return {
-      success: false,
-      error: error.response?.data || 'Failed to cancel subscription',
-      status: error.response?.status || 500,
-    };
-  }
-},
-
-getHaspremiumdetails: async () => {
-  try {
-    const headers = await AUTH_HEADERS();
-    const response = await axiosInstance.get(API_ENDPOINTS.HASPREMIUMDETAILS, headers);
-
-    console.log('getHaspremiumdetails1', response);
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    console.log('error config', error.config);
-    console.log('error request', error.request);
-    console.log('error response', error.response);
-    console.log('error message', error.message);
-    return {
-      success: false,
-      error: error.response?.data || 'Failed to fetch subscription status',
-      status: error.response?.status || 500,
-    };
-  }
-},
-
-getOrderdetails: async () => {
-  try {
-    const headers = await AUTH_HEADERS();
-
-    const response = await axiosInstance.get(API_ENDPOINTS.USERORDERDETAILS, headers);
-
-    console.log('getOrderdetails', response);
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    console.log('error config', error.config);
-    console.log('error request', error.request);
-    console.log('error response', error.response);
-    console.log('error message', error.message);
-    return {
-      success: false,
-      error: error.response?.data || 'Failed to fetch subscription status',
-      status: error.response?.status || 500,
-    };
-  }
-},
-getPaymentdetails: async () => {
-  try {
-    const headers = await AUTH_HEADERS();
-
-    const response = await axiosInstance.get(API_ENDPOINTS.PAYMENTDETAILS, headers);
-
-    console.log('getPaymentdetails', response);
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    console.log('error config', error.config);
-    console.log('error request', error.request);
-    console.log('error response', error.response);
-    console.log('error message', error.message);
-    return {
-      success: false,
-      error: error.response?.data || 'Failed to fetch subscription status',
-      status: error.response?.status || 500,
-    };
-  }
-},
+      console.log('deleteUserAccount', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to delete User Account',
+        status: error.response?.status || 500,
+      };
+    }
+  },
 };
 export default Services;

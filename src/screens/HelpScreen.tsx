@@ -18,6 +18,14 @@ const helpData = [
     question: 'How to make a payment?',
     answer: 'Go to Subscription section, pick a plan, and complete the payment via Stripe.',
   },
+  {
+    question: 'How to delete your account?',
+    answer: 'Go to My Profile in settings you get option to Delete Account From you can delete your account .',
+  },
+  {
+    question: 'How to reset account password ?',
+    answer: 'Go to My Profile in settings you get option to Change Password from there you can change/reset your password by entering your email and verify by otp .',
+  },
 ];
 
 const HelpScreen = () => {
@@ -29,7 +37,7 @@ const HelpScreen = () => {
   );
 
   const handleSupportEmail = () => {
-    Linking.openURL('mailto:support@agreementpaper.com?subject=Help Needed');
+    Linking.openURL('mailto:info@agreementpaper.com?subject=Help Needed');
   };
 
   return (
@@ -69,8 +77,17 @@ const HelpScreen = () => {
 export default HelpScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  header: { fontSize: 22, fontWeight: 'bold', marginBottom: 10, color: '#0E3386' },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff'
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#0E3386'
+  },
   searchInput: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -84,14 +101,31 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     paddingBottom: 8,
   },
-  question: { fontSize: 16, fontWeight: '600', color: '#333' },
-  answer: { fontSize: 14, color: '#555', marginTop: 5 },
-  contactContainer: { marginTop: 20, alignItems: 'center' },
-  contactTitle: { fontSize: 18, marginBottom: 10 },
+  question: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333'
+  },
+  answer: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 5
+  },
+  contactContainer: {
+    marginTop: 20,
+    alignItems: 'center'
+  },
+  contactTitle: {
+    fontSize: 18,
+    marginBottom: 10
+  },
   supportButton: {
     backgroundColor: '#0E3386',
     padding: 12,
     borderRadius: 8,
   },
-  supportButtonText: { color: '#fff', fontWeight: 'bold' },
+  supportButtonText: {
+    color: '#fff',
+    fontWeight: 'bold'
+  },
 });

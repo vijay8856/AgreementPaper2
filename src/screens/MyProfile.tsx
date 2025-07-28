@@ -20,9 +20,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import Services from '../Services/services'; // Your service file
 import Icon from 'react-native-vector-icons/Ionicons';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { PermissionsAndroid, Platform } from 'react-native';
-import * as ImagePickerLib from 'react-native-image-picker';
 import ImagePicker from 'react-native-image-crop-picker';
 type MyProfileNavProp = StackNavigationProp<RootStackParamList, 'MyProfile'>;
 
@@ -45,27 +42,16 @@ const MyProfile = () => {
   const [otpEmail, setOtpEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+const [deletePassword, setDeletePassword] = useState('');
+const [showDeletePassword, setShowDeletePassword] = useState(false);
 
 
   useEffect(() => {
     fetchUserProfile();
     fetchLanguages();
   }, []);
-  // const requestImagePermissions = async () => {
-  //   if (Platform.OS === 'android') {
-  //     try {
-  //       const result = await PermissionsAndroid.requestMultiple([
-  //         PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-  //         PermissionsAndroid.PERMISSIONS.CAMERA,
-  //         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-  //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //       ]);
-  //       console.log('Permission Result:', result);
-  //     } catch (err) {
-  //       console.warn('Permission error:', err);
-  //     }
-  //   }
-  // };
+
   const handleImagePick = async () => {
     try {
       const image = await ImagePicker.openPicker({
@@ -255,11 +241,11 @@ const MyProfile = () => {
 
   const handleResetPassword = async () => {
     const formData = new FormData();
-    formData.append('code', otpCode); // or token, as per your API
+    formData.append('code', otpCode);
     formData.append('password', newPassword);
 
     try {
-      const res = await Services.forgetPasswordReset(formData); // API call with FormData
+      const res = await Services.forgetPasswordReset(formData);
 
       if (res.success) {
         setPasswordModalVisible(false);
@@ -282,7 +268,12 @@ const MyProfile = () => {
       console.log('Reset error:', error);
     }
   };
-
+  const handleDeleteAccount = async () => {
+    Toast.show({
+      type: 'info',
+      text1: 'Coming Soon ',
+    });
+  }
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} size="large" />;
 
@@ -391,6 +382,12 @@ const MyProfile = () => {
         >
           <Text style={styles.settingsText}>Terms and Conditions</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.settingsItem}
+  onPress={() => setDeleteModalVisible(true)}
+>
+  <Text style={styles.settingsText}>Delete Account</Text>
+</TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -443,55 +440,177 @@ const MyProfile = () => {
           </TouchableOpacity>
         </View>
       </Modal>
+
+      <Modal visible={deleteModalVisible} animationType="slide" transparent>
+  <View style={styles.fullWhiteBackdrop}>
+    <Text style={styles.modalTitle}>Confirm Account Deletion</Text>
+
+    <View style={[styles.input1, { flexDirection: 'row', alignItems: 'center' }]}>
+  <TextInput
+    style={{ flex: 1 }}
+    placeholder="Enter your password"
+    value={deletePassword}
+    onChangeText={setDeletePassword}
+    secureTextEntry={!showDeletePassword}
+    autoCapitalize="none"
+  />
+  <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
+    <Icon
+      name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
+      size={22}
+      color="#555"
+    />
+  </TouchableOpacity>
+</View>
+
+    
+    {/* <TextInput
+      placeholder="Enter your password"
+      value={deletePassword}
+      onChangeText={setDeletePassword}
+      secureTextEntry
+      style={styles.input1}
+    /> */}
+
+    <TouchableOpacity
+      style={styles.resetbutton}
+      onPress={async () => {
+        try {
+     const result = await Services.deleteUserAccount(deletePassword);
+
+if (result.success) {
+  Toast.show({ type: 'success', text1: 'Account deleted successfully' });
+  await AsyncStorage.clear();
+  setDeleteModalVisible(false);
+
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'Login' as never }],
+  });
+} else {
+  Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
+}
+
+        } catch (error) {
+          Alert.alert('Error', 'Failed to delete account. Please check your password.');
+        }
+      }}
+    >
+      <Text style={styles.buttonText}>Delete</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      onPress={() => setDeleteModalVisible(false)}
+      style={styles.buttonlink}
+    >
+      <Text style={styles.link}>Cancel</Text>
+    </TouchableOpacity>
+  </View>
+</Modal>
+
     </ScrollView>
   );
 };
 
 export default MyProfile;
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  profileSection: { alignItems: 'center', marginTop: 20 },
-  avatarContainer: { marginBottom: 20 },
-  avatar: { width: 100, height: 100, borderRadius: 50 },
-  initialsCircle: {
-    width: 100, height: 100, borderRadius: 50,
-    backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center'
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 20
   },
-  initialsText: { fontSize: 32, color: '#fff' },
-  name: { fontSize: 22, fontWeight: 'bold' },
-  email: { fontSize: 16, color: '#777', marginVertical: 4 },
-  editIcon: { marginTop: 10 },
+  profileSection: {
+    alignItems: 'center',
+    marginTop: 20
+  },
+  avatarContainer: {
+    marginBottom: 20
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50
+  },
+  initialsCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  initialsText: {
+    fontSize: 32,
+    color: '#fff'
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: 'bold'
+  },
+  email: {
+    fontSize: 16,
+    color: '#777',
+    marginVertical: 4
+  },
+  editIcon: {
+    marginTop: 10
+  },
   input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 8, width: '100%', marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    width: '100%',
+    marginVertical: 8,
   },
   input1: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 8, width: '94%', marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+
+    width: '94%',
+    marginVertical: 8,
   },
-  settingsSection: { marginTop: 30 },
-  settingsHeader: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  settingsItem: { paddingVertical: 10 },
-  settingsText: { fontSize: 16 },
+  settingsSection: {
+    marginTop: 30
+  },
+  settingsHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10
+  },
+  settingsItem: {
+    paddingVertical: 10
+  },
+  settingsText: {
+    fontSize: 16
+  },
   logoutButton: {
     backgroundColor: '#000078',
     paddingVertical: 12,
     marginTop: 30,
     borderRadius: 8,
-    marginBottom: 20,  // Added bottom margin
+    marginBottom: 20,
   },
-  logoutText: { color: '#fff', textAlign: 'center', fontSize: 16 },
+  logoutText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16
+  },
   saveButton: {
     backgroundColor: '#000078',
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 10,
-    width: '100%',  // Full width
+    width: '100%',
     alignItems: 'center',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // semi-transparent dark
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -502,7 +621,11 @@ const styles = StyleSheet.create({
     width: '85%',
     maxHeight: '80%',
   },
-  modalTitle: { fontWeight: 'bold', fontSize: 18, marginBottom: 10 },
+  modalTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 10
+  },
   languageItem: {
     paddingVertical: 10,
     borderBottomWidth: 0.5,
@@ -510,7 +633,7 @@ const styles = StyleSheet.create({
   },
   fullWhiteBackdrop: {
     flex: 1,
-    backgroundColor: '#ffffff', // full solid white background
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -519,7 +642,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000078',
     padding: 10,
     borderRadius: 8,
-    paddingHorizontal: '31%',
+    paddingHorizontal: '35%',
     marginTop: 10,
     alignItems: 'center'
   },
@@ -527,18 +650,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#000078',
     padding: 10,
     borderRadius: 8,
-    paddingHorizontal: '37%',
+    paddingHorizontal: '32%',
     marginTop: 10,
     alignItems: 'center'
   },
   buttonlink: {
     backgroundColor: '#000078',
     padding: 10,
-    paddingHorizontal: '40%',
+    paddingHorizontal: '35%',
     borderRadius: 8,
     marginTop: 10,
     alignItems: 'center'
   },
-  buttonText: { color: '#fff', fontWeight: 'bold' },
-  link: { color: '#fff', fontWeight: 'bold' },  // Changed to blue
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold'
+  },
+  link: {
+    color: '#fff',
+    fontWeight: 'bold'
+  },
+
+
+
 });

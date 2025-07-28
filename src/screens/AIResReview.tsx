@@ -10,9 +10,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
-  PermissionsAndroid,
   Platform,
-  Linking,
   
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -224,14 +222,6 @@ const AIReviewScreen = () => {
     uploadedFile
   );
 
-  // const handleSelect= (value: string) => {
-  //   switch (currentPicker) {
-  //     case 'contractType': setContractType(value); break;
-  //     case 'businessLine': setBusinessLine(value); break;
-  //     case 'country': setCountry(value); break;
-  //   }
-  //   setPickerVisible(false);
-  // };
   const fetchCountries = async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
@@ -296,7 +286,7 @@ const AIReviewScreen = () => {
     }
   };
 
-const openPdfInExternalApp = async (file) => {
+const openPdfInExternalApp = async (file:any) => {
   try {
     let filePath = file.fileCopyUri || file.uri;
 
@@ -361,93 +351,6 @@ const getAiSummary = async () => {
     setIsLoading(false);
   }
 };
-
-
-  // const handleRun = async () => {
-  //   if (!uploadedFile) {
-  //     Alert.alert('Error', 'Please upload a file first');
-  //     return;
-  //   }
-
-  //   try {
-  //     let uri = uploadedFile.uri;
-  // console.log("uploadedFile",uri);
-
-  //     // Convert content URI to file path for Android
-  //     if (Platform.OS === 'android' && uri.startsWith('content://')) {
-  //       const destPath = `${RNFS.CachesDirectoryPath}/${uploadedFile.name}`;
-  //       await RNFS.copyFile(uri, destPath);
-  //       uri = `file://${destPath}`;
-  //     }
-
-  //     // Upload PDF to a temporary file host (or your server)
-  //     // For testing: skip upload and show with Google Docs
-  //     const encodedUrl = encodeURIComponent(uri);
-  //     const googleViewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodedUrl}`;
-
-
-
-  // //     const viewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf')}`;
-  // // setFileUri(viewerUrl);
-  // // setFileViewerVisible(true);
-  //     setFileUri(googleViewerUrl);
-  //     setFileViewerVisible(true);
-  //   } catch (error) {
-  //     console.error('File preparation error:', error);
-  //     Alert.alert('Error', 'Could not prepare PDF for viewing.');
-  //   }
-  // };
-
-
-  // Handle text copying
-
-  // const handleRun = async () => {
-  //   if (!uploadedFile) {
-  //     Alert.alert('Error', 'Please upload a file first');
-  //     return;
-  //   }
-
-  //   try {
-  //     let uri = uploadedFile.safeUri || uploadedFile.uri;
-  //     console.log('Uploaded File URI:', uri);
-
-  //     // Convert content URI to file path for Android
-  //     if (Platform.OS === 'android' && uri.startsWith('content://')) {
-  //       const destPath = `${RNFS.CachesDirectoryPath}/${uploadedFile.name}`;
-  //       await RNFS.copyFile(uri, destPath);
-  //       uri = `file://${destPath}`;
-  //     }
-
-  //     // 🔁 Create FormData
-  //     const formData = new FormData();
-  //     formData.append('document', {
-  //       uri,
-  //       name: uploadedFile.name,
-  //       type: uploadedFile.type || 'application/pdf',
-  //     });
-
-  //     // 🔁 Send to backend via generateUrl
-  //     console.log("formData", formData);
-
-  //     const result = await Services.generateUrl(formData);
-  //     console.log("result22", result);
-  //     if (!result.success || !result.data?.url) {
-  //       throw new Error('Failed to generate file URL');
-  //     }
-
-  //     const backendUrl = result.data.url;
-  //     const googleViewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(backendUrl)}`;
-  //     console.log("backendUrl", backendUrl);
-
-  //     setFileUri(googleViewerUrl);
-  //     setFileViewerVisible(true);
-  //   } catch (error) {
-  //     console.error('Error preparing PDF:', error);
-  //     Alert.alert('Error', 'Could not load PDF for viewing.');
-  //   }
-  // };
-
-
 
 const handleRun = async () => {
     if (!uploadedFile) {
@@ -602,43 +505,7 @@ const handleRun = async () => {
             </TouchableOpacity>
           </View>
 
-          {/* WebView for PDF with text selection */}
-          {/* {uploadedFile?.name?.endsWith('.pdf') ? (
-            <View style={styles.webviewContainer}>
-              <WebView
-                source={{ uri: fileUri }}
-                style={{ flex: 1 }}
-                javaScriptEnabled={true}
-                domStorageEnabled={true}
-                allowsInlineMediaPlayback={true}
-                allowFileAccess={true}
-                allowUniversalAccessFromFileURLs={true}
-                originWhitelist={['*']}
-                onMessage={(event) => {
-                  setSelectedText(event.nativeEvent.data);
-                }}
-                injectedJavaScript={`
-                  // Enable text selection
-                  document.body.style.userSelect = 'text';
-                  document.body.style.webkitUserSelect = 'text';
-                  
-                  // Send selected text to React Native
-                  document.addEventListener('selectionchange', () => {
-                    const selection = window.getSelection().toString();
-                    if (selection) {
-                      window.ReactNativeWebView.postMessage(selection);
-                    }
-                  });
-                  
-                  true; // required for injectedJavaScript
-                `}
-              />
-            </View>
-          ) : (
-            <Text style={styles.unsupportedText}>
-              Unsupported file format. Please upload a PDF.
-            </Text>
-          )} */}
+          
  <View style={styles.selectionPanel}>
   {/* Editable Selected Text Input (always visible) */}
   <View style={styles.selectedTextContainer}>

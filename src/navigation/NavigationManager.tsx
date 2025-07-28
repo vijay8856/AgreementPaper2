@@ -1,10 +1,7 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import { Platform, StatusBar, TouchableOpacity } from 'react-native';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import { Platform, StatusBar,  } from 'react-native';
 import LoginScreen from '../screens/Login';
 import DashboardWrapper from '../screens/DashboardWrapper';
 import SignUpScreen from '../screens/SignUpScreen';
@@ -77,7 +74,6 @@ const NavigationManager = () => {
         <RootStack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ title: 'Verify Email' }} />
         <RootStack.Screen name="MyProfile" component={MyProfile} options={{ title: 'My Profile' }} />
         <RootStack.Screen name="ESignatureScreen" component={ESignatureScreen} />
-
         <RootStack.Screen name="SignWebViewScreen" component={SignWebViewScreen} />
         <RootStack.Screen name="LinkedInLoginScreen" component={LinkedInLoginScreen} />
         <RootStack.Screen name="SubscriptionHistoryScreen" component={SubscriptionHistoryScreen} options={{ title: 'Subscription History ' }} />

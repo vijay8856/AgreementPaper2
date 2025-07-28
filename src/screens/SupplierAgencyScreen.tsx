@@ -19,7 +19,7 @@ import { Picker } from '@react-native-picker/picker';
 
 type Supplier = {
   id: string;
-  user:number,
+  user: number,
   company_name: string;
   email: string;
   country_name: string;
@@ -49,7 +49,7 @@ const SupplierAgencyScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
-  const [message, setMessage] = useState(''); 
+  const [message, setMessage] = useState('');
 
   const ratings = [
     { label: "All Ratings", value: "" },
@@ -78,7 +78,7 @@ const SupplierAgencyScreen = () => {
         // Transform API response to match our Supplier type
         const formattedSuppliers = response.data.map((supplier: any) => ({
           id: supplier.id,
-          user:supplier.user,
+          user: supplier.user,
           company_name: supplier.company_name,
           email: supplier.user_detail?.email || supplier.email,
           country_name: supplier.country_name,
@@ -133,7 +133,7 @@ const SupplierAgencyScreen = () => {
     // Safely extract values or fallback to empty string
     const companyName = supplier.company_name?.toLowerCase() || '';
     const email = supplier.email?.toLowerCase() || '';
-const user =supplier.user;
+    const user = supplier.user;
     const matchesSearch =
       companyName.includes(searchQuery.toLowerCase()) ||
       email.includes(searchQuery.toLowerCase());
@@ -144,73 +144,67 @@ const user =supplier.user;
       !locationFilter ||
       supplier.country_name === locationFilter;
 
-    return matchesSearch && matchesRating && matchesLocation &&user;
+    return matchesSearch && matchesRating && matchesLocation && user;
   });
 
-const handleSendConnection =()=>{
-sendConnection()
-}
+  const handleSendConnection = () => {
+    sendConnection()
+  }
 
 
-const sendConnection = async (isRefresh = false) => {
-  if (!isRefresh) setLoading(true);
-  else setRefreshing(true);
+  const sendConnection = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    else setRefreshing(true);
 
-  const payload = {
-    to_user: selectedSupplier?.user,
-    message: message?.trim() || '',
-  };
+    const payload = {
+      to_user: selectedSupplier?.user,
+      message: message?.trim() || '',
+    };
 
-  try {
-    const response = await Services.sendConnectionSupplier(payload);
+    try {
+      const response = await Services.sendConnectionSupplier(payload);
 
-    if (response.success === true) {
-      setConnectModalVisible(false);
-      Toast.show({
-        type: 'success',
-        text1: 'Connection sent successfully',
-        position: 'top',
-      });
+      if (response.success === true) {
+        setConnectModalVisible(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Connection sent successfully',
+          position: 'top',
+        });
 
-    } else if (
-      response.status === 400 &&
-      response.error?.message === 'Connection request pending'&&
-      setConnectModalVisible(false)
-    ) {
-      Toast.show({
-        type: 'info',
-        text1: 'Connection Already Pending',
-        text2: 'You have already sent a connection request.',
-        position: 'top',
-      });
+      } else if (
+        response.status === 400 &&
+        response.error?.message === 'Connection request pending' &&
+        setConnectModalVisible(false)
+      ) {
+        Toast.show({
+          type: 'info',
+          text1: 'Connection Already Pending',
+          text2: 'You have already sent a connection request.',
+          position: 'top',
+        });
 
-    } else {
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to send connection',
+          text2: response.error?.message || 'Something went wrong',
+          position: 'top',
+        });
+      }
+
+    } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Failed to send connection',
-        text2: response.error?.message || 'Something went wrong',
+        text1: 'Unexpected error',
+        text2: 'Please try again later',
         position: 'top',
       });
     }
 
-  } catch (error) {
-    Toast.show({
-      type: 'error',
-      text1: 'Unexpected error',
-      text2: 'Please try again later',
-      position: 'top',
-    });
-  }
-
-  setLoading(false);
-  setRefreshing(false);
-};
-
- 
-
-
-
-
+    setLoading(false);
+    setRefreshing(false);
+  };
   const handleConnect = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setConnectModalVisible(true);
@@ -228,23 +222,23 @@ const sendConnection = async (isRefresh = false) => {
       </View>
     );
   }
-const DetailItem: React.FC<{
-  label: string;
-  value: string;
-  isLink?: boolean;
-  isEmail?: boolean;
-}> = ({ label, value, isLink = false, isEmail = false }) => (
-  <View style={styles.infoGroup}>
-    <Text style={styles.infoLabel}>{label}</Text>
-    {isLink || isEmail ? (
-      <Text style={[styles.infoValue2, isLink && styles.linkText]}>
-        {value}
-      </Text>
-    ) : (
-      <Text style={styles.infoValue2}>{value}</Text>
-    )}
-  </View>
-);
+  const DetailItem: React.FC<{
+    label: string;
+    value: string;
+    isLink?: boolean;
+    isEmail?: boolean;
+  }> = ({ label, value, isLink = false, isEmail = false }) => (
+    <View style={styles.infoGroup}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      {isLink || isEmail ? (
+        <Text style={[styles.infoValue2, isLink && styles.linkText]}>
+          {value}
+        </Text>
+      ) : (
+        <Text style={styles.infoValue2}>{value}</Text>
+      )}
+    </View>
+  );
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -305,7 +299,7 @@ const DetailItem: React.FC<{
         </View>
       </View>
       <ScrollView horizontal>
-        <View style={{marginBottom:40}}>
+        <View style={{ marginBottom: 40 }}>
           {/* Table Header */}
           <View style={styles.tableHeader}>
             <View style={styles.idColumn}><Text style={styles.headerText}>ID</Text></View>
@@ -383,96 +377,96 @@ const DetailItem: React.FC<{
         </View>
       </ScrollView>
       {/* View Profile Modal */}
-      
+
       <Modal
-  visible={profileModalVisible}
-  transparent={true}
-  animationType="slide"
-  onRequestClose={() => setProfileModalVisible(false)}
->
-  <View style={styles.modalBackdrop}>
-    <View style={styles.modalContainer}>
-      <View style={styles.modalHeader}>
-        <Text style={styles.modalTitle}>Supplier Profile</Text>
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => setProfileModalVisible(false)}
-        >
-          <Icon name="close" size={24} color="#6B7280" />
-        </TouchableOpacity>
-      </View>
+        visible={profileModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setProfileModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Supplier Profile</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setProfileModalVisible(false)}
+              >
+                <Icon name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
-      {selectedSupplier && (
-        <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
-          {/* Company Information Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Icon name="business" size={20} color="#3B82F6" />
-              <Text style={styles.sectionTitle}>Company Information</Text>
-            </View>
-            <View style={styles.cardBody}>
-              <DetailItem 
-                label="Company Name" 
-                value={selectedSupplier.company_name} 
-              />
-              <DetailItem 
-                label="Email" 
-                value={selectedSupplier.email} 
-                isEmail={true}
-              />
-              <DetailItem 
-                label="Website" 
-                value={selectedSupplier.company_website || 'N/A'} 
-                isLink={true}
-              />
-              <View style={styles.infoGroup}>
-                <Text style={styles.infoLabel}>About</Text>
-                <Text style={styles.infoValue}>
-                  {selectedSupplier.about_company || 'No description available'}
-                </Text>
-              </View>
-            </View>
-          </View>
+            {selectedSupplier && (
+              <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
+                {/* Company Information Card */}
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <Icon name="business" size={20} color="#3B82F6" />
+                    <Text style={styles.sectionTitle}>Company Information</Text>
+                  </View>
+                  <View style={styles.cardBody}>
+                    <DetailItem
+                      label="Company Name"
+                      value={selectedSupplier.company_name}
+                    />
+                    <DetailItem
+                      label="Email"
+                      value={selectedSupplier.email}
+                      isEmail={true}
+                    />
+                    <DetailItem
+                      label="Website"
+                      value={selectedSupplier.company_website || 'N/A'}
+                      isLink={true}
+                    />
+                    <View style={styles.infoGroup}>
+                      <Text style={styles.infoLabel}>About</Text>
+                      <Text style={styles.infoValue}>
+                        {selectedSupplier.about_company || 'No description available'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
 
-          {/* Location Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Icon name="location-on" size={20} color="#EF4444" />
-              <Text style={styles.sectionTitle}>Location</Text>
-            </View>
-            <View style={styles.cardBody}>
-              <DetailItem label="Country" value={selectedSupplier.country_name} />
-              <DetailItem label="State" value={selectedSupplier.state_name} />
-              <DetailItem label="District" value={selectedSupplier.district} />
-            </View>
-          </View>
+                {/* Location Card */}
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <Icon name="location-on" size={20} color="#EF4444" />
+                    <Text style={styles.sectionTitle}>Location</Text>
+                  </View>
+                  <View style={styles.cardBody}>
+                    <DetailItem label="Country" value={selectedSupplier.country_name} />
+                    <DetailItem label="State" value={selectedSupplier.state_name} />
+                    <DetailItem label="District" value={selectedSupplier.district} />
+                  </View>
+                </View>
 
-          {/* Contact Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Icon name="person" size={20} color="#10B981" />
-              <Text style={styles.sectionTitle}>Contact</Text>
-            </View>
-            <View style={styles.cardBody}>
-              <DetailItem 
-                label="Contact Person" 
-                value={`${selectedSupplier.user_detail.first_name} ${selectedSupplier.user_detail.last_name}`} 
-              />
-              <DetailItem 
-                label="Phone" 
-                value={selectedSupplier.user_detail.contact_number || 'N/A'} 
-              />
-              <DetailItem 
-                label="Experience" 
-                value={selectedSupplier.user_detail.experience || 'N/A'} 
-              />
-            </View>
+                {/* Contact Card */}
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <Icon name="person" size={20} color="#10B981" />
+                    <Text style={styles.sectionTitle}>Contact</Text>
+                  </View>
+                  <View style={styles.cardBody}>
+                    <DetailItem
+                      label="Contact Person"
+                      value={`${selectedSupplier.user_detail.first_name} ${selectedSupplier.user_detail.last_name}`}
+                    />
+                    <DetailItem
+                      label="Phone"
+                      value={selectedSupplier.user_detail.contact_number || 'N/A'}
+                    />
+                    <DetailItem
+                      label="Experience"
+                      value={selectedSupplier.user_detail.experience || 'N/A'}
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            )}
           </View>
-        </ScrollView>
-      )}
-    </View>
-  </View>
-</Modal>
+        </View>
+      </Modal>
 
 
       {/* Connect Modal */}
@@ -503,8 +497,8 @@ const DetailItem: React.FC<{
                     numberOfLines={4}
                     placeholder="Type your message here..."
                     placeholderTextColor="#999"
-                     value={message}
-    onChangeText={setMessage}
+                    value={message}
+                    onChangeText={setMessage}
                   />
                 </View>
 
@@ -594,9 +588,9 @@ const styles = StyleSheet.create({
     height: 45,
   },
   pickerFont: {
-   fontSize: 11,
+    fontSize: 11,
     marginBottom: 10,
-     color: 'black',
+    color: 'black',
   },
   tableHeader: {
     flexDirection: 'row',
@@ -820,7 +814,7 @@ const styles = StyleSheet.create({
 
   // modal view style
 
-   modalBackdrop: {
+  modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',

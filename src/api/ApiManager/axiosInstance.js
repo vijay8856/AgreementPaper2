@@ -16,10 +16,10 @@ axiosInstance.interceptors.response.use(
       const errorMessage = data?.responseMessage || 'An error occurred';
 
       switch (status) {
-        // case 401:
-        //   localStorage.clear();
-        //   window.location.href = "/login";
-        //   break;
+        case 401:
+          localStorage.clear();
+          window.location.href = "/login";
+          break;
         case 403:
           console.error('Forbidden:', errorMessage);
           break;

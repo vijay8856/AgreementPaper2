@@ -27,7 +27,7 @@ const SignUpScreen: React.FC = () => {
   const [password2, setpassword2] = useState('');
   const [error, setError] = useState('');
   const [showPassword1, setShowPassword1] = useState(false);
-const [showPassword2, setShowPassword2] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
 
 
 const handleSignUp = async () => {

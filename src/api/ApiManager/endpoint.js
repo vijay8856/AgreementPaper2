@@ -30,5 +30,6 @@ SUBSCRIPTIONCANCEL:'/subscription/cancel_subscription/',
 HASPREMIUMDETAILS:'subscription/plan-details/',
 USERORDERDETAILS:'/subscription/order/?limit=5&offset=0',
 PAYMENTDETAILS:'/subscription/order/payment_detail/',
+DELETEUSERACCOUNT:'/accounts/delete/',
   // Add other endpoints here
 };

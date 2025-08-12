@@ -12,6 +12,8 @@ export type DashboardTabParamList = {
   AIReview: undefined,
 SubscriptionPlan:undefined
   SubscriptionHistoryScreen:undefined,
+    AICoreAdminScreen:undefined,
+
 };
 
 export type RootStackParamList = {
@@ -23,6 +25,14 @@ export type RootStackParamList = {
   MyProfile:undefined;
   LinkedInLoginScreen: undefined;
     SubscriptionHistoryScreen:undefined,
+    ContractPreviewScreen: { htmlContent: string };
+    AICoreAdminScreen:undefined,
+    ESignatureScreen:undefined,
+
+      OrganisationDashboard: undefined;
+  SupplierDashboard: undefined;
+  TalentDashboard: undefined;
+  LawyerDashboard: undefined;
 };
 export type AuthStackParamList = {
   Login: undefined;

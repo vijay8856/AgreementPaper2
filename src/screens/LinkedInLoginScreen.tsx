@@ -46,7 +46,6 @@ lient_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
 
     const handleNavigationChange = async (navState: any) => {
         const { url } = navState;
-        console.log("urlurlurl", url);
 
         if (url.startsWith(REDIRECT_URI)) {
             const codeMatch = url.match(/code=([^&]+)/);

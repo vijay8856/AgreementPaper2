@@ -430,15 +430,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const allItems = [
     { id: 1, icon: 'file-document-outline', label: 'AI-Full Review', screen: 'AIResFullReview', premium: true },
     { id: 2, icon: 'chip', label: 'AI-Review', screen: 'AIReview', premium: true },
-    { id: 3, icon: 'account-tie', label: 'Suppliers/Agencies', screen: 'SupplierAgency', premium: true },
+    { id: 10, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: true },
+
 
     { id: 5, icon: 'scale-balance', label: 'Lawyers', screen: 'LawyerNetwork', premium: false },
     { id: 8, icon: 'gavel', label: 'Invite Lawyer', screen: 'InviteLawyer', premium: false },
+    { id: 3, icon: 'account-tie', label: 'Suppliers/Agencies', screen: 'SupplierAgency', premium: true },
+
     { id: 6, icon: 'briefcase-plus', label: 'Invite Agency', screen: 'InviteAgency', premium: false },
 
     { id: 7, icon: 'account-group', label: 'Invite Your Friends', screen: 'InviteResource', premium: false },
     { id: 4, icon: 'cog-outline', label: 'Settings', screen: 'Settings', premium: false },
+
+    { id: 10, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
     { id: 9, icon: 'help-circle-outline', label: 'Help', screen: 'HelpScreen', premium: false },
+    
+
 
 
   ];

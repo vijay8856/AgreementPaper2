@@ -892,5 +892,113 @@ const Services = {
       };
     }
   },
+  Ai_Draft: async (payload) => {
+    console.log("payload",payload);
+    
+    try {
+      const headers = await AUTH_HEADERS();
+
+  const response = await axiosInstance.post(
+      API_ENDPOINTS.AIDRAFT,
+     payload, 
+      headers
+    );
+
+
+      console.log('Ai_Draft response', response);
+      return {
+        success: true,
+        data: response,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to Load Contract Review ',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+
+    saveDraftTemplate: async (payload) => {
+    
+    try {
+      const headers = await AUTH_HEADERS();
+
+  const response = await axiosInstance.post(
+      API_ENDPOINTS.SAVEDRAFTTEMPLATE,
+     payload, 
+      headers
+    );
+
+
+      console.log('Ai_Draft response', response);
+      return {
+        success: true,
+        data: response,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to Load Contract Review ',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+  getAllTemplate: async (data) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    const response = await axiosInstance.get(
+ API_ENDPOINTS.ALLTEMPLATES + `?&limit=${data?.limit}&offset=${data?.offset}`,
+      headers
+    );
+    console.log("getAllTemplate",response);
+    
+    return response.data;
+  } catch (error) {
+    console.error('getTemplatePDF error', error);
+    throw error;
+  }
+},
+
+
+  getTemplatePDF: async (templateId) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    const response = await axiosInstance.get(
+      `ai/draft-template/${templateId}/download_pdf/`,
+      headers
+    );
+    return response.data;
+  } catch (error) {
+    console.error('getTemplatePDF error', error);
+    throw error;
+  }
+},
+getTemplateDocx: async (templateId) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    const response = await axiosInstance.get(
+      `ai/draft-template/${templateId}/download_docx/`,
+      headers
+    );
+    return response.data;
+  } catch (error) {
+    console.error('getTemplateDOCX error', error);
+    throw error;
+  }
+},
+
 };
 export default Services;

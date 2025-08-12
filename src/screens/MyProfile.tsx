@@ -268,12 +268,7 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
       console.log('Reset error:', error);
     }
   };
-  const handleDeleteAccount = async () => {
-    Toast.show({
-      type: 'info',
-      text1: 'Coming Soon ',
-    });
-  }
+
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} size="large" />;
 

@@ -82,11 +82,8 @@ const ESignatureScreen = () => {
         />
         <TouchableOpacity
           style={styles.button}
-          onPress={() => {
-            navigation.navigate('WebViewScreen', {
-              url: 'https://app.agreementpaper.com/organisation/esign',
-            });
-          }}
+          onPress={() => { setModalVisible(true)
+         }}
         >
           <Text style={styles.buttonText}>Sign Document</Text>
         </TouchableOpacity>
@@ -133,7 +130,7 @@ const ESignatureScreen = () => {
               </View>
             </View>
           )}
-          ListEmptyComponent={<Text>No documents found.</Text>}
+          // ListEmptyComponent={<Text>No documents found.</Text>}
         />
       </View>
     </>

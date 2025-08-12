@@ -14,6 +14,9 @@ import WebViewScreen from '../components/WebViewScreen';
 import LinkedInLoginScreen from '../screens/LinkedInLoginScreen';
 import SubscriptionHistoryScreen from '../screens/SubscriptionHistoryScreen';
 import HelpScreen from '../screens/HelpScreen';
+import AIDraft from '../screens/AIDraft';
+import ContractPreviewScreen from '../screens/ContractPreviewScreen';
+import AICoreAdminScreen from '../screens/AIDraft';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -30,6 +33,9 @@ export type RootStackParamList = {
   LinkedInLoginScreen: undefined;
   SubscriptionHistoryScreen: undefined,
   HelpScreen:undefined,
+  AIDraft:undefined,
+  ContractPreviewScreen: { htmlContent: any };
+  AICoreAdminScreen:undefined,
 };
 
 const NavigationManager = () => {
@@ -73,11 +79,13 @@ const NavigationManager = () => {
         <RootStack.Screen name="SignUp" component={SignUpScreen} options={{ title: 'Sign Up' }} />
         <RootStack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ title: 'Verify Email' }} />
         <RootStack.Screen name="MyProfile" component={MyProfile} options={{ title: 'My Profile' }} />
-        <RootStack.Screen name="ESignatureScreen" component={ESignatureScreen} />
+        {/* <RootStack.Screen name="ESignatureScreen" component={ESignatureScreen} /> */}
         <RootStack.Screen name="SignWebViewScreen" component={SignWebViewScreen} />
         <RootStack.Screen name="LinkedInLoginScreen" component={LinkedInLoginScreen} />
         <RootStack.Screen name="SubscriptionHistoryScreen" component={SubscriptionHistoryScreen} options={{ title: 'Subscription History ' }} />
         <RootStack.Screen name="HelpScreen" component={HelpScreen} options={{ title: 'Help Screen ' }} />
+        <RootStack.Screen name="AIDraft" component={AICoreAdminScreen} options={{ title: 'AI Draft ' }} />
+        <RootStack.Screen name="ContractPreviewScreen" component={ContractPreviewScreen} options={{ title: 'Contract Preview ' }} />
 
 
 

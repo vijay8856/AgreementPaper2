@@ -31,5 +31,8 @@ HASPREMIUMDETAILS:'subscription/plan-details/',
 USERORDERDETAILS:'/subscription/order/?limit=5&offset=0',
 PAYMENTDETAILS:'/subscription/order/payment_detail/',
 DELETEUSERACCOUNT:'/accounts/delete/',
+AIDRAFT:"/settings/openai/analyze-contract/v2/",
+SAVEDRAFTTEMPLATE:'ai/draft-template/',
+ALLTEMPLATES:'/ai/draft-template/',
   // Add other endpoints here
 };

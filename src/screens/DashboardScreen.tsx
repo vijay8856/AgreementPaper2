@@ -5,9 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Screens
 import HomeScreen from './HomeScreen';
-import AIResFullReviewScreen from './AIResFullReviewScreen';
-import ESignatureScreen from './ESignatureScreen';
-import AIReviewScreen from './AIResReview';
+
 const Tab = createBottomTabNavigator();
 
 const BottomTabs = () => {

@@ -4,7 +4,6 @@ import { WebView } from 'react-native-webview';
 
 const SignWebViewScreen = ({ route }:any) => {
   const { url } = route.params;
-console.log("url",url);
 
   return (
     <View style={{ flex: 1 }}>

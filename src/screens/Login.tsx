@@ -74,14 +74,13 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       await GoogleSignin.signOut(); // optional, but ensures fresh login
       const userInfo = await GoogleSignin.signIn();
       const tokens = await GoogleSignin.getTokens();
-console.log("userinfouser",userInfo);
 
       const accessToken = tokens?.accessToken;
       const idToken = tokens?.idToken;
 
-      console.log("accessToken", accessToken);
-      console.log("tokens", tokens);
-      console.log("userInfo", userInfo);
+      // console.log("accessToken", accessToken);
+      // console.log("tokens", tokens);
+      // console.log("userInfo", userInfo);
 
       if (!accessToken) {
         await GoogleSignin.signOut();

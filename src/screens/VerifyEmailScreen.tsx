@@ -29,6 +29,7 @@ interface SignUpData {
 
 // Define service response types
 interface ServiceResponse {
+  [x: string]: any;
   success: boolean;
   error?: {
     message: string;
@@ -44,6 +45,17 @@ const VerifyEmailScreen: React.FC = () => {
 
   // Create refs for OTP inputs
   const otpInputs = useRef<(TextInput | null)[]>([]);
+
+
+const SIGNUP_TYPES = [
+  { label: 'Enterprise', value: 'ORGANISATION_USER', screen: 'OrganisationDashboard' },
+  { label: 'Supplier & Agency Network', value: 'AGENCY_USER', screen: 'SupplierDashboard' },
+  { label: 'Talent', value: 'RESOURCE_USER', screen: 'TalentDashboard' },
+  { label: 'Individual Buyer', value: 'INDIVIDUAL_USER', screen: 'Dashboard' },
+  { label: 'Lawyer Network', value: 'LAWYER_USER', screen: 'LawyerDashboard' },
+];
+
+
 
   useEffect(() => {
     const getEmailFromStorage = async (): Promise<void> => {
@@ -63,33 +75,71 @@ const VerifyEmailScreen: React.FC = () => {
 
     getEmailFromStorage();
   }, [navigation]);
+const handleVerifyCode = async (): Promise<void> => {
+  if (otp.length !== 5) {
+    Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
+    return;
+  }
 
-  const handleVerifyCode = async (): Promise<void> => {
-    if (otp.length !== 5) {
-      Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
-      return;
-    }
+  setLoading(true);
+  try {
+    const payload = { email, code: parseInt(otp, 10) };
+    const result: ServiceResponse = await Services.verifyCode(payload);
 
-    setLoading(true);
-    try {
-      const payload = { email, code: parseInt(otp, 10) };
-      const result: ServiceResponse = await Services.verifyCode(payload);
+    console.log("result of verifyCode", result);
 
-
-
-      if (result.success) {
-        Alert.alert('Success', 'Email verified successfully!');
-        navigation.navigate('Dashboard');
-      } else {
-        Alert.alert('Error', result.error?.message || 'Verification failed');
+    if (result.success) {
+      const userType = result.data?.payload?.user_type;
+   if (userType) {
+        await AsyncStorage.setItem('userType', userType);
+        console.log('User type saved:', userType);
       }
-    } catch (error) {
-      console.error('Verification error:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+      // Find matching type
+      const matchedType = SIGNUP_TYPES.find(type => type.value === userType);
+
+      if (matchedType) {
+        Alert.alert('Success', 'Email verified successfully!');
+       navigation.navigate(matchedType.screen as keyof RootStackParamList);
+      } else {
+        Alert.alert('Error', 'Unknown user type. Please contact support.');
+      }
+    } else {
+      Alert.alert('Error', result.error?.message || 'Verification failed');
     }
-  };
+  } catch (error) {
+    console.error('Verification error:', error);
+    Alert.alert('Error', 'Something went wrong. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+//   const handleVerifyCode = async (): Promise<void> => {
+//     if (otp.length !== 5) {
+//       Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
+//       return;
+//     }
+
+//     setLoading(true);
+//     try {
+//       const payload = { email, code: parseInt(otp, 10) };
+//       const result: ServiceResponse = await Services.verifyCode(payload);
+
+// console.log("result of verifyCode",result);
+
+
+//       if (result.success) {
+//         Alert.alert('Success', 'Email verified successfully!');
+//         navigation.navigate('Dashboard');
+//       } else {
+//         Alert.alert('Error', result.error?.message || 'Verification failed');
+//       }
+//     } catch (error) {
+//       console.error('Verification error:', error);
+//       Alert.alert('Error', 'Something went wrong. Please try again.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
   const handleResendCode = async (): Promise<void> => {
     setResendLoading(true);

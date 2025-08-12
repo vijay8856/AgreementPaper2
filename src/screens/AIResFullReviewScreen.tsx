@@ -172,14 +172,6 @@ const AIResFullReviewScreen = () => {
   ];
 
 
-  // const Clauses = [
-  //   { value: "SUMMARISE_CONTRACT", label: " Summary" },
-  //   { value: "FRAUD_DETECTION", label: " Fraud Detection" },
-  //   { value: "MISSING_CLAUSES", label: "Analyze" },
-  //   { value: "SECTION_32_REVIEW", label: "Analyze" },
-
-  // ];
-
   const Clauses = useMemo(() => {
     const baseClauses = [
       { value: "SUMMARISE_CONTRACT", label: " Summary" },
@@ -193,17 +185,16 @@ const AIResFullReviewScreen = () => {
       return [...baseClauses, { value: "MISSING_CLAUSES", label: "Analyze" }];
     }
   }, [contractType]);
-  // SECTION_32_REVIEW
 
   useEffect(() => {
     if (countries.length > 0) {
-      // Set default contract type
+
       setContractType('SECTION-32');
 
-      // Set default business line
+
       setBusinessLine('REAL ESTATE');
 
-      // Find and set Australia as default country
+
       const australia = countries.find(
         (c: PickerItem) => c.label === 'Australia'
       );
@@ -270,10 +261,6 @@ const AIResFullReviewScreen = () => {
     }
     closePicker();
   };
-
-
-
-
   // Risk Level
   const getRiskLevel = (score: number) => {
     if (score <= 2) return 'LOW';

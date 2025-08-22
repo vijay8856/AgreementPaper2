@@ -1,6 +1,13 @@
 {
   "extends": "@react-native/typescript-config/tsconfig.json",
-"include": [
+ "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["react", "react-dom"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
     "declarations.d.ts",
     "src/**/*"
   ]

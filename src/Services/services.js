@@ -16,7 +16,7 @@ const Services = {
           headers: { 'Content-Type': 'application/json' },
         }
       );
-      console.log("response", response);
+      console.log("response121212", response);
 
 
       const userData = response?.data;
@@ -53,15 +53,15 @@ const Services = {
       };
     }
   },
-  googleSignup: async (access_token) => {
-    console.log("........access_token", access_token);
+  googleSignup: async (access_token, user_type) => {
+      console.log("........access_token", access_token, "user_type", user_type);
 
     try {
       const response = await axiosInstance.post(
         API_ENDPOINTS.SENDACCESSTOKEN,
         {
           access_token,
-          user_type: 'INDIVIDUAL_USER',
+          user_type
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -138,7 +138,7 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch All MSA List',
+        error: error.response?.data || 'Failed to fetch Lawyer Network List',
         status: error.response?.status || 500,
       };
     }
@@ -214,7 +214,7 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch Countries List',
+        error: error.response?.data || 'Failed to fetch Suppliers List',
         status: error.response?.status || 500,
       };
     }
@@ -287,9 +287,9 @@ const Services = {
   },
   sendVerificationCode: async (payload) => {
     try {
-      const { headers } = await AUTH_HEADERS();
+   const headers = await AUTH_HEADERS();
       const response = await axiosInstance.post(
-        API_ENDPOINTS.REGISTER,
+        API_ENDPOINTS.SENDVERIFICATIONGAMILCODE,
         payload,
         { headers }
       );
@@ -379,7 +379,7 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch Countries List',
+        error: error.response?.data || 'Failed to fetch EsignDoc List',
         status: error.response?.status || 500,
       };
     }
@@ -391,7 +391,6 @@ const Services = {
         API_ENDPOINTS.USERPROFILE,
         headers,
       );
-      console.log("List", response);
 
       return {
         success: true,
@@ -408,46 +407,75 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch Countries List',
+        error: error.response?.data || 'Failed to fetch User Profile Details List',
         status: error.response?.status || 500,
       };
     }
   },
+  // updateUserProfileDetails: async (payload) => {
+  //   try {
+  //     const headers = await AUTH_MULTYPART_HEADERS();
+  //     const response = await axiosInstance.post(
+  //       API_ENDPOINTS.UPDATEUSERPROFILE,
+  //       payload,
+  //       headers,
+  //     );
+  //     console.log('updateUserProfileDetails', response);
+  //     if (response.status === 200) {
+  //       // await AsyncStorage.setItem("first_Name", response.data.payload.first_name || "");
+  //       // await AsyncStorage.setItem("last_Name", response.data.payload.last_name || "");
+  //       // await AsyncStorage.setItem("email", response.data.payload.email || "");
+  //       // await AsyncStorage.setItem("Token", response.data.key || "");
+
+  //     }
+
+  //     return {
+  //       success: true,
+  //       data: response.data,
+  //       status: response.status,
+  //     };
+  //   } catch (error) {
+  //     console.log('error config', error.config);
+  //     console.log('error request', error.request);
+  //     console.log('error response', error.response);
+  //     console.log('error message', error.message);
+
+  //     return {
+  //       success: false,
+  //       error: error.response?.data || 'Failed to send update User Profile',
+  //       status: error.response?.status || 500,
+  //     };
+  //   }
+  // },
+  
   updateUserProfileDetails: async (payload) => {
-    try {
-      const headers = await AUTH_MULTYPART_HEADERS();
-      const response = await axiosInstance.post(
-        API_ENDPOINTS.UPDATEUSERPROFILE,
-        payload,
-        headers,
-      );
-      console.log('updateUserProfileDetails', response);
-      if (response.status === 200) {
-        // await AsyncStorage.setItem("first_Name", response.data.payload.first_name || "");
-        // await AsyncStorage.setItem("last_Name", response.data.payload.last_name || "");
-        // await AsyncStorage.setItem("email", response.data.payload.email || "");
-        // await AsyncStorage.setItem("Token", response.data.key || "");
-
-      }
-
+  try {
+    const headers = await AUTH_MULTYPART_HEADERS();
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.UPDATEUSERPROFILE,
+      payload,
+      { headers } // Fixed: headers wrapped in config object
+    );
+    
+    if (response.status === 200) {
       return {
         success: true,
         data: response.data,
         status: response.status,
       };
-    } catch (error) {
-      console.log('error config', error.config);
-      console.log('error request', error.request);
-      console.log('error response', error.response);
-      console.log('error message', error.message);
-
-      return {
-        success: false,
-        error: error.response?.data || 'Failed to send connection',
-        status: error.response?.status || 500,
-      };
     }
-  },
+  } catch (error) {
+    console.log('Full error:', error);
+    console.log('Error data:', error.response?.data);
+    return {
+      success: false,
+      error: error.response?.data || 'Failed to send update User Profile',
+      status: error.response?.status || 500,
+    };
+  }
+},
+  
+  
   forgetPassword: async (payload) => {
     try {
       const response = await axiosInstance.post(
@@ -563,7 +591,7 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch Countries List',
+        error: error.response?.data || 'Failed to fetch Languages List',
         status: error.response?.status || 500,
       };
     }
@@ -652,7 +680,7 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch Countries List',
+        error: error.response?.data || 'Failed to fetch Privacy Settings',
         status: error.response?.status || 500,
       };
     }
@@ -705,7 +733,7 @@ const Services = {
       console.log('error message', error.message);
       return {
         success: false,
-        error: error.response?.data || 'Failed to fetch Countries List',
+        error: error.response?.data || 'Failed to fetch Subscription Plan Details List',
         status: error.response?.status || 500,
       };
     }
@@ -1000,5 +1028,292 @@ getTemplateDocx: async (templateId) => {
   }
 },
 
+//Organisation Api's
+
+getOrganisationDashboard: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      const response = await axiosInstance.get(API_ENDPOINTS.ORGANISATIONDASHBOARD, headers);
+
+      console.log('getOrganisationDashboard', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+ updateUserProfile : async (payload) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    const response = await axiosInstance.post(
+      `${API_ENDPOINTS.UPDATEUSERPROFILE}`,
+      payload,
+      { headers }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data };
+  }
+},
+// updateOrganizationProfile: async (payload) => {
+//   try {
+//     const headers = await AUTH_MULTYPART_HEADERS();
+//     const formData = new FormData();
+
+//     Object.entries(payload).forEach(([key, value]) => {
+//       if (value !== null && value !== undefined) {
+//         if (key === 'logo' && value && typeof value === 'object' && value.uri) {
+//           formData.append('logo', {
+//             uri: value.uri,
+//             name: value.fileName || value.name || 'logo.jpg',
+//             type: value.type || 'image/jpeg',
+//           });
+//         } else {
+//           formData.append(key, value);
+//         }
+//       }
+//     });
+
+//     const response = await axiosInstance.post(
+//       `${API_ENDPOINTS.ORGANISATIONPROFILE}`,
+//       formData,
+//       { headers }
+//     );
+// console.log("response43",response);
+
+//     return { success: true, data: response.data };
+//   } catch (error) {
+//     return { success: false, error: error.response?.data };
+//   }
+// },
+
+
+// Agency Api's
+
+updateOrganizationProfile: async (payload) => {
+  try {
+    console.log("📤 Payload received:", payload);
+
+    const headers = await AUTH_MULTYPART_HEADERS();
+    console.log("📌 Headers being sent:", headers);
+
+    const formData = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        if (key === 'logo' && value && typeof value === 'object' && value.uri) {
+          console.log(`🖼 Appending file field '${key}':`, value);
+          formData.append('state', selectedStateName.trim());
+
+          formData.append('logo', {
+            uri: value.uri,
+            name: value.fileName || value.name || 'logo.jpg',
+            type: value.type || 'image/jpeg',
+          });
+        } else {
+          console.log(`✏ Appending field '${key}':`, value);
+          formData.append(key, value);
+        }
+      }
+    });
+
+    console.log("📦 FormData appended successfully — ready to send");
+
+    const response = await axiosInstance.post(
+      `${API_ENDPOINTS.ORGANISATIONPROFILE}`,
+      formData,
+      { headers }
+    );
+
+    console.log("✅ API Response:", response);
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("❌ API Error object:", error);
+    console.error("📌 error.message:", error.message);
+    console.error("📌 error.response?.status:", error.response?.status);
+    console.error("📌 error.response?.data:", error.response?.data);
+    console.error("📌 error.request:", error.request);
+
+    return { success: false, error: error.response?.data || error.message };
+  }
+},
+
+
+
+//AGENCY API'S
+getAgencyDashboard: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      const response = await axiosInstance.get(API_ENDPOINTS.AGENCYDASHBOARD, headers);
+
+      console.log('getAgencyDashboard', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+
+  // LAWYER API'S
+  getTopResource: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      const response = await axiosInstance.get(API_ENDPOINTS.TOPRESOURCE, headers);
+
+      console.log('getTopResource', response);
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch subscription status',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+  //   getOrganistionProfileList: async data => {
+  //   try {
+  //     const headers = await AUTH_HEADERS();
+  //     const response = await axiosInstance.get(
+  //       API_ENDPOINTS.GETORGANISATIONPROFILE +
+  //       `?&limit=${data?.limit}&offset=${data?.offset}`,
+  //       headers,
+  //     );
+  //     console.log("getOrganistionProfileList",response);
+      
+  //     return {
+  //       success: true,
+  //       data: response.data.results,
+  //       status: response.status,
+  //     };
+  //   } catch (error) {
+
+  //     console.log('error config', error.config);
+  //     console.log('error request', error.request);
+  //     console.log('error response', error.response);
+  //     console.log('error message', error.message);
+  //     return {
+  //       success: false,
+  //       error: error.response?.data || 'Failed to fetch Lawyer Network List',
+  //       status: error.response?.status || 500,
+  //     };
+  //   }
+  // },
+  getOrganistionProfileList: async (data) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    
+    // Build query parameters
+    let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}`;
+    
+    // Add search parameter if provided
+    if (data?.search) {
+      queryParams += `&search=${encodeURIComponent(data.search)}`;
+    }
+    
+    const response = await axiosInstance.get(
+      API_ENDPOINTS.GETORGANISATIONPROFILE + queryParams,
+      headers
+    );
+    
+    console.log("getOrganistionProfileList response", response);
+    
+    return {
+      success: true,
+      data: response.data.results,
+      count: response.data.count, // Make sure your API returns total count
+      status: response.status,
+    };
+  } catch (error) {
+    console.error('Error fetching organisation profiles:', {
+      config: error.config,
+      request: error.request,
+      response: error.response,
+      message: error.message
+    });
+    
+    return {
+      success: false,
+      error: error.response?.data || 'Failed to fetch Organisation Profile List',
+      status: error.response?.status || 500,
+    };
+  }
+},
+  getJobProfileList: async (data) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    
+    // Build query parameters
+    let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}`;
+    
+    // Add search parameter if provided
+    // if (data?.search) {
+    //   queryParams += `&search=${encodeURIComponent(data.search)}`;
+    // }
+    
+    const response = await axiosInstance.get(
+      API_ENDPOINTS.JOBPROFILES + queryParams,
+      headers
+    );
+    
+    console.log("getJobProfileList", response);
+    
+    return {
+      success: true,
+      data: response.data,
+      count: response.data.count, 
+      status: response.status,
+    };
+  } catch (error) {
+    console.error('Error fetching organisation profiles:', {
+      config: error.config,
+      request: error.request,
+      response: error.response,
+      message: error.message
+    });
+    
+    return {
+      success: false,
+      error: error.response?.data || 'Failed to fetch Organisation Profile List',
+      status: error.response?.status || 500,
+    };
+  }
+},
 };
 export default Services;

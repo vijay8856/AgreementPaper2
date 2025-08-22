@@ -362,6 +362,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       try {
         const fName = await AsyncStorage.getItem('first_Name');
         const lName = await AsyncStorage.getItem('last_Name');
+        console.log("fName",fName);
+        console.log("lName",lName);
+
+        
         if (fName) setFirstName(fName);
         if (lName) setLastName(lName);
       } catch (e) {
@@ -442,7 +446,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     { id: 7, icon: 'account-group', label: 'Invite Your Friends', screen: 'InviteResource', premium: false },
     { id: 4, icon: 'cog-outline', label: 'Settings', screen: 'Settings', premium: false },
 
-    { id: 10, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
+    { id: 11, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
     { id: 9, icon: 'help-circle-outline', label: 'Help', screen: 'HelpScreen', premium: false },
     
 

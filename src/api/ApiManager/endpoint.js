@@ -2,11 +2,12 @@ export const API_ENDPOINTS = {
 REGISTER:'/accounts/signup/',
 SENDVERIFICATIONGAMILCODE:'/accounts/send-mail-verify-code/',
 VERIFYCODE:'/accounts/verify-mail/',
-LOGIN: '/accounts/v2/login/mobile/',
+LOGIN:'/accounts/login/',
+// LOGIN: '/accounts/v2/login/mobile/',
 LAWYERNETWORKLIST:'/lawyer-network/lawyers/',
 COUNTRIES:'/accounts/v2/countries/',
 ANALYSISCONTRACT:'/ai/analyze-contract/v2/',
-SUPPLIERSLIST:'/organisation/profile/',
+SUPPLIERSLIST:'agency/agency-profile',
 GOOGLELOGIN:'/accounts/dj-rest-auth/google/',
 CONNECTSUPPLIER:'accounts/user_connections/',
 INVITEUSER:'/accounts/invite-user/create/',
@@ -34,5 +35,23 @@ DELETEUSERACCOUNT:'/accounts/delete/',
 AIDRAFT:"/settings/openai/analyze-contract/v2/",
 SAVEDRAFTTEMPLATE:'ai/draft-template/',
 ALLTEMPLATES:'/ai/draft-template/',
-  // Add other endpoints here
+
+//Organisation Api's endpoint's
+ORGANISATIONDASHBOARD:'organisation/dashboard/',
+ORGANISATIONUSERPROFILE:'accounts/user-profile/',
+ORGANISATIONPROFILE:'organisation/profile/',
+ORGANIZATIONTOPAGENCYDASHBOARD:'organisation/my-agencies',
+ORGANIZATIONJOBPOSTDASHBOARD:'/job/job-post/',      
+ORGANIZATIONUSERMEMBERDASHBOARD:'organisation/organisation-user',
+
+// Agency Dashboard endpoint's  
+AGENCYDASHBOARD:'agency/dashboard-stats/',
+
+//Lawyer Dashboard endpoint's
+TOPRESOURCE:"resources/resources-profile",
+GETORGANISATIONPROFILE:"/organisation/profile",
+
+
+JOBPROFILES:"job/public-job-post/relevant-jobs/"
+ 
 };

@@ -83,6 +83,7 @@ export const AUTH_MULTYPART_HEADERS = async () => {
   return {
     'Content-Type': 'multipart/form-data',
     Authorization: `Token ${token}`,
+    'Accept': 'application/json',
   };
 };
 

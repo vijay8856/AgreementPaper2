@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Platform, StatusBar,  } from 'react-native';
+import { Platform, StatusBar, TouchableOpacity, } from 'react-native';
 import LoginScreen from '../screens/Login';
 import DashboardWrapper from '../screens/DashboardWrapper';
 import SignUpScreen from '../screens/SignUpScreen';
@@ -17,6 +17,16 @@ import HelpScreen from '../screens/HelpScreen';
 import AIDraft from '../screens/AIDraft';
 import ContractPreviewScreen from '../screens/ContractPreviewScreen';
 import AICoreAdminScreen from '../screens/AIDraft';
+import OrganisationDashboard from '../screens/OrganisationDashboard';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import AgencyDashboard from '../screens/AgencyDashboard';
+import { OrganisationDrawer } from '../components/DrawerNavigator';
+import { AgencyDrawerNavigator } from '../components/AgencyDrawerNavigator';
+import { LawyerDrawerNavigator } from '../components/LawyerDrawerNavigation';
+import LawyerOrgProfile from '../screens/LawyerOrgProfileList';
+import InviteOrganizationScreen from '../screens/InviteOrganization';
+import TalentDashboard from '../screens/TalentDashboard';
+import { TalentDrawerNavigator } from '../components/TalentDrawerNavigator';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -32,29 +42,19 @@ export type RootStackParamList = {
   WebViewScreen: { url: string };
   LinkedInLoginScreen: undefined;
   SubscriptionHistoryScreen: undefined,
-  HelpScreen:undefined,
-  AIDraft:undefined,
+  HelpScreen: undefined,
+  AIDraft: undefined,
   ContractPreviewScreen: { htmlContent: any };
-  AICoreAdminScreen:undefined,
+  AICoreAdminScreen: undefined,
+  OrganisationDashboard: undefined,
+  AgencyDashboard: undefined,
 };
 
 const NavigationManager = () => {
   return (
     <>
       <StatusBar backgroundColor="#0E3386" barStyle="light-content" />
-      {/* <RootStack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#0E3386',
-            elevation: 0,
-            shadowOpacity: 0,
-            height: Platform.OS === 'android' ? 60 : undefined,
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
-          headerTitleAlign: 'left',
-        }}
-      > */}
+
       <RootStack.Navigator
         initialRouteName="AuthLoading"
         screenOptions={{
@@ -86,9 +86,64 @@ const NavigationManager = () => {
         <RootStack.Screen name="HelpScreen" component={HelpScreen} options={{ title: 'Help Screen ' }} />
         <RootStack.Screen name="AIDraft" component={AICoreAdminScreen} options={{ title: 'AI Draft ' }} />
         <RootStack.Screen name="ContractPreviewScreen" component={ContractPreviewScreen} options={{ title: 'Contract Preview ' }} />
+        <RootStack.Screen name="LawyerOrgProfile" component={LawyerOrgProfile} options={{ title: 'Lawyer Profile' }} />
+        <RootStack.Screen name="InviteOrganization" component={InviteOrganizationScreen} options={{ title: 'Invite Organization' }} />
+
+        <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}   
+         options={{
+            headerShown: false,
+            // title: 'Organisation Dashboard',
+          }}
+        //  options={({ navigation }:any) => ({
+        //    title: 'Talent Dashboard',
+        //    headerRight: () => (
+        //      <TouchableOpacity
+        //        onPress={() => navigation.navigate('MyProfile')}
+        //        style={{ marginRight: 15 }}
+        //      >
+        //        <Icon name="account-circle" size={28} color="#fff" />
+        //      </TouchableOpacity>
+        //    ),
+        //  })} 
+         
+         />
 
 
 
+        <RootStack.Screen
+          name="OrganisationDashboard"
+          component={OrganisationDrawer}
+          options={{
+            headerShown: false,
+            // title: 'Organisation Dashboard',
+          }}
+        />
+        <RootStack.Screen
+          name="AgencyDashboard"
+          component={AgencyDrawerNavigator}
+          options={{
+            headerShown: false,
+          }}
+        // options={({ navigation }) => ({
+        //   title: 'Agency Dashboard',
+        //   headerRight: () => (
+        //     <TouchableOpacity 
+        //       onPress={() => navigation.navigate('MyProfile')}
+        //       style={{ marginRight: 15 }}
+        //     >
+        //       <Icon name="account-circle" size={28} color="#fff" />
+        //     </TouchableOpacity>
+        //   ),
+        // })}
+        />
+        <RootStack.Screen
+          name="LawyerDashboard"
+          component={LawyerDrawerNavigator}
+          options={{
+            headerShown: false,
+            // title: 'Organisation Dashboard',
+          }}
+        />
         <RootStack.Screen
           name="Dashboard"
           component={DashboardWrapper}

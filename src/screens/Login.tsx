@@ -70,10 +70,15 @@ const handleLogin = async (loginType: 'google' | 'email') => {
 
     // -------- Google Login flow ----------
     if (loginType === 'google') {
+  console.log("    come in try");
+  
       await GoogleSignin.hasPlayServices();
       await GoogleSignin.signOut(); // optional, but ensures fresh login
+
       const userInfo = await GoogleSignin.signIn();
+
       const tokens = await GoogleSignin.getTokens();
+
 
       const accessToken = tokens?.accessToken;
       const idToken = tokens?.idToken;
@@ -130,6 +135,7 @@ const handleLogin = async (loginType: 'google' | 'email') => {
 
             // Success: Save user data and navigate
             const user = tokenResult2?.data?.user;
+console.log("useruser",user);
 
             await AsyncStorage.setItem('first_Name', user?.first_name || '');
             await AsyncStorage.setItem('last_Name', user?.last_name || '');
@@ -137,6 +143,9 @@ const handleLogin = async (loginType: 'google' | 'email') => {
             await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
             await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
             await AsyncStorage.setItem('hasLoggedIn', 'true');
+await AsyncStorage.setItem('userType', user?.user_type);
+await AsyncStorage.setItem('userId', user?.id);
+
 
             Toast.show({
               type: 'success',
@@ -149,7 +158,7 @@ const handleLogin = async (loginType: 'google' | 'email') => {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{ name: 'Dashboard' }],
+                  routes: [{ name: 'AuthLoading' }],
                 })
               );
             }, 1000);
@@ -192,6 +201,9 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
       await AsyncStorage.setItem('hasLoggedIn', 'true');
+await AsyncStorage.setItem('userType', user?.user_type);
+await AsyncStorage.setItem('userId', user?.id);
+
 
       Toast.show({
         type: 'success',
@@ -204,7 +216,7 @@ const handleLogin = async (loginType: 'google' | 'email') => {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: 'Dashboard' }],
+            routes: [{ name: 'AuthLoading' }],
           })
         );
       }, 1000);
@@ -233,6 +245,7 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       }
 
       const result = await Services.login(email, password);
+console.log("result login",result);
 
       if (result.status === 200) {
         Toast.show({
@@ -241,15 +254,29 @@ const handleLogin = async (loginType: 'google' | 'email') => {
           position: 'top',
         });
 
-        await AsyncStorage.setItem('Token', result.data?.key || '');
-        await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
-        await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
-        await AsyncStorage.setItem('email', result.data?.data?.email || '');
-        await AsyncStorage.setItem('hasLoggedIn', 'true');
+        // await AsyncStorage.setItem('Token', result.data?.key || '');
+        // await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
+        // await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
+        // await AsyncStorage.setItem('email', result.data?.data?.email || '');
+        // await AsyncStorage.setItem('hasLoggedIn', 'true');
+        // await AsyncStorage.setItem('userType', result.data?.payload?.user_type);
+        // await AsyncStorage.setItem('isActive', result.data?.payload?.profile?.is_active);
 
+    await AsyncStorage.multiSet([
+      ['Token', result.data.key || ''],
+      ['first_Name', result.data.payload?.first_name || ''],
+      ['last_Name', result.data.payload?.last_name || ''],
+      ['email', result.data.payload?.email || ''],
+      ['hasLoggedIn', 'true'],
+      ['userType', result.data.payload?.user_type || ''],
+      ['isActive', result.data.payload?.profile?.is_active?.toString() || 'false'],
+   ['userId', result.data.payload?.id?.toString() || ''],
+    ]);
+
+   
         setTimeout(() => {
           setLoading(false);
-          navigation.navigate('Dashboard');
+          navigation.navigate('AuthLoading');
         }, 1000);
       } else {
         setLoading(false);

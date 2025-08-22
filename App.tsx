@@ -10,6 +10,8 @@ import NavigationManager from './src/navigation/NavigationManager';
 import SplashScreen from './src/components/SplashScreen';
 import Toast from 'react-native-toast-message';
 import { REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE } from '@env';
+import 'react-native-gesture-handler';
+import { OrganisationDrawer } from './src/components/DrawerNavigator';
 function App(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,6 +25,7 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
+    <>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <LoaderProvider>
@@ -45,6 +48,7 @@ function App(): React.JSX.Element {
         </SafeAreaProvider>
       </LoaderProvider>
     </GestureHandlerRootView>
+    </>
   );
 }
 

@@ -242,14 +242,14 @@ const SupplierAgencyScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient
+      {/* <LinearGradient
         colors={['#0E3386', '#1A3B8B']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >
         <Text style={styles.headerTitle}>ORGANIZATION</Text>
-      </LinearGradient>
+      </LinearGradient> */}
 
       {/* Filter Section */}
       <View style={styles.filterContainer}>
@@ -303,9 +303,9 @@ const SupplierAgencyScreen = () => {
           {/* Table Header */}
           <View style={styles.tableHeader}>
             <View style={styles.idColumn}><Text style={styles.headerText}>ID</Text></View>
-            <View style={styles.orgColumn}><Text style={styles.headerText}>ORG</Text></View>
+            <View style={styles.orgColumn}><Text style={styles.headerText}>AGENCY</Text></View>
             <View style={styles.emailColumn}><Text style={styles.headerText}>EMAIL | COMPANY</Text></View>
-            <View style={styles.ratingColumn}><Text style={styles.headerText}>RATINGS</Text></View>
+            {/* <View style={styles.ratingColumn}><Text style={styles.headerText}>RATINGS</Text></View> */}
             <View style={styles.locationColumn}><Text style={styles.headerText}>LOCATION</Text></View>
             <View style={styles.statusColumn}><Text style={styles.headerText}>STATUS</Text></View>
             <View style={styles.connectColumn}><Text style={styles.headerText}>CONNECT</Text></View>
@@ -332,9 +332,9 @@ const SupplierAgencyScreen = () => {
                   <Text style={styles.companyText}>{supplier.company_name}</Text>
                 </View>
 
-                <View style={styles.ratingColumn}>
+                {/* <View style={styles.ratingColumn}>
                   <Text style={styles.cellText}>India</Text>
-                </View>
+                </View> */}
 
                 <View style={styles.locationColumn}>
                   <Text style={styles.cellText}>India</Text>

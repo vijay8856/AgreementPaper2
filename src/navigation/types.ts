@@ -24,15 +24,15 @@ export type RootStackParamList = {
   AuthLoading: undefined;
   MyProfile:undefined;
   LinkedInLoginScreen: undefined;
-    SubscriptionHistoryScreen:undefined,
-    ContractPreviewScreen: { htmlContent: string };
-    AICoreAdminScreen:undefined,
-    ESignatureScreen:undefined,
-
-      OrganisationDashboard: undefined;
+  SubscriptionHistoryScreen:undefined,
+  ContractPreviewScreen: { htmlContent: string };
+  AICoreAdminScreen:undefined,
+  ESignatureScreen:undefined,
+  OrganisationDashboard: undefined;
   SupplierDashboard: undefined;
   TalentDashboard: undefined;
   LawyerDashboard: undefined;
+  OrganizationProfileModal:undefined,
 };
 export type AuthStackParamList = {
   Login: undefined;

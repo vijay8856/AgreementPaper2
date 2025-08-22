@@ -15,8 +15,9 @@ declare module 'react-native-vector-icons/Ionicons' {
 }
 
 declare module 'react-native-vector-icons/MaterialIcons' {
+  import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
   import { Icon } from 'react-native-vector-icons/Icon';
-  const content: typeof Icon;
+  const content: typeof Icon ,MaterialIcons;
   export default content;
 }
 // react-native-vector-icons.d.ts

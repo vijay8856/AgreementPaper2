@@ -89,7 +89,29 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
       }
     }
   };
-
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      // First load from AsyncStorage for quick display
+      const storedData = await AsyncStorage.getItem('userData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        // Convert relative paths to absolute
+        if (parsedData.profile_pic?.startsWith('/')) {
+          parsedData.profile_pic = `https://api.agreementpaper.com/${parsedData.profile_pic}`;
+        }
+        setUserData(parsedData);
+      }
+      
+      // Then fetch fresh data from API
+      await fetchUserProfile();
+    } catch (error) {
+      console.log('Initial load error:', error);
+    }
+  };
+  
+  loadData();
+}, []);
 
   const fetchUserProfile = async () => {
     try {
@@ -99,22 +121,47 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
 
         console.log("userssss", user);
 
-        setUserData({
-          ...user,
-          first_name: user.first_name || '',
-          last_name: user.last_name || '',
-          profile_pic: user.avatar || '',
-          email: user.email || '',
-          contact_number: user.contact_number || '',
-          linkedin_url: user.linkedin_url || '',
-          age: user.age || '',
-          language: user.language || '',
-        });
-        setSelectedLanguage(user.language_data[0] || {});
+           let profilePic = user.profile_pic || user.avatar || '';
+      if (profilePic && !profilePic.startsWith('http')) {
+        profilePic = `http://api.agreementpaper.com${profilePic}`;
+      }
 
-        setContactNumber(user.contact_number || '');
-        setLinkedinUrl(user.linkedin_url || '');
-        setAge(user.age?.toString() || '');
+
+
+        const updatedUser = {
+        ...user,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        profile_pic: profilePic,
+        email: user.email || '',
+        contact_number: user.contact_number || '',
+        linkedin_url: user.linkedin_url || '',
+        age: user.age || '',
+        language: user.language || '',
+        userId:user.id || '' ,
+      };
+  await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+        // setUserData({
+        //   ...user,
+        //   first_name: user.first_name || '',
+        //   last_name: user.last_name || '',
+        //    profile_pic: user.profile_pic || user.avatar || '',
+        //   email: user.email || '',
+        //   contact_number: user.contact_number || '',
+        //   linkedin_url: user.linkedin_url || '',
+        //   age: user.age || '',
+        //   language: user.language || '',
+        // });
+        // setSelectedLanguage(user.language_data[0] || {});
+
+        // setContactNumber(user.contact_number || '');
+        // setLinkedinUrl(user.linkedin_url || '');
+        // setAge(user.age?.toString() || '');
+              setUserData(updatedUser);
+      setSelectedLanguage(user.language_data[0] || {});
+      setContactNumber(user.contact_number || '');
+      setLinkedinUrl(user.linkedin_url || '');
+      setAge(user.age?.toString() || '');
       }
     } catch (err) {
       console.log('Error loading profile', err);
@@ -135,16 +182,19 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
     }
   };
 
-  const handleUpdateProfile = async () => {
-    if (!userData.language) {
-      Toast.show({
-        type: 'error',
-        text1: 'Please select a language before updating',
-      });
-      return;
-    }
 
+
+console.log("userData",userData?.profile_pic);
+const handleUpdateProfile = async () => {
+  if (!userData.language) {
+    Toast.show({ type: 'error', text1: 'Please select a language' });
+    return;
+  }
+
+  try {
     const formData = new FormData();
+    
+    
     formData.append('first_name', userData.first_name || '');
     formData.append('last_name', userData.last_name || '');
     formData.append('contact_number', contactNumber || '');
@@ -152,6 +202,7 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
     formData.append('age', age || '');
     formData.append('language', String(Number(selectedLanguage.id)));
 
+    
     if (userData.profile_pic && userData.profile_pic.startsWith('file://')) {
       formData.append('profile_pic', {
         uri: userData.profile_pic,
@@ -160,23 +211,48 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
       });
     }
 
-    try {
-      setLoading(true); // Start loader
-      const response = await Services.updateUserProfileDetails(formData);
+    setLoading(true);
+    const response = await Services.updateUserProfileDetails(formData);
 
-      if (response.success) {
-        Toast.show({ type: 'success', text1: 'Profile updated' });
-        setEditMode(false);
-      } else {
-        Toast.show({ type: 'error', text1: 'Update failed' });
+    if (response?.success) {
+      
+ let profilePicUrl = response.data.profile_pic;
+      if (profilePicUrl && !profilePicUrl.startsWith('http')) {
+        profilePicUrl = `http://api.agreementpaper.com${profilePicUrl}`;
       }
-    } catch (e) {
-      console.log(e);
-      Toast.show({ type: 'error', text1: 'An error occurred' });
-    } finally {
-      setLoading(false); // Stop loader
+      const updatedUser = {
+        ...userData,
+        profile_pic: profilePicUrl,
+           profile_file: null
+      };
+      try {
+    await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+    setUserData(updatedUser);
+       await fetchUserProfile();
+  } catch (error) {
+    console.log('Error saving user data:', error);
+  }
+
+      Toast.show({ type: 'success', text1: 'Profile updated' });
+      setEditMode(false);
+    } else {
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Update failed',
+        text2: response?.error || 'Please try again'
+      });
     }
-  };
+  } catch (error) {
+    console.log('Profile update error:', error);
+    Toast.show({
+      type: 'error',
+      text1: 'Update error',
+      text2: error.message || 'An unexpected error occurred'
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -221,8 +297,6 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
       </View>
     </Modal>
   );
-
-
 
   const handleSendResetCode = async () => {
     const res = await Services.forgetPassword({ email: otpEmail });
@@ -279,16 +353,28 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
       {renderLanguageModal()}
 
       <View style={styles.profileSection}>
-        <TouchableOpacity onPress={handleImagePick}>
-          {userData.profile_pic ? (
-            <Image source={{ uri: userData.profile_pic }} style={styles.avatar} />
-          ) : (
-            <View style={styles.initialsCircle}>
-              <Text style={styles.initialsText}>{userData.first_name?.charAt(0)}</Text>
-            </View>
-          )}
-          <Text style={{ color: 'blue' }}>Change Picture</Text>
-        </TouchableOpacity>
+<TouchableOpacity onPress={handleImagePick}>
+  {userData?.profile_pic ? (
+    <Image
+      source={{ 
+        uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+        cache: 'reload'
+      }}
+      style={styles.avatar}
+      onError={(e) => {
+        console.log('Image loading error:', e.nativeEvent.error);
+        // Fallback to initials if image fails to load
+      }}
+    />
+  ) : (
+    <View style={styles.initialsCircle}>
+      <Text style={styles.initialsText}>
+        {userData?.first_name?.charAt(0) || ''}
+      </Text>
+    </View>
+  )}
+  <Text style={{ color: 'blue' }}>Change Picture</Text>
+</TouchableOpacity>
 
 
         {editMode ? (
@@ -319,6 +405,7 @@ const [showDeletePassword, setShowDeletePassword] = useState(false);
               value={contactNumber}
               onChangeText={setContactNumber}
               keyboardType="phone-pad"
+              maxLength={10}
             />
 
             <TextInput
@@ -524,7 +611,8 @@ const styles = StyleSheet.create({
   avatar: {
     width: 100,
     height: 100,
-    borderRadius: 50
+    borderRadius: 50,
+    backgroundColor:"gray"
   },
   initialsCircle: {
     width: 100,

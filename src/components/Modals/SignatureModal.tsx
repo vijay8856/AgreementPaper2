@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Modal,
     View,
@@ -19,6 +19,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import RNFS from 'react-native-fs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { API_KEY } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 type NavigationProp = StackNavigationProp<RootStackParamList, 'SignWebViewScreen'>;
 
 interface Props {
@@ -32,9 +33,21 @@ const SignatureModal = ({ visible, onClose }: Props) => {
     const [email, setEmail] = useState('');
     const [passcode, setPasscode] = useState('');
     const [document, setDocument] = useState<any>(null);
-
+ const [userId ,setUserId] = useState<any>(null);
     const API_KEY1 = API_KEY
+  useEffect(() => {
+    const fetchData = async () => {
+      const data2 = await AsyncStorage.getItem('userId');
 
+
+
+      if (data2) {
+        setUserId(JSON.parse(data2));
+        
+      }
+    };
+    fetchData();
+  }, []);
     const pickDocument = async () => {
         try {
             const res = await DocumentPicker.pickSingle({
@@ -111,14 +124,18 @@ const SignatureModal = ({ visible, onClose }: Props) => {
                 text_tags: true,
                 subject: 'Please sign this document',
                 message: 'Please review and sign this document.',
-
-                recipients: [
+  recipients: [
                     {
+                         send_email: true,
+          send_email_delay: 0,
                         name: name,
                         email: email,
                         role: "Signer",
                         embedded_signing: true,
-                        id: 14123
+                        id: userId,
+                        passcode: passcode,
+          subject: "Please sign this document",
+          message: "Please review and sign this document.",
                     }
                 ],
 

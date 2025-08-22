@@ -49,7 +49,7 @@ const VerifyEmailScreen: React.FC = () => {
 
 const SIGNUP_TYPES = [
   { label: 'Enterprise', value: 'ORGANISATION_USER', screen: 'OrganisationDashboard' },
-  { label: 'Supplier & Agency Network', value: 'AGENCY_USER', screen: 'SupplierDashboard' },
+  { label: 'Supplier & Agency Network', value: 'AGENCY_USER', screen: 'AgencyDashboard' },
   { label: 'Talent', value: 'RESOURCE_USER', screen: 'TalentDashboard' },
   { label: 'Individual Buyer', value: 'INDIVIDUAL_USER', screen: 'Dashboard' },
   { label: 'Lawyer Network', value: 'LAWYER_USER', screen: 'LawyerDashboard' },
@@ -93,7 +93,7 @@ const handleVerifyCode = async (): Promise<void> => {
    if (userType) {
         await AsyncStorage.setItem('userType', userType);
         console.log('User type saved:', userType);
-      }
+      } 
       // Find matching type
       const matchedType = SIGNUP_TYPES.find(type => type.value === userType);
 

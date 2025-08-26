@@ -30,6 +30,7 @@ import { TalentDrawerNavigator } from '../components/TalentDrawerNavigator';
 import MSADetailsScreen from '../screens/OrganizationModules/MSADetailScreen';
 import MSADetailScreen from '../screens/OrganizationModules/MSADetailScreen';
 import CreateMSA from '../screens/CreateMSA';
+import ApproverModal from '../components/Modals/ApproverModal';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -51,8 +52,9 @@ export type RootStackParamList = {
   AICoreAdminScreen: undefined,
   OrganisationDashboard: undefined,
   AgencyDashboard: undefined,
-  MSADetailScreen: { data: any }; 
+ MSADetailScreen: { data: any };
   CreateMSA:undefined,
+  ApproverModal:undefined,
 };
 
 const NavigationManager = () => {
@@ -95,6 +97,7 @@ const NavigationManager = () => {
         <RootStack.Screen name="InviteOrganization" component={InviteOrganizationScreen} options={{ title: 'Invite Organization' }} />
  <RootStack.Screen name="MSADetailScreen" component={MSADetailScreen} options={{ title: 'MSA Details Screen' }} />
  <RootStack.Screen name="CreateMSA" component={CreateMSA} options={{ title: 'Create MSA ' }} />
+  <RootStack.Screen name="ApproverModal" component={ApproverModal} options={{ title: 'Approver Modal ' }} />
 
         <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}   
          options={{

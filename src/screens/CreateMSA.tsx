@@ -24,7 +24,7 @@ const SearchableModal = ({ visible, onClose, title, data, onSelect }: any) => {
         if (searchQuery.trim() === "") {
             setFilteredData(data || []);
         } else {
-            const filtered = (data || []).filter(item =>
+            const filtered = (data || []).filter((item: any) =>
                 item && (
                     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     (item.code && item.code.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -36,7 +36,7 @@ const SearchableModal = ({ visible, onClose, title, data, onSelect }: any) => {
 
     const renderListItem = useCallback((item: any) => {
         if (!item) return null;
-        
+
         return (
             <TouchableOpacity
                 style={styles.listItem}
@@ -61,7 +61,7 @@ const SearchableModal = ({ visible, onClose, title, data, onSelect }: any) => {
             <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>{title}</Text>
-                    
+
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search..."
@@ -69,7 +69,7 @@ const SearchableModal = ({ visible, onClose, title, data, onSelect }: any) => {
                         onChangeText={setSearchQuery}
                         autoFocus={true}
                     />
-                    
+
                     <FlatList
                         data={filteredData}
                         keyExtractor={(item, index) => index.toString()}
@@ -80,7 +80,7 @@ const SearchableModal = ({ visible, onClose, title, data, onSelect }: any) => {
                         }
                         keyboardShouldPersistTaps="handled" // Important for keeping keyboard open
                     />
-                    
+
                     <TouchableOpacity
                         style={styles.closeButton}
                         onPress={() => {
@@ -95,14 +95,125 @@ const SearchableModal = ({ visible, onClose, title, data, onSelect }: any) => {
         </Modal>
     );
 };
+const ProfileModal = ({ visible, onClose, title, data, onSelect, selectedProfile }: any) => {
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filteredData, setFilteredData] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (searchQuery.trim() === "") {
+            setFilteredData(data || []);
+        } else {
+            const filtered = (data || []).filter((item: any) =>
+                item &&
+                (
+                    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+            );
+
+            setFilteredData(filtered);
+        }
+    }, [searchQuery, data]);
+
+    const renderListItem = useCallback((item: any) => {
+        if (!item) return null;
+
+        // Extract user details for agency/resource or use direct properties for master data
+        const userDetail = item.user_detail || item;
+        const firstName = userDetail.first_name || '';
+        const lastName = userDetail.last_name || '';
+        const email = userDetail.email || item.email;
+        const companyName = item.name || userDetail.company_name;
+        const status = item.status || userDetail.status;
+
+        const fullName = `${firstName} ${lastName}`.trim();
+        const displayName = fullName || companyName || 'Unnamed';
+
+        return (
+            <TouchableOpacity
+                style={[styles.listItem, selectedProfile?.id === item.id && styles.selectedListItem]}
+                onPress={() => {
+                    onSelect(item);
+                    setSearchQuery("");
+                }}
+            >
+                <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>
+                        {displayName}
+                    </Text>
+                    {email && (
+                        <Text style={styles.profileEmail}>{email}</Text>
+                    )}
+                    {status && (
+                        <Text style={styles.profileStatus}>
+                            • {status}
+                        </Text>
+                    )}
+                </View>
+                {selectedProfile?.id === item.id && (
+                    <Text style={styles.selectedText}>✓ Selected</Text>
+                )}
+            </TouchableOpacity>
+        );
+    }, [onSelect, selectedProfile]);
+
+    return (
+        <Modal
+            visible={visible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>{title}</Text>
+
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search..."
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        autoFocus={true}
+                    />
+
+                    <FlatList
+                        data={filteredData}
+                        keyExtractor={(item, index) => `${item.id}-${index}`}
+                        renderItem={({ item }) => renderListItem(item)}
+                        style={styles.list}
+                        ListEmptyComponent={
+                            <Text style={styles.emptyText}>No {title.toLowerCase()} found</Text>
+                        }
+                        keyboardShouldPersistTaps="handled"
+                    />
+
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => {
+                            setSearchQuery("");
+                            onClose();
+                        }}
+                    >
+                        <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { RadioButton } from "react-native-paper";
 import Services from "../Services/services";
 import DocumentPicker from "react-native-document-picker";
 import { launchImageLibrary } from "react-native-image-picker";
+import ApproverModal from "../components/Modals/ApproverModal";
 const CreateMSA = ({ route, navigation }: any) => {
     const { type } = route.params;
+    console.log("log",type);
+    
     const [fields, setFields] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -148,11 +259,28 @@ const CreateMSA = ({ route, navigation }: any) => {
     const [selectedPaymentTerm, setSelectedPaymentTerm] = useState("");
 
 
- const [countryModalVisible, setCountryModalVisible] = useState(false);
+    const [countryModalVisible, setCountryModalVisible] = useState(false);
     const [stateModalVisible, setStateModalVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredCountries, setFilteredCountries] = useState<any[]>([]);
     const [filteredStates, setFilteredStates] = useState<any[]>([]);
+
+    // New states for profile selection
+    const [agencyModalVisible, setAgencyModalVisible] = useState(false);
+    const [resourceModalVisible, setResourceModalVisible] = useState(false);
+    const [masterDataModalVisible, setMasterDataModalVisible] = useState(false);
+
+    const [agencyList, setAgencyList] = useState<any[]>([]);
+    const [resourceList, setResourceList] = useState<any[]>([]);
+    const [masterDataList, setMasterDataList] = useState<any[]>([]);
+
+    const [selectedAgency, setSelectedAgency] = useState<any>(null);
+    const [selectedResource, setSelectedResource] = useState<any>(null);
+    const [selectedMasterData, setSelectedMasterData] = useState<any>(null);
+
+    const [isMSAApproverEnabled, setIsMSAApproverEnabled] = useState(false);
+    const [selectedApprover, setSelectedApprover] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
 
 
@@ -179,6 +307,139 @@ const CreateMSA = ({ route, navigation }: any) => {
         { value: "5", label: "Assign All IP to Client" },
         { value: "6", label: "Limited License for Use Only" },
     ];
+
+
+
+
+
+    const formatDate = (date: any) => {
+  if (!date) return '';
+  
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+    // Fetch data for each profile type
+    useEffect(() => {
+        const fetchProfileData = async () => {
+            try {
+                const data = {
+                    limit: 10,
+                };
+                // Fetch agencies
+                const agencyRes = await Services.getSuppliersList(data);
+                if (agencyRes.success) {
+                    console.log("agencyRes", agencyRes);
+
+                    setAgencyList(agencyRes.data || []);
+                }
+
+                // Fetch resources
+                const resourceRes = await Services.getTopResource();
+                if (resourceRes.success) {
+                    console.log("resourceRes", resourceRes);
+
+                    setResourceList(resourceRes.data || []);
+                }
+
+                // Fetch master data
+                const masterDataRes = await Services.getMasterDataList(data);
+                if (masterDataRes.success) {
+                    console.log("masterDataRes", masterDataRes);
+
+                    setMasterDataList(masterDataRes.data || []);
+                }
+            } catch (err) {
+                console.error("Error fetching profile data:", err);
+            }
+        };
+
+        fetchProfileData();
+    }, []);
+
+
+    const handleSwitchToggle = (value: any) => {
+        setIsMSAApproverEnabled(value);
+        if (value) {
+            setIsModalVisible(true);
+        } else {
+            setSelectedApprover(null);
+        }
+    };
+
+    const handleSelectApprover = (approver: any) => {
+        setSelectedApprover(approver);
+    };
+
+    const handleChangeApprover = () => {
+        setIsModalVisible(true);
+    };
+
+
+
+
+
+
+
+    // Handle switch toggles - only allow one to be active
+    const handleAgencyToggle = (value: boolean) => {
+        if (value) {
+            // Turn off other switches
+            setAssignResource(false);
+            setAssignMasterData(false);
+            setSelectedResource(null);
+            setSelectedMasterData(null);
+            setAgencyModalVisible(true);
+        }
+        setAssignAgency(value);
+    };
+
+    const handleResourceToggle = (value: boolean) => {
+        if (value) {
+            // Turn off other switches
+            setAssignAgency(false);
+            setAssignMasterData(false);
+            setSelectedAgency(null);
+            setSelectedMasterData(null);
+            setResourceModalVisible(true);
+        }
+        setAssignResource(value);
+    };
+
+    const handleMasterDataToggle = (value: boolean) => {
+        if (value) {
+            // Turn off other switches
+            setAssignAgency(false);
+            setAssignResource(false);
+            setSelectedAgency(null);
+            setSelectedResource(null);
+            setMasterDataModalVisible(true);
+        }
+        setAssignMasterData(value);
+    };
+
+    // Handle profile selection
+    const handleAgencySelect = (agency: any) => {
+        setSelectedAgency(agency);
+        setAgencyModalVisible(false);
+    };
+
+    const handleResourceSelect = (resource: any) => {
+        setSelectedResource(resource);
+        setResourceModalVisible(false);
+    };
+
+    const handleMasterDataSelect = (masterData: any) => {
+        setSelectedMasterData(masterData);
+        setMasterDataModalVisible(false);
+    };
+
+
+
+
     // Country selection handler
     const handleCountrySelect = useCallback((country: any) => {
         if (!country) return;
@@ -192,8 +453,8 @@ const CreateMSA = ({ route, navigation }: any) => {
         setSelectedState(state.name || '');
         setStateModalVisible(false);
     }, []);
-// Filter countries based on search query
- useEffect(() => {
+    // Filter countries based on search query
+    useEffect(() => {
         if (searchQuery.trim() === "") {
             setFilteredCountries(countries || []);
         } else {
@@ -324,9 +585,10 @@ const CreateMSA = ({ route, navigation }: any) => {
             });
 
             if (res && res[0]) {
-                setFiles((prev) => [...prev, { type, ...res[0] }]);
+                setFiles((prev) => [...prev, { ...res[0], fileType: type }]);
                 console.log("Picked File:", res[0]);
             }
+
         } catch (err: any) {
             if (DocumentPicker.isCancel(err)) {
                 console.log("User cancelled document picker");
@@ -368,61 +630,143 @@ const CreateMSA = ({ route, navigation }: any) => {
         }
     };
 
-    const formatDate = (date: any) => {
-        return date.toISOString().split('T')[0];
-    };
+    // const formatDate = (date: any) => {
+    //     return date.toISOString().split('T')[0];
+    // };
 
-    const handleSubmit = async () => {
-        // Validate required fields
-        if (!msaName || !industry || !description || !businessUnit || !msaType ||
-            !glAccount || !taxService || !taxGroup || !savingsPercentage ||
-            !paymentTerms || !frequency || !terminationClause) {
-            Alert.alert("Error", "Please fill all required fields");
-            return;
-        }
+    // const handleSubmit = async () => {
+    //     // Validate required fields
+    //     if (!msaName || !industry || !description || !businessUnit || !msaType ||
+    //         !glAccount || !taxService || !taxGroup || !savingsPercentage ||
+    //         !paymentTerms || !frequency || !terminationClause) {
+    //         Alert.alert("Error", "Please fill all required fields");
+    //         return;
+    //     }
 
-        try {
-            // Prepare the data for API
-            const formData = {
-                name: msaName,
-                msa_number: refNumber,
-                msa_type: msaType,
-                unpsc_code: industry,
-                business_unit: businessUnit,
-                gl_account: glAccount,
-                tax_service_type: taxService,
-                tax_group: taxGroup,
-                savings_percentage: savingsPercentage,
-                payment_term: paymentTerms,
-                frequency: frequency,
-                termination_clause: terminationClause,
-                confidentiality_ownership: confidentiality,
-                special_clause: specialClauses,
-                comments: comments,
-                description: description,
-                start_date: formatDate(startDate),
-                end_date: formatDate(endDate),
-                currency_code: currency,
-                budget: budget,
-                jurisdiction_country: jurisdiction === "yes" ? "India" : "",
-                jurisdiction_state: jurisdiction === "yes" ? "Madhya Pradesh" : "",
-                jurisdiction_district: jurisdiction === "yes" ? "Indore" : "",
-                assign_msa_agency: assignAgency,
-                assign_msa_resource: assignResource,
-                assign_msa_masterdata: assignMasterData,
-            };
+    //     try {
+    //         // Prepare the data for API
+    //         const formData = {
+    //             name: msaName,
+    //             msa_number: refNumber,
+    //             msa_type: msaType,
+    //             unpsc_code: industry,
+    //             business_unit: businessUnit,
+    //             gl_account: glAccount,
+    //             tax_service_type: taxService,
+    //             tax_group: taxGroup,
+    //             savings_percentage: savingsPercentage,
+    //             payment_term: paymentTerms,
+    //             frequency: frequency,
+    //             termination_clause: terminationClause,
+    //             confidentiality_ownership: confidentiality,
+    //             special_clause: specialClauses,
+    //             comments: comments,
+    //             description: description,
+    //             start_date: formatDate(startDate),
+    //             end_date: formatDate(endDate),
+    //             currency_code: currency,
+    //             budget: budget,
+    //             jurisdiction_country: jurisdiction === "yes" ? "India" : "",
+    //             jurisdiction_state: jurisdiction === "yes" ? "Madhya Pradesh" : "",
+    //             jurisdiction_district: jurisdiction === "yes" ? "Indore" : "",
+    //             assign_msa_agency: assignAgency,
+    //             assign_msa_resource: assignResource,
+    //             assign_msa_masterdata: assignMasterData,
+    //         };
 
-            // Call your API to create MSA
-            // const response = await Services.createMSA(formData);
+    //         // Call your API to create MSA
+    //         // const response = await Services.createMSA(formData);
 
-            Alert.alert("Success", "MSA created successfully!");
-            navigation.goBack();
-        } catch (error) {
-            console.error("Error creating MSA:", error);
-            Alert.alert("Error", "Failed to create MSA");
-        }
-    };
+    //         Alert.alert("Success", "MSA created successfully!");
+    //         navigation.goBack();
+    //     } catch (error) {
+    //         console.error("Error creating MSA:", error);
+    //         Alert.alert("Error", "Failed to create MSA");
+    //     }
+    // };
+ const handleSubmit = async () => {
+    // Validate required fields
+    if (!msaName || !industry || !description || !businessUnit || !msaType ||
+        !glAccount || !taxService || !taxGroup || !savingsPercentage ||
+        !selectedPaymentTerm || !frequency || !terminationClause || !selectedCurrency || !budget) {
+      Alert.alert("Error", "Please fill all required fields");
+      return;
+    }
 
+    // Validate approver if enabled
+    if (isMSAApproverEnabled && !selectedApprover) {
+      Alert.alert("Error", "Please select an approver");
+      return;
+    }
+
+    try {
+         if (jurisdiction === "yes" && (!selectedCountry || !selectedState || !district)) {
+    Alert.alert("Error", "Please fill all jurisdiction fields");
+    return;
+  }
+        
+ const attachmentData = files.map(file => ({
+      name: file.name || file.fileName,
+      type: file.type || 'application/octet-stream',
+      uri: file.uri || file.path,
+      fileType: file.fileType || 'other'
+    }));
+      // Prepare the data for API
+      const formData = {
+        msa_number: refNumber || null,
+        name: msaName,
+        budget: parseFloat(budget),
+        start_date: `${formatDate(startDate)} 00:00:00`,
+        end_date: `${formatDate(endDate)} 23:59:59`,
+        description: description,
+        savings_percentage: parseFloat(savingsPercentage),
+        comments: comments,
+        status: "in_progress",
+        is_active: true,
+        msa_type: parseInt(msaType),
+        msa_flow: type === "contractor" ? 1 : 2, // 1 for Contractor, 2 for Service
+        unpsc_code: parseInt(industry),
+        business_unit: parseInt(businessUnit),
+        gl_account: parseInt(glAccount),
+        resource: assignResource && selectedResource ? selectedResource.id : null,
+        agency: assignAgency && selectedAgency ? selectedAgency.id : null,
+        tax_service_type: parseInt(taxService),
+        tax_group: parseInt(taxGroup),
+        approver: isMSAApproverEnabled && selectedApprover ? selectedApprover.id : null,
+        currency_code: selectedCurrency,
+        organisation: null,
+        masterdata: assignMasterData && selectedMasterData ? selectedMasterData.id : null,
+        for_organisation: false,
+         attachments: files.map(file => file.name || file.fileName),
+      attachment_data: attachmentData,
+        payment_term: parseInt(selectedPaymentTerm),
+        frequency: parseInt(frequency),
+        termination_clause: parseInt(terminationClause),
+        confidentiality_ownership: parseInt(confidentiality),
+        special_clause: specialClauses,
+        jurisdiction_country: jurisdiction === "yes" ? selectedCountry : "",
+        jurisdiction_state: jurisdiction === "yes" ? selectedState : "",
+        jurisdiction_district: jurisdiction === "yes" ? district : ""
+      };
+// Call your API to create MSA
+
+console.log("formData",formData);
+
+      const response = await Services.createMSA(formData);
+console.log("createMSA",response);
+      
+      if (response.success) {
+        Alert.alert("Success", "MSA created successfully!");
+        navigation.goBack();
+      } else {
+        console.error("Error creating MSA:", response.error);
+        Alert.alert("Error", response.error?.message || "Failed to create MSA");
+      }
+    } catch (error) {
+      console.error("Error creating MSA:", error);
+      Alert.alert("Error", "Failed to create MSA");
+    }
+  };
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -430,10 +774,6 @@ const CreateMSA = ({ route, navigation }: any) => {
             </View>
         );
     }
-
-
-
-
 
     // Open country modal
     const openCountryModal = () => {
@@ -454,9 +794,9 @@ const CreateMSA = ({ route, navigation }: any) => {
     };
 
     // Render item for country/state list
-     const renderListItem = (item: any, onSelect: any) => {
+    const renderListItem = (item: any, onSelect: any) => {
         if (!item) return null; // Handle undefined items
-        
+
         return (
             <TouchableOpacity
                 style={styles.listItem}
@@ -468,9 +808,48 @@ const CreateMSA = ({ route, navigation }: any) => {
         );
     };
 
- 
+    // Render selected profile
+    const renderSelectedProfile = (profile: any, type: string) => {
+        if (!profile) return null;
 
+        // Extract user details for agency/resource or use direct properties for master data
+        const userDetail = profile.user_detail || profile;
+        const firstName = userDetail.first_name || '';
+        const lastName = userDetail.last_name || '';
+        const email = userDetail.email || profile.email;
+        const companyName = profile.company_name || userDetail.company_name;
+        const status = profile.status || userDetail.status;
 
+        const fullName = `${firstName} ${lastName}`.trim();
+        const displayName = fullName || companyName || 'Unnamed';
+
+        return (
+            <View style={styles.selectedProfileContainer}>
+                <Text style={styles.selectedProfileTitle}>Selected {type}:</Text>
+                <View style={styles.selectedProfileCard}>
+                    <Text style={styles.selectedProfileName}>
+                        {displayName}
+                    </Text>
+                    {email && (
+                        <Text style={styles.selectedProfileEmail}>{email}</Text>
+                    )}
+                    {status && (
+                        <Text style={styles.selectedProfileStatus}>Status: {status}</Text>
+                    )}
+                    <TouchableOpacity
+                        style={styles.changeButton}
+                        onPress={() => {
+                            if (type === 'Agency') setAgencyModalVisible(true);
+                            if (type === 'Resource') setResourceModalVisible(true);
+                            if (type === 'Master Data') setMasterDataModalVisible(true);
+                        }}
+                    >
+                        <Text style={styles.changeButtonText}>Change</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    };
 
 
 
@@ -521,24 +900,29 @@ const CreateMSA = ({ route, navigation }: any) => {
                     <View style={styles.checkboxRow}>
                         <Switch
                             value={assignAgency}
-                            onValueChange={setAssignAgency}
+                            onValueChange={handleAgencyToggle}
                         />
                         <Text style={styles.checkboxLabel}>MSA For Agency/Supplier</Text>
                     </View>
+                    {assignAgency && renderSelectedProfile(selectedAgency, 'Agency')}
+
                     <View style={styles.checkboxRow}>
                         <Switch
                             value={assignResource}
-                            onValueChange={setAssignResource}
+                            onValueChange={handleResourceToggle}
                         />
                         <Text style={styles.checkboxLabel}>MSA For Resource/Services</Text>
                     </View>
+                    {assignResource && renderSelectedProfile(selectedResource, 'Resource')}
+
                     <View style={styles.checkboxRow}>
                         <Switch
                             value={assignMasterData}
-                            onValueChange={setAssignMasterData}
+                            onValueChange={handleMasterDataToggle}
                         />
                         <Text style={styles.checkboxLabel}>MSA with Master data</Text>
                     </View>
+                    {assignMasterData && renderSelectedProfile(selectedMasterData, 'Master Data')}
                 </View>
 
                 {/* Reference Number */}
@@ -749,76 +1133,9 @@ const CreateMSA = ({ route, navigation }: any) => {
                     </Picker>
                 </View>
 
-                {/* Location/Jurisdiction */}
-                {/* <View>
-                    <Text style={styles.label}>Location/Jurisdiction *</Text>
-                    <View style={styles.radioContainer}>
-                        <View style={styles.radioRow}>
-                            <RadioButton
-                                value="yes"
-                                status={jurisdiction === "yes" ? "checked" : "unchecked"}
-                                onPress={() => setJurisdiction("yes")}
-                            />
-                            <Text style={styles.radioLabel}>Yes</Text>
-                        </View>
-                        <View style={styles.radioRow}>
-                            <RadioButton
-                                value="no"
-                                status={jurisdiction === "no" ? "checked" : "unchecked"}
-                                onPress={() => setJurisdiction("no")}
-                            />
-                            <Text style={styles.radioLabel}>No</Text>
-                        </View>
-                    </View>
-
-                    {jurisdiction === "yes" && (
-                        <View>
-                         
-                            <Text style={styles.label}>Country *</Text>
-                            <View style={styles.pickerContainer}>
-                                <Picker
-                                    selectedValue={selectedCountry}
-                                    onValueChange={(val) => {
-                                        setSelectedCountry(val);
-                                        setSelectedState(""); // reset state when country changes
-                                    }}
-                                >
-                                    <Picker.Item label="Select Country" value="" />
-                                    {countries.map((item) => (
-                                        <Picker.Item key={item.id} label={item.name} value={item.name} />
-                                    ))}
-                                </Picker>
-                            </View>
-
-                        
-                            <Text style={styles.label}>State *</Text>
-                            <View style={styles.pickerContainer}>
-                                <Picker
-                                    selectedValue={selectedState}
-                                    onValueChange={(val) => setSelectedState(val)}
-                                    enabled={states.length > 0} // disable until states are loaded
-                                >
-                                    <Picker.Item label="Select State" value="" />
-                                    {states.map((item, index) => (
-                                        <Picker.Item key={index} label={item.name} value={item.name} />
-                                    ))}
-                                </Picker>
-                            </View>
 
 
-                        
-                            <Text style={styles.label}>District *</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter District"
-                                value={district}
-                                onChangeText={setDistrict}
-                            />
-                        </View>
-                    )}
-                </View> */}
-
-<View>
+                <View>
                     <Text style={styles.label}>Location/Jurisdiction *</Text>
                     <View style={styles.radioContainer}>
                         <View style={styles.radioRow}>
@@ -940,20 +1257,52 @@ const CreateMSA = ({ route, navigation }: any) => {
                     onChangeText={setVersion}
                 />
 
-                {/* Supporting Documents - Placeholder */}
-                <Text style={styles.label}>Supporting Documents</Text>
-                <Text style={styles.placeholderText}>Due diligence documents</Text>
-                <View style={styles.divider} />
+
 
                 {/* Select Approver */}
                 <Text style={styles.label}>Select Approver *</Text>
-                <Text style={styles.placeholderText}>MSA Approver *</Text>
 
-                {/* Automatic Approval */}
                 <View style={styles.checkboxRow}>
-                    <Switch />
-                    <Text style={styles.checkboxLabel}>Automatic Approval</Text>
+                    <Switch
+                        value={isMSAApproverEnabled}
+                        onValueChange={handleSwitchToggle}
+                    />
+                    <Text style={styles.checkboxLabel}>MSA Approver *</Text>
                 </View>
+
+                {/* Display selected approver */}
+                {isMSAApproverEnabled && selectedApprover && (
+                    <View style={styles.selectedApproverContainer}>
+                        <View style={styles.approverInfo}>
+                            {/* <Text style={styles.approverName}>{selectedApprover.name}</Text> */}
+                            <Text style={styles.approverName}>
+                                {`${(selectedApprover as any)?.first_name ?? ""} ${(selectedApprover as any)?.last_name ?? ""}`}
+                            </Text>
+                            <Text style={styles.approverEmail}>{(selectedApprover as any)?.email}</Text>
+                        </View>
+                        <TouchableOpacity
+                            style={styles.changeButton}
+                            onPress={handleChangeApprover}
+                        >
+                            <Text style={styles.changeButtonText}>Change</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Show placeholder if switch is on but no approver selected */}
+                {isMSAApproverEnabled && !selectedApprover && (
+                    <View style={styles.placeholderContainer}>
+                        <Text style={styles.placeholderText}>No approver selected</Text>
+                    </View>
+                )}
+
+                {/* Modal for selecting approver */}
+                <ApproverModal
+                    visible={isModalVisible}
+                    onClose={() => setIsModalVisible(false)}
+                    onSelectApprover={handleSelectApprover}
+                    selectedApprover={selectedApprover}
+                />
 
                 {/* Buttons */}
                 <View style={styles.actions}>
@@ -979,8 +1328,8 @@ const CreateMSA = ({ route, navigation }: any) => {
                 )}
 
 
-                   {/* Searchable Modals */}
-                    <SearchableModal
+                {/* Searchable Modals */}
+                <SearchableModal
                     visible={countryModalVisible}
                     onClose={() => setCountryModalVisible(false)}
                     title="Select Country"
@@ -995,23 +1344,32 @@ const CreateMSA = ({ route, navigation }: any) => {
                     data={states}
                     onSelect={handleStateSelect}
                 />
-                {/* <SearchableModal
-                    visible={countryModalVisible}
-                    onClose={() => setCountryModalVisible(false)}
-                    title="Select Country"
-                    data={filteredCountries}
-                    renderItem={({ item }: any) => renderListItem(item, handleCountrySelect)}
-                    onSelect={handleCountrySelect}
+                <ProfileModal
+                    visible={agencyModalVisible}
+                    onClose={() => setAgencyModalVisible(false)}
+                    title="Select Agency"
+                    data={agencyList}
+                    onSelect={handleAgencySelect}
+                    selectedProfile={selectedAgency}
                 />
 
-                <SearchableModal
-                    visible={stateModalVisible}
-                    onClose={() => setStateModalVisible(false)}
-                    title="Select State"
-                    data={filteredStates}
-                    renderItem={({ item }: any) => renderListItem(item, handleStateSelect)}
-                    onSelect={handleStateSelect}
-                /> */}
+                <ProfileModal
+                    visible={resourceModalVisible}
+                    onClose={() => setResourceModalVisible(false)}
+                    title="Select Resource"
+                    data={resourceList}
+                    onSelect={handleResourceSelect}
+                    selectedProfile={selectedResource}
+                />
+
+                <ProfileModal
+                    visible={masterDataModalVisible}
+                    onClose={() => setMasterDataModalVisible(false)}
+                    title="Select Master Data"
+                    data={masterDataList}
+                    onSelect={handleMasterDataSelect}
+                    selectedProfile={selectedMasterData}
+                />
             </ScrollView>
         </SafeAreaView>
     );
@@ -1161,12 +1519,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#333",
     },
-
-
-
-
-
-     dropdownButton: {
+    dropdownButton: {
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5,
@@ -1239,12 +1592,120 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
-       emptyText: {
+    emptyText: {
         textAlign: 'center',
         padding: 20,
         color: '#999',
         fontStyle: 'italic',
     },
+    // New styles for profile selection
+    selectedProfileContainer: {
+        marginTop: 10,
+        marginLeft: 40,
+        marginBottom: 15,
+    },
+    selectedProfileTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 5,
+        color: '#333',
+    },
+    selectedProfileCard: {
+        backgroundColor: '#f8f9fa',
+        padding: 15,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    selectedProfileName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#0033CC',
+        marginBottom: 5,
+    },
+    selectedProfileEmail: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 5,
+    },
+    selectedProfileStatus: {
+        fontSize: 14,
+        color: '#28a745',
+        fontStyle: 'italic',
+        marginBottom: 10,
+    },
+    changeButton: {
+        backgroundColor: '#6c757d',
+        padding: 8,
+        borderRadius: 5,
+        alignSelf: 'flex-start',
+    },
+    changeButtonText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+
+    selectedListItem: {
+        backgroundColor: '#e3f2fd',
+        borderLeftWidth: 3,
+        borderLeftColor: '#0033CC',
+    },
+    profileInfo: {
+        flex: 1,
+    },
+    profileName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 3,
+    },
+    profileEmail: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 3,
+    },
+    profileStatus: {
+        fontSize: 14,
+        color: '#28a745',
+        fontStyle: 'italic',
+    },
+    selectedText: {
+        color: '#0033CC',
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+
+    selectedApproverContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    approverInfo: {
+        flex: 1,
+    },
+    approverName: {
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+    approverEmail: {
+        fontSize: 14,
+        color: '#666',
+    },
+
+
+    placeholderContainer: {
+        backgroundColor: '#f5f5f5',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+
 });
 
 export default CreateMSA;

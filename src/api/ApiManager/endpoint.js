@@ -52,6 +52,9 @@ UPDATEMSA:'msa/master-agreement',
 MSAFIELDSDROPDOWN:'msa/msa-fields/',
 CURRENCYDETAILS:'accounts/currency/',
 PAYMENTTERMSDROPDOWNCREATEMSA:'settings/payment-terms/',
+MASTERDATALIST:'masterdata/master-data/',
+APPROVERCUSTOMUSER:'/accounts/custom-user',
+CREATEMSA:'/msa/master-agreement/',
 // Agency Dashboard endpoint's  
 AGENCYDASHBOARD:'agency/dashboard-stats/',
 

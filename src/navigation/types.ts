@@ -33,7 +33,7 @@ export type RootStackParamList = {
   TalentDashboard: undefined;
   LawyerDashboard: undefined;
   OrganizationProfileModal:undefined,
-  MSADetailScreen: { data: any }; 
+ MSADetailScreen: { data: any }; 
 };
 export type AuthStackParamList = {
   Login: undefined;

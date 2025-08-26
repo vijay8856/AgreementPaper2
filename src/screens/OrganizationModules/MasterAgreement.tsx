@@ -11,7 +11,8 @@ import {
   FlatList,
   Dimensions,
   ActivityIndicator,
-  Modal
+  Modal,
+  RefreshControl
 } from 'react-native';
 import Services from '../../Services/services';
 import { useNavigation } from '@react-navigation/native';
@@ -111,7 +112,9 @@ const handleViewDetails = async (item:any) => {
 
       if (res.success) {
         console.log("MSA Detail Data", res.data);
-        navigation.navigate("MSADetailScreen", { data: res.data });
+        // navigation.navigate("MSADetailScreen", { data: res.data });
+        navigation.navigate("MSADetailScreen", { data: res.data as MSAData });
+
       } else {
         console.log("Error", res.error);
       }
@@ -213,12 +216,6 @@ const renderStatusBadge = (status: string) => {
           <Text style={styles.detailValue}>{item.budget}</Text>
         </View>
       </View>
-      
-
-
-
-
-
 
       <View style={styles.actionButtons}>
          <TouchableOpacity
@@ -233,30 +230,14 @@ const renderStatusBadge = (status: string) => {
         <Text style={styles.viewButtonText}>View Details</Text>
       )}
     </TouchableOpacity>
-      {/* <TouchableOpacity 
-  style={styles.viewButton}
-  onPress={async () => {
-    const res = await Services.getMSADetail({
-      slug: item.slug,  
-    });
-
-    if (res.success) {
-      console.log("MSA Detail Data", res.data);
-navigation.navigate("MSADetailScreen", { data: res.data });
-
-    } else {
-      console.log("Error", res.error);
-    }
-  }}
->
-  <Text style={styles.viewButtonText}>View Details</Text>
-</TouchableOpacity> */}
+  
       </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+        <ScrollView>
       <StatusBar barStyle="dark-content" />
       
       {/* Header */}
@@ -328,22 +309,55 @@ navigation.navigate("MSADetailScreen", { data: res.data });
       </View>
 
       {/* MSA List */}
-    {loading ? (
-        <ActivityIndicator size="large" color="#007BFF" />
-      ) : error ? (
-        <Text style={{ color: "red" }}>{error}</Text>
-      ) : (
-        <FlatList
-          data={msaData}
-          renderItem={renderItem}
-          keyExtractor={(item:any) => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-            refreshing={refreshing}
-  onRefresh={onRefresh}
-        />
-      )}
+     {/* <View style={styles.listWrapper}>
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#007BFF" />
+                </View>
+            ) : error ? (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={msaData}
+                    renderItem={renderItem}
+                    keyExtractor={(item: any) => item.id.toString()}
+                    contentContainerStyle={styles.listContainer}
+                    showsVerticalScrollIndicator={true}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                />
+            )}
+        </View> */}
 
+
+<View style={styles.listWrapper}>
+  <ScrollView 
+    refreshControl={
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        colors={['#007BFF']}
+        tintColor={'#007BFF'}
+      />
+    }
+  >
+    {loading ? (
+        <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007BFF" />
+        </View>
+    ) : error ? (
+        <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+        </View>
+    ) : (
+        <View style={styles.listContainer}>
+            {msaData.map((item) => renderItem({ item }))}
+        </View>
+    )}
+  </ScrollView>
+</View>
 <Modal
   animationType="slide"
   transparent={true}
@@ -398,15 +412,17 @@ navigation.navigate("MSADetailScreen", { data: res.data });
 
 
 
-
+</ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: '#f8f9fa',
   },
+  
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -538,6 +554,7 @@ activeTabText: {
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+
   },
   cardHeader: {
     flexDirection: 'row',
@@ -677,7 +694,26 @@ closeButtonText: {
   fontWeight: "bold",
   color: "#333",
 },
+    listWrapper: {
+        flex: 1, 
 
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        textAlign: 'center',
+    },
 });
 
 export default MasterAgreement;

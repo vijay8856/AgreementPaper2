@@ -27,6 +27,9 @@ import LawyerOrgProfile from '../screens/LawyerOrgProfileList';
 import InviteOrganizationScreen from '../screens/InviteOrganization';
 import TalentDashboard from '../screens/TalentDashboard';
 import { TalentDrawerNavigator } from '../components/TalentDrawerNavigator';
+import MSADetailsScreen from '../screens/OrganizationModules/MSADetailScreen';
+import MSADetailScreen from '../screens/OrganizationModules/MSADetailScreen';
+import CreateMSA from '../screens/CreateMSA';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -48,6 +51,8 @@ export type RootStackParamList = {
   AICoreAdminScreen: undefined,
   OrganisationDashboard: undefined,
   AgencyDashboard: undefined,
+  MSADetailScreen: { data: any }; 
+  CreateMSA:undefined,
 };
 
 const NavigationManager = () => {
@@ -88,6 +93,8 @@ const NavigationManager = () => {
         <RootStack.Screen name="ContractPreviewScreen" component={ContractPreviewScreen} options={{ title: 'Contract Preview ' }} />
         <RootStack.Screen name="LawyerOrgProfile" component={LawyerOrgProfile} options={{ title: 'Lawyer Profile' }} />
         <RootStack.Screen name="InviteOrganization" component={InviteOrganizationScreen} options={{ title: 'Invite Organization' }} />
+ <RootStack.Screen name="MSADetailScreen" component={MSADetailScreen} options={{ title: 'MSA Details Screen' }} />
+ <RootStack.Screen name="CreateMSA" component={CreateMSA} options={{ title: 'Create MSA ' }} />
 
         <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}   
          options={{

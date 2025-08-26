@@ -108,6 +108,7 @@ export const AUTH_HEADERS = async () => {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Token ${token}`,
+      
     },
   };
 };

@@ -8,6 +8,7 @@ import AICoreAdminScreen from '../screens/AIDraft';
 import ESignatureScreen from '../screens/ESignatureScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
+import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
 // Import other screens you want in the drawer
 
 const Drawer = createDrawerNavigator();
@@ -33,7 +34,17 @@ export const OrganisationDrawer = () => {
                 component={OrganisationDashboard}
                 options={{ headerShown: false }}
             />
-
+ <Drawer.Screen
+                name="MasterAgreement"
+                component={MasterAgreement}
+                options={{
+                    title: 'Master Agreement',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
             <Drawer.Screen
                 name="AIResFullReview"
                 component={AIResFullReviewScreen}

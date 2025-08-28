@@ -31,6 +31,7 @@ import MSADetailsScreen from '../screens/OrganizationModules/MSADetailScreen';
 import MSADetailScreen from '../screens/OrganizationModules/MSADetailScreen';
 import CreateMSA from '../screens/CreateMSA';
 import ApproverModal from '../components/Modals/ApproverModal';
+import SOWDetailScreen from '../screens/OrganizationModules/SOWDetailScreen';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -55,6 +56,7 @@ export type RootStackParamList = {
  MSADetailScreen: { data: any };
   CreateMSA:undefined,
   ApproverModal:undefined,
+  SOWDetailScreen:undefined
 };
 
 const NavigationManager = () => {
@@ -96,8 +98,12 @@ const NavigationManager = () => {
         <RootStack.Screen name="LawyerOrgProfile" component={LawyerOrgProfile} options={{ title: 'Lawyer Profile' }} />
         <RootStack.Screen name="InviteOrganization" component={InviteOrganizationScreen} options={{ title: 'Invite Organization' }} />
  <RootStack.Screen name="MSADetailScreen" component={MSADetailScreen} options={{ title: 'MSA Details Screen' }} />
+
  <RootStack.Screen name="CreateMSA" component={CreateMSA} options={{ title: 'Create MSA ' }} />
   <RootStack.Screen name="ApproverModal" component={ApproverModal} options={{ title: 'Approver Modal ' }} />
+
+ <RootStack.Screen name="SOWDetailScreen" component={SOWDetailScreen} options={{ title: 'SOW Detail Screen' }} />
+
 
         <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}   
          options={{

@@ -76,28 +76,28 @@ export const LINKEDIN_HEADERS = {
 };
 
 // use AUTH_MULTYPART_HEADERS when you have passed data with image form
-export const AUTH_MULTYPART_HEADERS = async () => {
-  const token = await AsyncStorage.getItem('Token');
-  console.log("yestoken", token);
-
-  return {
-    'Content-Type': 'multipart/form-data',
-    Authorization: `Token ${token}`,
-    'Accept': 'application/json',
-  };
-};
-
 // export const AUTH_MULTYPART_HEADERS = async () => {
 //   const token = await AsyncStorage.getItem('Token');
-//   console.log("yestoken",token);
-  
+//   console.log("yestoken", token);
+
 //   return {
-//     headers: {
-//       'Content-Type': 'multipart/form-data',
-//       Authorization: `Token ${token}`,
-//     },
+//     'Content-Type': 'multipart/form-data',
+//     Authorization: `Token ${token}`,
+//     'Accept': 'application/json',
 //   };
 // };
+
+export const AUTH_MULTYPART_HEADERS = async () => {
+  const token = await AsyncStorage.getItem('Token');
+  console.log("yestoken",token);
+  
+  return {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      Authorization: `Token ${token}`,
+    },
+  };
+};
 
 // use AUTH_HEADERS when you have passed data with json and normal data object
 export const AUTH_HEADERS = async () => {

@@ -721,7 +721,7 @@ const CreateMSA = ({ route, navigation }: any) => {
         description: description,
         savings_percentage: parseFloat(savingsPercentage),
         comments: comments,
-        status: "in_progress",
+        status: "pending_approval",
         is_active: true,
         msa_type: parseInt(msaType),
         msa_flow: type === "contractor" ? 1 : 2, // 1 for Contractor, 2 for Service
@@ -817,7 +817,7 @@ console.log("createMSA",response);
         const firstName = userDetail.first_name || '';
         const lastName = userDetail.last_name || '';
         const email = userDetail.email || profile.email;
-        const companyName = profile.company_name || userDetail.company_name;
+        const companyName = profile.name || userDetail.company_name;
         const status = profile.status || userDetail.status;
 
         const fullName = `${firstName} ${lastName}`.trim();

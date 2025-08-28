@@ -55,6 +55,13 @@ PAYMENTTERMSDROPDOWNCREATEMSA:'settings/payment-terms/',
 MASTERDATALIST:'masterdata/master-data/',
 APPROVERCUSTOMUSER:'/accounts/custom-user',
 CREATEMSA:'/msa/master-agreement/',
+
+SOWCONTRACTORLIST:"sow/v2/statement-of-work/contractor/",
+SOWSERVICELIST:"sow/v2/statement-of-work/service/",
+SOWALLSTATUS:'sow/statement-of-work/',
+SOWDETAIL:"sow/statement-of-work/",
+SOWFIELDSDROPDOWN:"sow/sow-fields/",
+UPDATESOW:"sow/statement-of-work/",
 // Agency Dashboard endpoint's  
 AGENCYDASHBOARD:'agency/dashboard-stats/',
 

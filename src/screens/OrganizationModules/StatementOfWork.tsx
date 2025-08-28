@@ -19,7 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 const { width } = Dimensions.get('window');
 
-const MasterAgreement = () => {
+const StatementOfWork = () => {
     const navigation = useNavigation()
   const [activeTab, setActiveTab] = useState(1);
  
@@ -32,8 +32,8 @@ const [modalVisible, setModalVisible] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const tabs = [{label:"Contractor MSA" , value:1}, {label:"Service MSA" , value:2},{label:'Approved' , value:3}, {label:'Pending' , value:4}, {label:'Rejected' , value:5}];
-console.log("msaData",msaData);
+  const tabs = [{label:"Contractor SOW" , value:1}, {label:"Service SOW" , value:2},{label:'Approved' , value:3}, {label:'Pending' , value:4}, {label:'Rejected' , value:5}];
+console.log("sowData",msaData);
 
 const formatDate = (date) => {
   const year = date.getFullYear();
@@ -49,30 +49,30 @@ const fetchMSAData = async (tab:any) => {
     let response;
 
     // Common pagination object
-    const params = { limit: 6, offset: 0 };
+    const params = { limit: 6, offset: 0 ,sow:"contractor"};
 if (startDate) params.date_from = formatDate(startDate);
       if (endDate) params.date_to = formatDate(endDate);
     if (tab === 1) {
       // Contractor MSA
-      response = await Services.getMSAContractorList(params);
+      response = await Services.getSowContractorList(params);
     } else if (tab === 2) {
       // Service MSA
-      response = await Services.getMSAServiceList(params);
+      response = await Services.getSOWServiceList(params);
     } else if (tab === 3) {
       // Approved
-      response = await Services.getMSAStatusList({
+      response = await Services.getSOWStatusList({
         ...params,
         status: "approved",
       });
     } else if (tab === 4) {
       // Pending
-      response = await Services.getMSAStatusList({
+      response = await Services.getSOWStatusList({
         ...params,
         status: "pending_approval",
       });
     } else if (tab === 5) {
       // Rejected
-      response = await Services.getMSAStatusList({
+      response = await Services.getSOWStatusList({
         ...params,
         status: "rejected",
       });
@@ -116,12 +116,12 @@ const handleViewDetails = async (item:any) => {
     
     setLoading(true); 
     try {
-      const res = await Services.getMSADetail(item);
+      const res = await Services.getSOWDetail(item);
 
       if (res.success) {
-        console.log("MSA Detail Data", res.data);
+        console.log("SOW Detail Data", res.data);
         // navigation.navigate("MSADetailScreen", { data: res.data });
-        navigation.navigate("MSADetailScreen", { data: res.data as MSAData });
+        navigation.navigate("SOWDetailScreen", { data: res.data as MSAData });
 
       } else {
         console.log("Error", res.error);
@@ -136,10 +136,10 @@ const getName = (item: any) => {
   if (item.masterdata_detail.name) {
     return `${item.masterdata_detail.name} `;
     // ${item.masterdata_detail.email}
-  } else if (item.resource_datail?.user_detail) {
-    return `${item.resource_datail.user_detail.first_name} ${item.resource_datail.user_detail.last_name}`;
-  } else if (item.agency_datail?.user_detail) {
-    return `${item.agency_datail.user_detail.first_name} ${item.agency_datail.user_detail.last_name}`;
+  } else if (item.resource_detail?.user_detail) {
+    return `${item.resource_detail.user_detail.first_name} ${item.resource_detail.user_detail.last_name}`;
+  } else if (item.account_detail?.user_detail) {
+    return `${item.account_detail.user_detail.first_name} ${item.account_detail.user_detail.last_name}`;
   }
   return "";
 };
@@ -192,13 +192,13 @@ const renderStatusBadge = (status: string) => {
   const renderItem = ({ item}:any) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.msaNo}>{item.msa_number}</Text>
+        <Text style={styles.msaNo}>{item.sow_number}</Text>
         {renderStatusBadge(item.status)}
       </View>
       
-      <Text style={styles.msaTitle}>{item.name}</Text>
+      <Text style={styles.msaTitle}>{item.title}</Text>
       <Text style={styles.msaType}>
-  {item.msa_flow === 1 ? 'Contractor' : item.msa_flow === 2 ? 'Service' : ''}
+  {item.sow_flow === 1 ? 'Contractor' : item.sow_flow === 2 ? 'Service' : ''}
 </Text>
 
       
@@ -220,16 +220,16 @@ const renderStatusBadge = (status: string) => {
       </View>
       
       <View style={styles.detailsRow}>
-        <View style={styles.detailItem}>
+        {/* <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>SOWs</Text>
         <Text style={styles.detailValue}>
   {item.sow_data && item.sow_data.length > 0 ? item.sow_data.length : 0}
 </Text>
 
-        </View>
+        </View> */}
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>Budget</Text>
-          <Text style={styles.detailValue}>{item.budget}</Text>
+          <Text style={styles.detailValue}>{item.grand_total}</Text>
         </View>
       </View>
 
@@ -265,9 +265,9 @@ const renderStatusBadge = (status: string) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Master Service Agreements</Text>
+        <Text style={styles.headerTitle}>Statement Of Work </Text>
        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-  <Text style={styles.addButtonText}>+ Add MSA</Text>
+  <Text style={styles.addButtonText}>+ Add SOW</Text>
 </TouchableOpacity>
 
       </View>
@@ -355,7 +355,7 @@ const renderStatusBadge = (status: string) => {
 
       {/* Results Count */}
       <View style={styles.resultsContainer}>
-        <Text style={styles.resultsText}>{msaData.length} MSAs found</Text>
+        <Text style={styles.resultsText}>{msaData.length} SOWs found</Text>
       </View>
 
       {/* MSA List */}
@@ -767,4 +767,4 @@ closeButtonText: {
     
 });
 
-export default MasterAgreement;
+export default StatementOfWork;

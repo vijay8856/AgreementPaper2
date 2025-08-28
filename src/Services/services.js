@@ -1412,11 +1412,13 @@ createMSA: async (payload) => {
 
 
   getMSAContractorList: async (data) => {
+    console.log("&offset=${data?.offset || 0}",data);
+    
     try {
       const headers = await AUTH_HEADERS();
 
       // Build query parameters
-      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}`;
+      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}&date_from=${data?.date_from || 0}&date_to=${data?.date_to || 0} `;
 
       // Add search parameter if provided
       // if (data?.search) {
@@ -1568,6 +1570,42 @@ createMSA: async (payload) => {
       };
     }
   },
+
+
+getMSAApprovalList: async () => {
+  try {
+    const headers = await AUTH_HEADERS();
+
+    const response = await axiosInstance.get(
+      `${API_ENDPOINTS.MSADETAIL}/?status=pending_approval`,
+      headers
+    );
+
+    console.log("MSAApprovalList  Response", response);
+
+    return {
+      success: true,
+      data: response.data,
+      count: response.data.count,
+      status: response.status,
+    };
+  } catch (error) {
+    console.error("Error fetching MSA Approval List", {
+      config: error.config,
+      request: error.request,
+      response: error.response,
+      message: error.message,
+    });
+
+    return {
+      success: false,
+      error: error.response?.data || "Failed to fetch MSA Approval List",
+      status: error.response?.status || 500,
+    };
+  }
+},
+
+
   // updateMSADetail: async (slug, payload) => {
   //   try {
   //     const headers = await AUTH_HEADERS();
@@ -1616,7 +1654,6 @@ createMSA: async (payload) => {
         throw new Error("Slug is required for fetching MSA detail");
       }
 
-      // ✅ Ensure dates are in the correct format
       const formattedPayload = {
         ...payload,
         start_date: payload.start_date
@@ -1759,5 +1796,345 @@ createMSA: async (payload) => {
       };
     }
   },
+
+
+updateMSAStatus: async (slug, payload) => {
+  try {
+    const headers = await AUTH_HEADERS();
+
+    if (!slug) {
+      throw new Error("Slug is required for updating MSA status");
+    }
+
+    // slug in query parameter
+    const response = await axiosInstance.patch(
+      `${API_ENDPOINTS.UPDATEMSA}?slug=${slug}`,
+      payload,
+      headers
+    );
+
+    console.log("Update MSA Status Response", response);
+
+    return {
+      success: true,
+      data: response.data,
+      count: response.data.count,
+      status: response.status,
+    };
+  } catch (error) {
+    console.error("Error updating MSA Status", {
+      config: error.config,
+      request: error.request,
+      response: error.response,
+      message: error.message,
+    });
+
+    return {
+      success: false,
+      error: error.response?.data || "Failed to update MSA Status",
+      status: error.response?.status || 500,
+    };
+  }
+},
+
+
+
+getSowContractorList: async (data) => {
+    console.log("&offset=${data?.offset || 0}",data);
+    
+    try {
+      const headers = await AUTH_HEADERS();
+
+      // Build query parameters
+      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}&date_from=${data?.date_from || 0}&date_to=${data?.date_to || 0}&sow_type=${data?.sow || 0}`;
+
+      // Add search parameter if provided
+      // if (data?.search) {
+      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
+      // }
+
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.SOWCONTRACTORLIST + queryParams,
+        headers
+      );
+
+      console.log("getSOWContractorList", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error('Error fetching SOW Contractor', {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch SOW Contractor List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+ getSOWDetail: async (data) => {
+    console.log("datadatadata", data);
+
+    try {
+      const headers = await AUTH_HEADERS();
+
+      if (!data) {
+        throw new Error("Slug is required for fetching SOW detail");
+      }
+
+      const response = await axiosInstance.get(
+        `${API_ENDPOINTS.SOWDETAIL}${data}`,
+        headers
+      );
+
+      console.log("SOW Detail Response", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error("Error fetching SOW Detail", {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message,
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || "Failed to fetch SOW Detail",
+        status: error.response?.status || 500,
+      };
+    }
+  },
+    getSOWFields: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+
+      const response = await axiosInstance.get(
+        `${API_ENDPOINTS.SOWFIELDSDROPDOWN}`,
+        headers
+      );
+
+      console.log("SOWFields Response", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error("Error fetching SOW Fields", {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message,
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || "Failed to fetch SOW Fields ",
+        status: error.response?.status || 500,
+      };
+    }
+  },
+    getSOWServiceList: async (data) => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      // Build query parameters
+      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}`;
+
+      // Add search parameter if provided
+      // if (data?.search) {
+      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
+      // }
+
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.SOWSERVICELIST + queryParams,
+        headers
+      );
+
+      console.log("Service", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error('Error fetching Service', {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch Service List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+    getSOWStatusList: async (data) => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}&status=${data?.status || 0}`;
+
+
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.SOWALLSTATUS + queryParams,
+        headers
+      );
+
+      console.log("Status", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error('Error fetching Status', {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch Status List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+   updateSOWDetail: async (slug, payload) => {
+    console.log("payload",payload);
+    console.log("slug",slug);
+
+    
+    try {
+      const headers = await AUTH_MULTYPART_HEADERS();
+
+      if (!slug) {
+        throw new Error("Slug is required for fetching SOW Detail");
+      }
+
+      const formattedPayload = {
+        ...payload,
+        start_date: payload.start_date
+          ? dayjs(payload.start_date).format("YYYY-MM-DD HH:mm:ss")
+          : null,
+        end_date: payload.end_date
+          ? dayjs(payload.end_date).format("YYYY-MM-DD HH:mm:ss")
+          : null,
+      };
+
+      const response = await axiosInstance.patch(
+        `${API_ENDPOINTS.UPDATESOW}${slug}/`,
+        formattedPayload,
+        headers
+      );
+
+      console.log("Update SOW Detail Response", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error("Error Update SOW Detail", {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message,
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || "Failed to Update SOW Detail",
+        status: error.response?.status || 500,
+      };
+    }
+  },
+//  updateSOWDetail: async (slug, payload) => {
+//   console.log("🔹 [updateSOWDetail] slug:", slug);
+//   console.log("🔹 [updateSOWDetail] payload type:", payload instanceof FormData ? "FormData" : typeof payload);
+
+//   if (payload instanceof FormData) {
+//     console.log("🔹 [updateSOWDetail] FormData entries:");
+//     for (let pair of payload.entries()) {
+//       console.log(`   ${pair[0]}:`, pair[1]);
+//     }
+//   } else {
+//     console.log("🔹 [updateSOWDetail] JSON payload:", JSON.stringify(payload, null, 2));
+//   }
+
+//   try {
+//     const headers = await AUTH_MULTYPART_HEADERS();
+//     console.log("🔹 [updateSOWDetail] Headers:", headers);
+
+//     if (!slug) throw new Error("Slug is required for fetching SOW Detail");
+
+//     const url = `${API_ENDPOINTS.UPDATESOW}${slug}/`;
+//     console.log("🔹 [updateSOWDetail] URL:", url);
+
+//     const response = await axiosInstance.patch(url, payload, headers);
+
+//     console.log("✅ [updateSOWDetail] Success Response:", {
+//       status: response.status,
+//       data: response.data,
+//       headers: response.headers,
+//     });
+
+//     return {
+//       success: true,
+//       data: response.data,
+//       count: response.data.count,
+//       status: response.status,
+//     };
+//   } catch (error) {
+//     console.error("❌ [updateSOWDetail] ERROR FULL:", error);
+
+//     if (error.response) {
+//       console.error("❌ [updateSOWDetail] Error.response.status:", error.response.status);
+//       console.error("❌ [updateSOWDetail] Error.response.data:", error.response.data);
+//       console.error("❌ [updateSOWDetail] Error.response.headers:", error.response.headers);
+//     } else if (error.request) {
+//       console.error("❌ [updateSOWDetail] Error.request (no response):", error.request);
+//     } else {
+//       console.error("❌ [updateSOWDetail] General error.message:", error.message);
+//     }
+
+//     return {
+//       success: false,
+//       error: error.response?.data || error.message || "Failed to Update SOW Detail",
+//       status: error.response?.status || 500,
+//     };
+//   }
+// },
+  
 };
 export default Services;

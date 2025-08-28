@@ -9,6 +9,8 @@ import ESignatureScreen from '../screens/ESignatureScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
 import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
+import ApprovalScreen from '../screens/OrganizationModules/ApprovalScreen';
+import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
 // Import other screens you want in the drawer
 
 const Drawer = createDrawerNavigator();
@@ -38,7 +40,29 @@ export const OrganisationDrawer = () => {
                 name="MasterAgreement"
                 component={MasterAgreement}
                 options={{
-                    title: 'Master Agreement',
+                    title: 'Master Service Agreement (MSA)',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
+ <Drawer.Screen
+                name="StatementOfWork"
+                component={StatementOfWork}
+                options={{
+                    title: 'Statement Of Work (SOW)',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
+             <Drawer.Screen
+                name="ApprovalScreen"
+                component={ApprovalScreen}
+                options={{
+                    title: 'Approval',
                     headerShown: true,
                     headerStyle: { backgroundColor: '#0E3386' },
                     headerTintColor: '#fff',

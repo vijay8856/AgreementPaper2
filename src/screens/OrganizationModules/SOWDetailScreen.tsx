@@ -20,21 +20,22 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Services from "../../Services/services";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-const MSADetailScreen = ({ route }:any) => {
+const SOWDetailScreen = ({ route }:any) => {
   const { data } = route.params;
   const [isEditing, setIsEditing] = useState(false);
-  const [msaData, setMsaData] = useState(data);
+  const [sowData, setSowData] = useState(data);
   const [refreshing, setRefreshing] = useState(false);
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [dropdownData, setDropdownData] = useState({
-    msa_type: [],
+    account:[],
+    cost_center:[],
+    sow_type: [],
+    tax_group: [],
     unpsc_code: [],
-    gl_account: [],
     business_unit: [],
     tax_service_type: [],
-    tax_group: [],
   });
   const [dropdownModal, setDropdownModal] = useState({
     visible: false,
@@ -45,9 +46,9 @@ const MSADetailScreen = ({ route }:any) => {
 const onRefresh = async () => {
   try {
     setRefreshing(true);
-    const res = await Services.getMSADetail(msaData.slug);
+    const res = await Services.getSOWDetail(sowData.slug);
     if (res.success) {
-      setMsaData(res.data);
+      setSowData(res.data);
     } else {
       console.log("Refresh error:", res.error);
     }
@@ -62,7 +63,7 @@ const onRefresh = async () => {
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const response = await Services.getMSAFields();
+        const response = await Services.getSOWFields();
         if (response.success) {
           setDropdownData(response.data.payload);
         } else {
@@ -76,72 +77,128 @@ const onRefresh = async () => {
 
     fetchDropdownData();
   }, []);
-const getResourceData = (msaData: any) => {
-  if (msaData?.masterdata_detail.name) {
+const getResourceData = (sowData: any) => {
+  if (sowData?.masterdata_detail.name) {
     return {
-      ...msaData.masterdata_detail,
-      profile_pic: msaData.masterdata_detail.logo,
-      first_name: msaData.masterdata_detail.name,
-      email: msaData.masterdata_detail.email,
-      contact_number: msaData.masterdata_detail.mobile,
+      ...sowData.masterdata_detail,
+      profile_pic: sowData.masterdata_detail.logo,
+      first_name: sowData.masterdata_detail.name,
+      email: sowData.masterdata_detail.email,
+      contact_number: sowData.masterdata_detail.mobile,
     };
-  } else if (msaData?.resource_datail?.user_detail) {
+  } else if (sowData?.resource_detail?.user_detail) {
     return {
-      ...msaData.resource_datail,
-      ...msaData.resource_datail?.user_detail,
+      ...sowData.resource_detail,
+      ...sowData.resource_detail?.user_detail,
     };
-  } else if (msaData?.agency_datail?.user_detail) {
+  } else if (sowData?.agency_datail?.user_detail) {
     return {
-      ...msaData.agency_datail,
-      ...msaData.agency_datail.user_detail,
+      ...sowData.agency_datail,
+      ...sowData.agency_datail.user_detail,
     };
   }
   return {};
 };
 
-  const handleSave = async () => {
-    try {
-      // Prepare the data to send to API
-      const payload = {
-        ...msaData,
-        // Include all the fields that can be edited
-        name: msaData.name,
-        msa_number: msaData.msa_number,
-        msa_type: msaData.msa_type,
-        unpsc_code: msaData.unpsc_code,
-        gl_account: msaData.gl_account,
-        business_unit: msaData.business_unit,
-        currency_code: msaData.currency_code,
-        budget: msaData.budget,
-        tax_service_type: msaData.tax_service_type,
-        tax_group: msaData.tax_group,
-        savings_percentage: msaData.savings_percentage,
-        comments: msaData.comments,
-        description: msaData.description,
-        start_date: msaData.start_date,
-        end_date: msaData.end_date,
-        // Add assign MSA fields if needed
-        assign_msa_agency: msaData.assign_msa_agency || false,
-        assign_msa_resource: msaData.assign_msa_resource || false,
-        assign_msa_masterdata: msaData.assign_msa_masterdata || false,
-      };
+//   const handleSave = async () => {
+//     try {
+//       // Prepare the data to send to API
+//       const payload = {
+//         ...sowData,
+//         // Include all the fields that can be edited
+//         name: sowData.name,
+//         msa_number: sowData.msa_number,
+//         sow_type: sowData.sow_type,
+//         unpsc_code: sowData.unpsc_code,
+//         account: sowData.account,
+//         business_unit: sowData.business_unit,
+//         currency_code: sowData.currency_code,
+//         budget: sowData.budget,
+//         tax_service_type: sowData.tax_service_type,
+//         tax_group: sowData.tax_group,
+//         savings_percentage: sowData.savings_percentage,
+//         comments: sowData.comments,
+//         description: sowData.description,
+//         start_date: sowData.start_date,
+//         end_date: sowData.end_date,
+//         // Add assign MSA fields if needed
+//         assign_msa_agency: sowData.assign_msa_agency || false,
+//         assign_msa_resource: sowData.assign_msa_resource || false,
+//         assign_msa_masterdata: sowData.assign_msa_masterdata || false,
+//       };
 
       
-      const response = await Services.updateMSADetail(msaData.slug, payload);
+//       const response = await Services.updateMSADetail(sowData.slug, payload);
 
-      console.log("response update ",response);
+//       console.log("response update ",response);
       
-      Alert.alert("Success", "MSA details updated successfully!");
-      setIsEditing(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to update MSA details. Please try again.");
-      console.error(error);
+//       Alert.alert("Success", "MSA details updated successfully!");
+//       setIsEditing(false);
+//     } catch (error) {
+//       Alert.alert("Error", "Failed to update MSA details. Please try again.");
+//       console.error(error);
+//     }
+//   };
+
+
+
+const handleSave = async () => {
+  try {
+    const formData = new FormData();
+
+    // Append normal text fields
+    formData.append("title", sowData.title || "");
+    formData.append("sow_number", sowData.sow_number || "");
+    formData.append("sow_type", sowData.sow_type || "");
+    formData.append("start_date", sowData.start_date || "");
+    formData.append("end_date", sowData.end_date || "");
+    formData.append("resource", sowData.resource || "");
+    formData.append("is_hour", sowData.is_hour ? "true" : "false");
+    formData.append("is_day", sowData.is_day ? "true" : "false");
+    formData.append("currency", sowData.currency || "");
+    formData.append("work_rate", String(sowData.work_rate || 0));
+    formData.append("work_quantity", String(sowData.work_quantity || 0));
+    formData.append("amount", String(sowData.amount || 0));
+    formData.append("tax_group", sowData.tax_group || "");
+    formData.append("tax_percent", String(sowData.tax_percent || 0));
+    formData.append("account", sowData.account || "");
+    formData.append("cost_center", sowData.cost_center || "");
+    formData.append("description", sowData.description || "");
+    formData.append("comments", sowData.comments || "");
+    formData.append("msa", sowData.msa || "");
+    formData.append("file_id", String(sowData.file_id || "")); 
+
+    // ✅ If you have file selected, append it
+    if (sowData.attachment_file) {
+      formData.append("attachment_files", {
+        uri: sowData.attachment_file.uri,   // e.g. "file:///path/to/invoice.pdf"
+        type: sowData.attachment_file.type, // e.g. "application/pdf"
+        name: sowData.attachment_file.name, // e.g. "invoice.pdf"
+      });
     }
-  };
+
+    console.log("FormData ready:", formData);
+
+    const response = await Services.updateSOWDetail(sowData.slug, formData, );
+
+    console.log("Update response:", response);
+
+    if (response.success) {
+      Alert.alert("Success", "SOW details updated successfully!");
+      setIsEditing(false);
+      onRefresh();
+    } else {
+      Alert.alert("Error", response.error || "Failed to update SOW details");
+    }
+  } catch (error) {
+    Alert.alert("Error", "Failed to update SOW details. Please try again.");
+    console.error("Update error:", error);
+  }
+};
 
   const handleCancel = () => {
     // Reset to original data
-    setMsaData(data);
+    setSowData(data);
     setIsEditing(false);
   };
 
@@ -154,8 +211,8 @@ const getResourceData = (msaData: any) => {
   const onStartDateChange = (event:any, selectedDate:any) => {
     setShowStartDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
-      setMsaData({
-        ...msaData,
+      setSowData({
+        ...sowData,
         start_date: selectedDate.toISOString(),
       });
     }
@@ -164,8 +221,8 @@ const getResourceData = (msaData: any) => {
   const onEndDateChange = (event:any, selectedDate:any) => {
     setShowEndDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
-      setMsaData({
-        ...msaData,
+      setSowData({
+        ...sowData,
         end_date: selectedDate.toISOString(),
       });
     }
@@ -181,16 +238,16 @@ const getResourceData = (msaData: any) => {
 
   const selectDropdownItem = (item:any) => {
     const fieldMap = {
-      msa_type: "msa_type",
+      sow_type: "sow_type",
       unpsc_code: "unpsc_code",
-      gl_account: "gl_account",
+      account: "account",
       business_unit: "business_unit",
       tax_service_type: "tax_service_type",
       tax_group: "tax_group",
     };
 
-    setMsaData({
-      ...msaData,
+    setSowData({
+      ...sowData,
       [fieldMap[dropdownModal.type]]: item.id,
     });
 
@@ -360,8 +417,8 @@ const renderStatusBadge = (status: string) => {
   );
 
  
-const ResourceDetailCard = ({ msaData }: any) => {
-  const resource = getResourceData(msaData);
+const ResourceDetailCard = ({ sowData }: any) => {
+  const resource = getResourceData(sowData);
 
   return (
     <ScrollView style={styles.ResourceDetailCardcontainer}>
@@ -451,7 +508,7 @@ return (
 
         {/* Title and Edit Button */}
         <View style={styles.titleContainer}>
-                      <Text style={styles.title}>{msaData.name}</Text>
+                      <Text style={styles.title}>{sowData.title}</Text>
 
           {!isEditing ? (
             <TouchableOpacity
@@ -479,7 +536,7 @@ return (
         </View>
          <View style={styles.statusBadge}>
 
-        {renderStatusBadge(msaData.status)}
+        {renderStatusBadge(sowData.status)}
                 
 
           </View>
@@ -487,58 +544,53 @@ return (
         {/* MSA Details */}
         <View style={styles.detailsContainer}>
           {renderEditableField(
-            "MSA Name", 
-            msaData.name, 
-            (text:any) => setMsaData({...msaData, name: text}), 
+            "SOW Name", 
+            sowData.title, 
+            (text:any) => setSowData({...sowData, title: text}), 
             "name"
           )}
           
           {renderEditableField(
             "Reference Number", 
-            msaData.msa_number, 
-            (text:any) => setMsaData({...msaData, msa_number: text}), 
+            sowData.sow_number, 
+            (text:any) => setSowData({...sowData, sow_number: text}), 
             "msa_number"
           )}
           
           {renderDropdownField(
-            "MSA Type",
-            "msa_type",
-            msaData.msa_type,
-            "msa_type"
+            "SOW Type",
+            "sow_type",
+            sowData.sow_type,
+            "sow_type"
           )}
 
-          {renderDropdownField(
-            "Industry Material Group",
-            "unpsc_code",
-            msaData.unpsc_code,
-            "unpsc_code"
-          )}
+       
 
-          {renderDropdownField(
+           {/* {renderDropdownField(
             "Business Unit",
             "business_unit",
-            msaData.business_unit,
+            sowData.business_unit,
             "business_unit"
           )}
 
           {renderDropdownField(
             "GL Account",
-            "gl_account",
-            msaData.gl_account,
-            "gl_account"
-          )}
+            "account",
+            sowData.account,
+            "account"
+          )} */}
 
           {/* Assign MSA Section */}
-        <Text style={styles.sectionTitle}>ASSIGN MSA</Text>
+        {/* <Text style={styles.sectionTitle}>ASSIGN MSA</Text>
 <View style={styles.checkboxGroup}>
   <View style={styles.checkboxRow}>
     <Switch
-      value={msaData.agency !== null} // <-- checked if agency not null
+      value={sowData.agency !== null} // <-- checked if agency not null
       onValueChange={(value) =>
-        setMsaData({
-          ...msaData,
+        setSowData({
+          ...sowData,
           assign_msa_agency: value,
-          agency: value ? msaData.agency ?? {} : null, // reset if turned off
+          agency: value ? sowData.agency ?? {} : null, // reset if turned off
         })
       }
       disabled={!isEditing}
@@ -548,12 +600,12 @@ return (
 
   <View style={styles.checkboxRow}>
     <Switch
-      value={msaData.resource !== null} // <-- checked if resource not null
+      value={sowData.resource !== null} // <-- checked if resource not null
       onValueChange={(value) =>
-        setMsaData({
-          ...msaData,
+        setSowData({
+          ...sowData,
           assign_msa_resource: value,
-          resource: value ? msaData.resource ?? {} : null,
+          resource: value ? sowData.resource ?? {} : null,
         })
       }
       disabled={!isEditing}
@@ -563,19 +615,19 @@ return (
 
   <View style={styles.checkboxRow}>
     <Switch
-      value={msaData.masterdata !== null} // <-- checked if masterdata not null
+      value={sowData.masterdata !== null} // <-- checked if masterdata not null
       onValueChange={(value) =>
-        setMsaData({
-          ...msaData,
+        setSowData({
+          ...sowData,
           assign_msa_masterdata: value,
-          masterdata: value ? msaData.masterdata ?? {} : null,
+          masterdata: value ? sowData.masterdata ?? {} : null,
         })
       }
       disabled={!isEditing}
     />
     <Text style={styles.checkboxLabel}>MSA For MasterData</Text>
   </View>
-</View>
+</View> */}
 
 
           {/* Dates and Budget */}
@@ -583,7 +635,7 @@ return (
             <View style={styles.halfWidth}>
               {renderDateField(
                 "Start Date",
-                msaData.start_date,
+                sowData.start_date,
                 () => setShowStartDatePicker(true),
                 "start_date"
               )}
@@ -591,83 +643,151 @@ return (
             <View style={styles.halfWidth}>
               {renderDateField(
                 "End Date",
-                msaData.end_date,
+                sowData.end_date,
                 () => setShowEndDatePicker(true),
                 "end_date"
               )}
             </View>
           </View>
+              <Text style={styles.sectionTitle}>Work Timesheet</Text>
+   <View style={styles.checkboxRow}>
 
+  <Text style={styles.checkboxLabel}>Is Hourly</Text>
+  <Switch
+    value={sowData.is_hour}
+    onValueChange={(value) => setSowData({...sowData, is_hour: value})}
+    disabled={!isEditing}
+  />
+</View>
           <View style={styles.rowContainer}>
+           
             <View style={styles.halfWidth}>
+
+
+
+
               {renderEditableField(
                 "Currency",
-                msaData.currency_code,
-                (text:any) => setMsaData({...msaData, currency_code: text}),
+                sowData.currency_detail?.currency,
+                (text:any) => setSowData({...sowData, currency: text}),
                 "currency_code"
               )}
             </View>
             <View style={styles.halfWidth}>
               {renderEditableField(
-                "Budget",
-                msaData.budget,
-                (text:any) => setMsaData({...msaData, budget: text}),
+                "Rate",
+                sowData.work_rate,
+                (text:any) => setSowData({...sowData, work_rate: text}),
                 "budget",
                 "",
                 "numeric"
               )}
             </View>
+          
+          </View>
+
+          <View style={styles.rowContainer}>
+
+  <View style={styles.halfWidth}>
+              {renderEditableField(
+                "Amount ",
+                sowData.amount,
+                (text:any) => setSowData({...sowData, budget: text}),
+                "amount",
+                "",
+                "numeric"
+              )}
+            </View>
+
+  <View style={styles.halfWidth}>
+              {renderEditableField(
+                "Work Quantity ",
+                sowData.work_quantity,
+                (text:any) => setSowData({...sowData, budget: text}),
+                "work_quantity",
+                "",
+                "numeric"
+              )}
+            </View>
+
           </View>
 
           {/* Description */}
           {renderEditableField(
             "Description",
-            msaData.description,
-            (text:any) => setMsaData({...msaData, description: text}),
+            sowData.description,
+            (text:any) => setSowData({...sowData, description: text}),
             "description",
             "Enter MSA description"
           )}
 
           {/* Tax Information */}
           <Text style={styles.sectionTitle}>Tax Information</Text>
-          
-          {renderDropdownField(
+          {renderEditableField(
+  "Tax Percent",
+  sowData.tax_percent,
+  (text:any) => setSowData({...sowData, tax_percent: text}),
+  "tax_percent",
+  "",
+  "numeric"
+)}
+          {/* {renderDropdownField(
             "Service Tax Type",
             "tax_service_type",
-            msaData.tax_service_type,
+            sowData.tax_service_type,
             "tax_service_type"
-          )}
+          )} */}
 
           {renderDropdownField(
             "Tax Group",
             "tax_group",
-            msaData.tax_group,
+            sowData.tax_group,
             "tax_group"
           )}
-
-          {renderEditableField(
+  {renderDropdownField(
+            "GL Account",
+            "account",
+            sowData.account,
+            "account"
+          )} 
+          {/* {renderEditableField(
             "Saving Percentage",
-            msaData.savings_percentage,
-            (text:any) => setMsaData({...msaData, savings_percentage: text}),
+            sowData.savings_percentage,
+            (text:any) => setSowData({...sowData, savings_percentage: text}),
             "savings_percentage",
             "",
             "numeric"
-          )}
+          )} */}
 
+         {renderDropdownField(
+            "Cost Center ",
+            "cost_center",
+            sowData.cost_center,
+            "cost_center"
+          )}
+          {renderEditableField(
+            "Grand Total ",
+            sowData.grand_total,
+            (text:any) => setSowData({...sowData, grand_total: text}),
+            "grand_total",
+            "",
+            "numeric"
+          )}
           {/* Comments */}
           {renderEditableField(
             "Comments",
-            msaData.comments,
-            (text:any) => setMsaData({...msaData, comments: text}),
+            sowData.comments,
+            (text:any) => setSowData({...sowData, comments: text}),
             "comments",
             "Enter comments"
           )}
+        
         </View>
 
         {/* Date Pickers */}
         {showStartDatePicker && (
           <DateTimePicker
-            value={new Date(msaData.start_date || Date.now())}
+            value={new Date(sowData.start_date || Date.now())}
             mode="date"
             display="default"
             onChange={onStartDateChange}
@@ -676,7 +796,7 @@ return (
         
         {showEndDatePicker && (
           <DateTimePicker
-            value={new Date(msaData.end_date || Date.now())}
+            value={new Date(sowData.end_date || Date.now())}
             mode="date"
             display="default"
             onChange={onEndDateChange}
@@ -686,7 +806,7 @@ return (
         {/* Dropdown Modal */}
         {renderDropdownModal()}
         <View style={styles.sectionTitle}></View>
-<ResourceDetailCard msaData={msaData} />
+<ResourceDetailCard sowData={sowData} />
 
 
 
@@ -857,9 +977,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   checkboxRow: {
+    
+    padding:10,
+    borderWidth:1,
+    borderRadius:5,
+    borderColor:"gray",
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 18,
   },
   checkboxLabel: {
     marginLeft: 12,
@@ -1000,4 +1125,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MSADetailScreen;
+export default SOWDetailScreen;

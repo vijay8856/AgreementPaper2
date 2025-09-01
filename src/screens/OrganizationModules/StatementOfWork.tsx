@@ -416,15 +416,15 @@ const renderStatusBadge = (status: string) => {
 
       {/* Option 1 - Contractor MSA */}
       <View style={styles.optionCard}>
-        <Text style={styles.optionTitle}>Master Service Agreement for Contractors</Text>
+        <Text style={styles.optionTitle}>Statement Of Work for Contractors</Text>
         <Text style={styles.optionDesc}>
-          Use this option if you are creating MSA for Services by Contractors through Agencies or Supplier
+          Use this option if you are creating SOW for Services by Contractors through Agencies or Supplier
         </Text>
         <TouchableOpacity
           style={styles.createButton}
           onPress={() => {
             setModalVisible(false);
-            navigation.navigate("CreateMSA", { type: "contractor" });
+            navigation.navigate("CreateSOW", { type: "contractor" });
           }}
         >
           <Text style={styles.createButtonText}>Create</Text>
@@ -433,15 +433,16 @@ const renderStatusBadge = (status: string) => {
 
       {/* Option 2 - Service MSA */}
       <View style={styles.optionCard}>
-        <Text style={styles.optionTitle}>Master Service Agreement</Text>
+        <Text style={styles.optionTitle}>Statement Of Work
+</Text>
         <Text style={styles.optionDesc}>
-          Use this option if you are creating MSA for Service Procurement
+      Use this option if you are creating SOW for Service/Material Procurement
         </Text>
         <TouchableOpacity
           style={styles.createButton2}
           onPress={() => {
             setModalVisible(false);
-            navigation.navigate("CreateMSA", { type: "service" });
+            navigation.navigate("CreateSOW", { type: "service" });
           }}
         >
           <Text style={styles.createButtonText}>Create</Text>

@@ -23,14 +23,7 @@
 
 // // use AUTH_MULTYPART_HEADERS when you have passed data with image form
 
-// export const AUTH_MULTYPART_HEADERS = () => {
-//   return {
-//     headers: {
-//       'Content-Type': 'multipart/form-data',
-//       Authorization: `Token ${localStorage.getItem('access_token')}`,
-//     },
-//   };
-// };
+
 
 // // use AUTH_HEADERS when you have passed data with json and normal data object
 
@@ -93,8 +86,9 @@ export const AUTH_MULTYPART_HEADERS = async () => {
   
   return {
     headers: {
-      'Content-Type': 'multipart/form-data',
-      Authorization: `Token ${token}`,
+        "Content-Type": "multipart/form-data",
+  Accept: "application/json",
+  Authorization: `Token ${token}`,
     },
   };
 };

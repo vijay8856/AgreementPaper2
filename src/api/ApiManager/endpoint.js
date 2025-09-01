@@ -58,6 +58,7 @@ CREATEMSA:'/msa/master-agreement/',
 
 SOWCONTRACTORLIST:"sow/v2/statement-of-work/contractor/",
 SOWSERVICELIST:"sow/v2/statement-of-work/service/",
+CREATESOW:"sow/statement-of-work/",
 SOWALLSTATUS:'sow/statement-of-work/',
 SOWDETAIL:"sow/statement-of-work/",
 SOWFIELDSDROPDOWN:"sow/sow-fields/",

@@ -45,3 +45,65 @@ export type AppStackParamList = {
   MyProfile: undefined;
 };
 
+// types.ts
+export interface SignWellDocument {
+  id?: string;
+  name: string;
+  custom_requester_name: string;
+  embedded_edit_url: string;
+  recipients: Array<{
+    email: string;
+    embedded_signing_url: string;
+    id: string;
+    name: string;
+    passcode: string;
+    status: string;
+  }>;
+  requester_email_address: string;
+  status: string;
+  subject: string;
+}
+
+export interface UserData {
+  id: string;
+  // Add other user properties as needed
+}
+
+export interface DocumentResponse {
+  // Define the structure based on your API response
+  id: string;
+  name: string;
+  // Add other properties
+}
+
+export interface CreateDocumentProps {
+  signwellRes: boolean | SignWellDocument;
+  setSignwellRes: (res: boolean | SignWellDocument) => void;
+  setUrl: (url: string | null) => void;
+  setRequestingRedirectUrl: (url: string | null) => void;
+  fileName: string;
+  recipientName: string;
+  recipientEmail: string;
+  passcode: string;
+  setFileName: (name: string) => void;
+  setRecipientName: (name: string) => void;
+  setRecipientEmail: (email: string) => void;
+  setPasscode: (passcode: string) => void;
+  isDocumentOpen: boolean;
+  setIsDocumentOpen: (open: boolean) => void;
+  handleClear: () => void;
+  documentResponse: DocumentResponse | null;
+  setDocumentResponse: (response: DocumentResponse | null) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+  id: string | undefined;
+  error: string | null;
+  setError: (error: string | null) => void;
+}
+
+export interface SignWellEmbedProps {
+  embeddedSigningUrl: string | null;
+  id: string;
+  requestingRedirectUrl: string | null;
+  handleClear: () => void;
+}

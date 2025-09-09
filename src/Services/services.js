@@ -5,6 +5,19 @@ import { AUTH_HEADERS, AUTH_MULTYPART_HEADERS, HEADERS, MULTYPART_HEADERS } from
 import { authorize } from 'react-native-app-auth';
 import dayjs from "dayjs";
 import axios from 'axios';
+
+export const API_KEY = 'YWNjZXNzOjhlMDI4YTlhODAyMjcwYzU3ZmE0ZjRiZWM4YzRjYjFj'; //live api
+export const SIGNWELL_API_URL = 'https://www.signwell.com/api/v1/documents/';
+
+const signwellAxios = axios.create({
+  baseURL: SIGNWELL_API_URL,
+  headers: {
+    "Authorization": `Token ${API_KEY}`,
+    "Content-Type": "application/json",
+  },
+});
+// export const API_KEY = 'YWNjZXNzOjhlMDI4YTlhODAyMjcwYzU3ZmE0ZjRiZWM4YzRjYjFj'; //test api
+// export const API_KEY = 'YWNjZXNzOjZiODE2Yzc1N2E2YzllMmZjOTFiNzZkMjA3Mjc4Y2Jl'; //live api
 const Services = {
 
   login: async (email, password) => {
@@ -198,6 +211,29 @@ const Services = {
   },
 
 
+searchCountry: async (query) => {
+  try {
+    const headers = await AUTH_HEADERS();
+    const response = await axiosInstance.get(
+      `${API_ENDPOINTS.COUNTRIESSEARCH}?country=${query}&limit=10&offset=0`,
+      headers
+    );
+    console.log("searchCountry response",response);
+    
+    return {
+      success: true,
+      data: response.data.results,
+      status: response.status,
+    };
+  } catch (error) {
+    console.error("Country search error:", error);
+    return {
+      success: false,
+      error: error.response?.data || "Failed to search countries",
+      status: error.response?.status || 500,
+    };
+  }
+},
 
 
   analysisContractByAi: async (formData) => {
@@ -1460,7 +1496,7 @@ const Services = {
       const headers = await AUTH_HEADERS();
 
       // Build query parameters
-      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}`;
+      let queryParams = `?limit=${data?.limit }&offset=${data?.offset || 0}`;
 
       // Add search parameter if provided
       // if (data?.search) {
@@ -1646,7 +1682,38 @@ const Services = {
       };
     }
   },
+  getSOWApprovalList: async () => {
+    try {
+      const headers = await AUTH_HEADERS();
 
+      const response = await axiosInstance.get(
+        `${API_ENDPOINTS.SOWDETAIL}?status=pending_approval`,
+        headers
+      );
+
+      console.log("SOWApprovalList  Response", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error("Error fetching SOW Approval List", {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message,
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || "Failed to fetch SOW Approval List",
+        status: error.response?.status || 500,
+      };
+    }
+  },
 
   // updateMSADetail: async (slug, payload) => {
   //   try {
@@ -1879,7 +1946,54 @@ const Services = {
     }
   },
 
+updateSOWStatus: async (slug, payload) => {
+  try {
+    console.log("🔹 updateSOWStatus called with:", { slug, payload });
 
+    const headers = await AUTH_HEADERS();
+    console.log("✅ Headers generated:", headers);
+
+    if (!slug) {
+      throw new Error("❌ Slug is required for updating SOW status");
+    }
+
+    // slug in query parameter
+    console.log(`📡 Making PATCH request to: ${API_ENDPOINTS.UPDATESOW}${slug}/`);
+    console.log("📦 Payload:", payload);
+
+    const response = await axiosInstance.patch(
+      `${API_ENDPOINTS.UPDATESOW}${slug}/`,
+      payload,
+      headers 
+    );
+
+    console.log("✅ Update SOW Status Response:", {
+      status: response.status,
+      data: response.data,
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      count: response.data.count,
+      status: response.status,
+    };
+  } catch (error) {
+    console.error("❌ Error updating SOW Status:", {
+      message: error.message,
+      config: error.config,
+      request: error.request,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    return {
+      success: false,
+      error: error.response?.data || error.message || "Failed to update SOW Status",
+      status: error.response?.status || 500,
+    };
+  }
+},
 
   getSowContractorList: async (data) => {
     console.log("&offset=${data?.offset || 0}", data);
@@ -1889,11 +2003,6 @@ const Services = {
 
       // Build query parameters
       let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}&date_from=${data?.date_from || 0}&date_to=${data?.date_to || 0}&sow_type=${data?.sow || 0}`;
-
-      // Add search parameter if provided
-      // if (data?.search) {
-      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
-      // }
 
       const response = await axiosInstance.get(
         API_ENDPOINTS.SOWCONTRACTORLIST + queryParams,
@@ -2070,58 +2179,6 @@ const Services = {
     }
   },
 
-  //  updateSOWDetail: async (slug, payload) => {
-  //   console.log("payload",payload);
-  //   console.log("slug",slug);
-
-
-  //   try {
-  //     const headers = await AUTH_MULTYPART_HEADERS();
-
-  //     if (!slug) {
-  //       throw new Error("Slug is required for fetching SOW Detail");
-  //     }
-
-  //     const formattedPayload = {
-  //       ...payload,
-  //       start_date: payload.start_date
-  //         ? dayjs(payload.start_date).format("YYYY-MM-DD HH:mm:ss")
-  //         : null,
-  //       end_date: payload.end_date
-  //         ? dayjs(payload.end_date).format("YYYY-MM-DD HH:mm:ss")
-  //         : null,
-  //     };
-
-  //     const response = await axiosInstance.patch(
-  //       `${API_ENDPOINTS.UPDATESOW}${slug}/`,
-  //       formattedPayload,
-  //       headers
-  //     );
-
-  //     console.log("Update SOW Detail Response", response);
-
-  //     return {
-  //       success: true,
-  //       data: response.data,
-  //       count: response.data.count,
-  //       status: response.status,
-  //     };
-  //   } catch (error) {
-  //     console.error("Error Update SOW Detail", {
-  //       config: error.config,
-  //       request: error.request,
-  //       response: error.response,
-  //       message: error.message,
-  //     });
-
-  //     return {
-  //       success: false,
-  //       error: error.response?.data || "Failed to Update SOW Detail",
-  //       status: error.response?.status || 500,
-  //     };
-  //   }
-  // },
-
 updateSOWDetail: async (slug, payload) => {
   console.log("payload", payload);
   console.log("slug", slug);
@@ -2134,8 +2191,7 @@ updateSOWDetail: async (slug, payload) => {
       throw new Error("Slug is required for updating SOW");
     }
 
-    // Since payload is FormData, we don't need to reformat it
-    // FormData will handle the content type with proper boundary
+
     const response = await axiosInstance.patch(
       `${API_ENDPOINTS.UPDATESOW}${slug}/`, // Make sure this endpoint accepts PATCH
       payload, // Send FormData directly
@@ -2169,15 +2225,6 @@ updateSOWDetail: async (slug, payload) => {
 createSOW: async (payload) => {
   try {
     const headers = await AUTH_MULTYPART_HEADERS();
-    
-    // // For FormData, we need to set the proper content type
-    // // Remove the default Content-Type header as FormData will set it automatically
-    // // with the proper boundary parameter
-    // const formDataHeaders = {
-    //   ...headers,
-    //   'Content-Type': 'multipart/form-data',
-    // };
-
     const response = await axiosInstance.post(
       `${API_ENDPOINTS.CREATESOW}`,
       payload,
@@ -2192,6 +2239,511 @@ createSOW: async (payload) => {
       success: false, 
       error: error.response?.data || error.message 
     };
+  }
+},
+
+
+// createServiceSOW: async (payload) => {
+//   try {
+//     const headers = await AUTH_MULTYPART_HEADERS();
+//     const response = await axiosInstance.post(
+//       `${API_ENDPOINTS.CREATESERVICESOW}`,
+//       payload,
+//      headers
+//     );
+    
+//     console.log("response of createSOW", response);
+//     return { success: true, data: response.data };
+//   } catch (error) {
+//     console.error("Error creating SOW:", error);
+//     return { 
+//       success: false, 
+//       error: error.response?.data || error.message 
+//     };
+//   }
+// },
+
+createServiceSOW: async (payload) => {
+  try {
+    console.log("🔹 createServiceSOW called with payload (FormData):", payload);
+
+    const headers = await AUTH_MULTYPART_HEADERS();
+    console.log("🔹 Headers being sent:", headers);
+
+    console.log("🔹 Endpoint:", API_ENDPOINTS.CREATESERVICESOW);
+
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.CREATESERVICESOW,
+      payload,
+     headers
+    );
+
+    console.log("✅ Response status:", response.status);
+    console.log("✅ Response data:", JSON.stringify(response.data, null, 2));
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("❌ Error creating SOW:");
+
+    if (error.response) {
+      console.error("👉 Status:", error.response.status);
+      console.error("👉 Data:", JSON.stringify(error.response.data, null, 2));
+      console.error("👉 Headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("👉 No response received. Request object:", error.request);
+    } else {
+      console.error("👉 Request setup error:", error.message);
+    }
+
+    return { 
+      success: false, 
+      error: error.response?.data || error.message 
+    };
+  }
+},
+
+updateServiceDetail: async (originalSlug,formData) => {
+  try {
+    console.log("🔹 updateServiceDetail called with payload (FormData):", formData);
+console.log("originalSlug",originalSlug);
+
+    const headers = await AUTH_MULTYPART_HEADERS();
+    console.log("🔹 Headers being sent:", headers);
+
+    console.log("🔹 Endpoint:", API_ENDPOINTS.CREATESERVICESOW);
+
+    const response = await axiosInstance.post(
+      // API_ENDPOINTS.CREATESERVICESOW,
+      `${API_ENDPOINTS.CREATESERVICESOW}?slug=${originalSlug}`,
+      formData,
+     headers
+    );
+
+    console.log("✅ Response status:", response.status);
+    console.log("✅ Response data:", JSON.stringify(response.data, null, 2));
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("❌ Error update Service  SOW:");
+
+    if (error.response) {
+      console.error("👉 Status:", error.response.status);
+      console.error("👉 Data:", JSON.stringify(error.response.data, null, 2));
+      console.error("👉 Headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("👉 No response received. Request object:", error.request);
+    } else {
+      console.error("👉 Request setup error:", error.message);
+    }
+
+    return { 
+      success: false, 
+      error: error.response?.data || error.message 
+    };
+  }
+},
+
+  getTimeSheetList: async (data) => {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      // Build query parameters
+      let queryParams = `?limit=${data?.limit }&offset=${data?.offset || 0}`;
+
+      // Add search parameter if provided
+      if (data?.search) {
+        queryParams += `&search=${encodeURIComponent(data.search)}`;
+      }
+
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.TIMESHEET + queryParams,
+        headers
+      );
+
+      console.log("TimeSheetList", response);
+
+      return {
+        success: true,
+        data: response.data,
+        count: response.data.count,
+        status: response.status,
+      };
+    } catch (error) {
+      console.error('Error fetching Time Sheet List', {
+        config: error.config,
+        request: error.request,
+        response: error.response,
+        message: error.message
+      });
+
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch Time Sheet List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+  getMasterMaterialListBySerach: async (data) => {
+console.log("getMasterMaterialListBySerach",data);
+
+    try {
+  const headers = await AUTH_HEADERS();
+
+      let queryParams = `?limit=${data?.limit }&offset=${data?.offset || 0}`;
+
+
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.MASTERMATERIALLIST + queryParams,
+        headers
+      );
+
+console.log("getMasterMaterialListBySerach",response);
+
+      return {
+        success: true,
+        data: response.data.results,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data ||
+          "Failed to fetch Serached Master Material List ",
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+ getMaterialDetails: async (materialUid) => {
+console.log("getMaterialDetails",materialUid);
+
+    try {
+  const headers = await AUTH_HEADERS();
+
+      // let queryParams = `?limit=${data?.limit }&offset=${data?.offset || 0}`;
+
+  const response = await axiosInstance.get(
+      `${API_ENDPOINTS.MATERIAL_DETAILS}/${materialUid}/`,
+      headers
+    );
+   
+
+console.log("getMaterialDetails",response);
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data ||
+          "Failed to fetch Serached Master Material List ",
+        status: error.response?.status || 500,
+      };
+    }
+  },
+// createSignWellDocument: async (documentData) => {
+//   try {
+//     const response = await fetch(SIGNWELL_API_URL, {
+//       method: "POST",
+//       headers: {
+//         'X-Api-Key': API_KEY,
+//         Accept: 'application/json',
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(documentData),
+//     });
+
+//     const data = await response.json();
+//     console.log("📥 SignWell API Response:", data);
+
+//     if (data.error_message) {
+//       return { success: false, error: data.error_message };
+//     }
+
+//     return { success: true, data };
+//   } catch (error) {
+//     console.error("❌ Error in createSignWellDocument:", error);
+//     return { success: false, error: error.message };
+//   }
+// },
+
+createSignWellDocument:async (documentData) =>{
+    try {
+        const response = await fetch(SIGNWELL_API_URL, {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': API_KEY,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(documentData),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Error: ${error.message}`);
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error('There was an error creating the document:', error);
+        throw error;
+    }
+},
+
+
+
+
+
+  createDraftDocument: async (fileUrl, title) => {
+    try {
+      const payload = {
+        name: title,
+        draft: true,                   // keep in draft mode
+        embedded_edit_url: true,       // return embedded edit URL
+        embedded_signing: false,       // not signing yet, just edit/add contacts
+        files: [
+          { file_url: fileUrl }        // or use file_base64
+        ],
+      };
+
+      const response = await signwellAxios.post("/documents", payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("❌ Error creating draft:", error.response?.data || error.message);
+      return { success: false, error: error.response?.data || error.message };
+    }
+  },
+
+
+
+
+
+
+// createSignWellDocument: async (documentData, allowManualContacts = false) => {
+//   try {
+//     const payload  = { ...documentData };
+
+//     if (allowManualContacts) {
+//       // Force draft + remove recipients
+//       payload.draft = true;
+//       delete payload.recipients;
+//     }
+
+//     const response = await fetch(SIGNWELL_API_URL, {
+//       method: "POST",
+//       headers: {
+//         "X-Api-Key": API_KEY,
+//         Accept: "application/json",
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(payload),
+//     });
+
+//     const data = await response.json();
+//     console.log("📥 SignWell API Response:", data);
+
+//     if (data.error_message || data.errors) {
+//       throw new Error(data.error_message || JSON.stringify(data.errors));
+//     }
+
+//     return data;
+//   } catch (error) {
+//     console.error("❌ Error in createSignWellDocument:", error);
+//     throw error;
+//   }
+// },
+
+
+
+// createSignWellDocument: async (documentData) => {
+//   try {
+//     const response = await fetch(SIGNWELL_API_URL, {
+      
+//       method: 'POST',
+//       headers: {
+//         'X-Api-Key': API_KEY,
+//         Accept: 'application/json',
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(documentData),
+//     });
+
+//     // Try to parse the body (even for errors)
+//     let responseBody;
+//     try {
+//       responseBody = await response.json();
+//     } catch {
+//       responseBody = await response.text(); // fallback if not JSON
+//     }
+
+//     if (!response.ok) {
+//       const errorMsg =
+//         responseBody?.message ||
+//         responseBody?.error ||
+//         JSON.stringify(responseBody) ||
+//         `HTTP ${response.status}`;
+//       throw new Error(errorMsg);
+//     }
+
+//     return responseBody;
+//   } catch (error) {
+//     console.error('There was an error creating the document:', error);
+//     throw error;
+//   }
+// },
+
+//   createSignWellDocument: async (documentData) =>{
+//     try {
+//         const response = await fetch(SIGNWELL_API_URL, {
+//             method: 'POST',
+//             headers: {
+//                 'X-Api-Key': API_KEY,
+//                 'Accept': 'application/json',
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(documentData),
+//         });
+
+//         if (!response.ok) {
+//             const error = await response.json();
+//             throw new Error(`Error: ${error.message}`);
+//         }
+
+//         const data = await response.json();
+//         return data;
+
+//     } catch (error) {
+//         console.error('There was an error creating the document:', error);
+//         throw error;
+//     }
+// },
+
+
+
+
+
+   checkStatusSignWellDocument:async (id)  =>{
+    try {
+        const response = await fetch(`${SIGNWELL_API_URL}${id}/`, {
+            method: 'GET',
+            headers: {
+                'X-Api-Key': API_KEY,
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            return {status:false,message:error.message};
+        }
+        const data = await response.json();
+
+        return {status:true,data:data}
+
+    } catch (error) {
+        console.error('There was an error retrieving the document:', error);
+        throw error;
+    }
+},
+getCompletedSignWellDocument:async(id)=> {
+    try {
+        const response = await fetch(`${SIGNWELL_API_URL}${id}/completed_pdf/?url_only=false&audit_page=true`, {
+            method: 'GET',
+            headers: {
+                'X-Api-Key': API_KEY,
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            return  {status:false,message:error.message}
+        }
+
+        // The response is a binary PDF file, so we should handle it as a blob
+        const blob = await response.blob();
+
+        // Convert the blob to a URL to display in an iframe
+        const pdfUrl = URL.createObjectURL(blob);
+        return  {status:true,pdfUrl:pdfUrl,blob:blob}
+
+    } catch (error) {
+        console.error('There was an error retrieving the document:', error);
+        throw error;
+    }
+},
+
+sendeSignDocsSaga: async (payload) => {
+  try {
+    console.log("🔹 sendeSignDocsSaga called with payload :", payload);
+
+    const headers = await AUTH_HEADERS();
+    console.log("🔹 Headers being sent:", headers);
+
+    console.log("🔹 Endpoint:", API_ENDPOINTS.ESIGNDOCLIST);
+
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.ESIGNDOCLIST,
+      payload,
+     headers
+    );
+
+    console.log("✅ Response status:", response.status);
+    console.log("✅ Response data:", JSON.stringify(response.data, null, 2));
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("❌ Error sendeSignDocsSaga:");
+
+    if (error.response) {
+      console.error("👉 Status:", error.response.status);
+      console.error("👉 Data:", JSON.stringify(error.response.data, null, 2));
+      console.error("👉 Headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("👉 No response received. Request object:", error.request);
+    } else {
+      console.error("👉 Request setup error:", error.message);
+    }
+
+    return { 
+      success: false, 
+      error: error.response?.data || error.message 
+    };
+  }
+},
+createMasterData : async (data) => {
+    const headers = await AUTH_MULTYPART_HEADERS();
+
+  try {
+      const response = await axiosInstance.post(
+      API_ENDPOINTS.MASTERDTATA,
+      data,
+     headers
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error creating master data:', error);
+    throw error;
+  }
+},
+getMasterData : async () => {
+
+  try {
+      const response = await axiosInstance.get(
+      API_ENDPOINTS.MASTERDTATA,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error creating master data:', error);
+    throw error;
   }
 },
 };

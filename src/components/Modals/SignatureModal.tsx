@@ -34,7 +34,7 @@ const SignatureModal = ({ visible, onClose }: Props) => {
     const [passcode, setPasscode] = useState('');
     const [document, setDocument] = useState<any>(null);
  const [userId ,setUserId] = useState<any>(null);
-    const API_KEY1 = API_KEY
+    const API_KEY1 = 'YWNjZXNzOjhlMDI4YTlhODAyMjcwYzU3ZmE0ZjRiZWM4YzRjYjFj'
   useEffect(() => {
     const fetchData = async () => {
       const data2 = await AsyncStorage.getItem('userId');
@@ -78,7 +78,9 @@ const SignatureModal = ({ visible, onClose }: Props) => {
         if (name && email && document) {
             try {
                 const result = await createSignWellDocument({ name, email, file: document });
-                const signingUrl = result.recipients?.[0]?.embedded_signing_url;
+                console.log("result",result);
+                
+                const signingUrl = result.recipients[0].embedded_signing_url;
                 if (signingUrl) {
                     onClose();
                     navigation.navigate('SignWebViewScreen', { url: signingUrl });
@@ -108,48 +110,82 @@ const SignatureModal = ({ visible, onClose }: Props) => {
     }) => {
         try {
             const base64 = await RNFS.readFile(file.uri, 'base64');
-
-            const body = {
-                name: file.name,
-                draft: false,
-                test_mode: false,
-                with_signature_page: true,
-                reminders: true,
-                apply_signing_order: false,
-                allow_decline: true,
-                allow_reassign: true,
-                custom_requester_name: 'Agreementpaper.com',
-                embedded_signing: true,
-                embedded_signing_notifications: true,
-                text_tags: true,
-                subject: 'Please sign this document',
-                message: 'Please review and sign this document.',
-  recipients: [
-                    {
-                         send_email: true,
+   const documentData = {
+      test_mode: false,
+      draft: true,
+      with_signature_page: true,
+      reminders: true,
+      apply_signing_order: false,
+      embedded_signing: true,
+      embedded_signing_notifications: true,
+      text_tags: true,
+      allow_decline: true,
+      allow_reassign: true,
+      name: file.name,
+      subject: 'Please sign this document',
+      message: 'Please review and sign this document.',
+      custom_requester_name: 'Agreementpaper.com',
+      recipients: [
+        {
+            role: "Signer",
+          send_email: true,
           send_email_delay: 0,
-                        name: name,
-                        email: email,
-                        role: "Signer",
-                        embedded_signing: true,
-                        id: userId,
-                        passcode: passcode,
-          subject: "Please sign this document",
-          message: "Please review and sign this document.",
-                    }
-                ],
+          id: userId,
+          name: name,
+          email: email,
+          passcode: passcode,
+          subject: 'Please sign this document',
+          message: 'Please review and sign this document.',
+        },
+      ],
+      files: [
+      {
+          name: file.name,
+          file_base64: base64,
+        },
+      ],
+    };
+//             const body = {
+//                 name: file.name,
+//                 draft: false,
+//                 test_mode: false,
+//                 with_signature_page: true,
+//                 reminders: true,
+//                 apply_signing_order: false,
+//                 allow_decline: true,
+//                 allow_reassign: true,
+//                 custom_requester_name: 'Agreementpaper.com',
+//                 embedded_signing: true,
+//                 embedded_signing_notifications: true,
+//                 text_tags: true,
+//                 subject: 'Please sign this document',
+//                 message: 'Please review and sign this document.',
+//   recipients: [
+//                     {
+//                          send_email: true,
+//           send_email_delay: 0,
+//                         name: name,
+//                         email: email,
+//                         role: "Signer",
+//                         embedded_signing: true,
+//                         id: userId,
+//                         passcode: passcode,
+//           subject: "Please sign this document",
+//           message: "Please review and sign this document.",
+//                     }
+//                 ],
 
-                files: [
-                    {
-                        name: file.name,
-                        file_base64: base64,
-                    },
-                ],
+//                 files: [
+//                     {
+//                         name: file.name,
+//                         file_base64: base64,
+//                     },
+//                 ],
 
-            };
-            console.log("body", body);
+//             };
+            console.log("body", documentData);
 
-            const response = await axios.post('https://www.signwell.com/api/v1/documents/', body, {
+            const response = await axios.post('https://www.signwell.com/api/v1/documents/', documentData, {
                 headers: {
                     'X-Api-Key': API_KEY1,
                     'Content-Type': 'application/json',

@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image, FlatList } from 'react-native';
 import Services from '../../Services/services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/NavigationManager';
 import { StackNavigationProp } from '@react-navigation/stack';
+import ImagePicker from 'react-native-image-crop-picker';
 type OrganizationProfileModal = StackNavigationProp<RootStackParamList, 'OrganizationProfileModal'>;
 const OrganizationProfileModal = ({ visible, onComplete, onClose }: any) => {
      const navigation = useNavigation<OrganizationProfileModal>();
@@ -24,8 +25,54 @@ const OrganizationProfileModal = ({ visible, onComplete, onClose }: any) => {
     currency: '',
     logo: null, // { uri, name, type }
   });
+const [searchQuery, setSearchQuery] = useState("");
+const [countryResults, setCountryResults] = useState<any[]>([]);
+const [loading, setLoading] = useState(false);
 
+const pickLogo = async () => {
+  try {
+    const image = await ImagePicker.openPicker({
+      width: 300,
+      height: 300,
+      cropping: true, // enables crop UI
+      includeBase64: true, // optional if backend accepts base64
+    });
 
+    console.log("Selected logo:", image);
+
+    // Prepare for formData (if backend expects file upload)
+    const logoFile = {
+      uri: image.path,
+      type: image.mime,
+      name: 'logo.jpg', // you can dynamically set based on company name
+    };
+
+    // Update formData state
+    handleInputChange('logo', logoFile);
+  } catch (error) {
+    if (error.message !== 'User cancelled image selection') {
+      console.error('Logo picker error:', error);
+    }
+  }
+};
+const handleSearchCountry = async (text: string) => {
+  setSearchQuery(text);
+  if (text.length < 2) {
+    setCountryResults([]);
+    return;
+  }
+
+  setLoading(true);
+  const res = await Services.searchCountry(text);
+  setLoading(false);
+console.log("resres",res);
+
+  if (res.success) {
+    setCountryResults(res.data); // API returns array of countries
+  } else {
+    setCountryResults([]);
+  }
+};
 
     const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -78,9 +125,17 @@ const renderStep1 = () => (
       onChangeText={(text) => handleInputChange('company_name', text)}
     />
     <Text style={styles.sectionHeader}>Company Logo</Text>
-    <TouchableOpacity style={styles.uploadButton}>
-      <Text>Update Logo</Text>
-    </TouchableOpacity>
+   <TouchableOpacity style={styles.uploadButton} onPress={pickLogo}>
+  <Text>Update Logo</Text>
+</TouchableOpacity>
+
+{formData.logo?.uri && (
+  <Image
+    source={{ uri: formData.logo.uri }}
+    style={{ width: 80, height: 80, marginTop: 10, borderRadius: 8 }}
+  />
+)}
+
 
     <Text style={styles.sectionHeader}>Company Description</Text>
     <TextInput
@@ -130,11 +185,35 @@ const renderStep1 = () => (
     <View>
       <Text style={styles.modalTitle}>Company Address</Text>
       
-      <Text style={styles.sectionHeader}>Geolocation</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Search for places"
-      />
+     <Text style={styles.sectionHeader}>Geolocation</Text>
+<TextInput
+  style={styles.input}
+  placeholder="Search for country"
+  value={searchQuery}
+  onChangeText={handleSearchCountry}
+/>
+
+{loading && <Text>Loading...</Text>}
+
+{Array.isArray(countryResults) && countryResults.length > 0 && (
+  <View style={styles.dropdown}>
+    {countryResults.map((item, index) => (
+      <TouchableOpacity
+        key={index}
+        onPress={() => {
+          handleInputChange("country", item.name);
+          setSearchQuery(item.name);
+          setCountryResults([]);
+        }}
+      >
+        <Text style={styles.searchResult}>{item.name}</Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+)}
+
+
+
 
       <Text style={styles.sectionHeader}>Address</Text>
       <TextInput
@@ -216,6 +295,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
+  searchResult: {
+  padding: 10,
+  borderBottomWidth: 1,
+  borderBottomColor: "#eee",
+},
+dropdown: {
+  maxHeight: 200,
+  backgroundColor: "#fff",
+  borderRadius: 5,
+  marginTop: 4,
+  borderWidth: 1,
+  borderColor: "#ccc",
+},
   modalContent: {
     backgroundColor: 'white',
     margin: 20,

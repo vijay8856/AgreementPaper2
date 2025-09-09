@@ -6,6 +6,7 @@ LOGIN:'/accounts/login/',
 // LOGIN: '/accounts/v2/login/mobile/',
 LAWYERNETWORKLIST:'/lawyer-network/lawyers/',
 COUNTRIES:'/accounts/v2/countries/',
+COUNTRIESSEARCH:"accounts/country/",
 COUNTRIESDETAILSSTATES:'accounts/v2/country/detail',
 ANALYSISCONTRACT:'/ai/analyze-contract/v2/',
 SUPPLIERSLIST:'agency/agency-profile',
@@ -63,7 +64,13 @@ SOWALLSTATUS:'sow/statement-of-work/',
 SOWDETAIL:"sow/statement-of-work/",
 SOWFIELDSDROPDOWN:"sow/sow-fields/",
 UPDATESOW:"sow/statement-of-work/",
-// Agency Dashboard endpoint's  
+TIMESHEET:"timesheet/timesheet/",
+CREATESERVICESOW:"sow/v2/service-statement-of-work/",
+  MASTERMATERIALLIST: `masterdata/material-master-data/`,
+  MATERIAL_DETAILS:"masterdata/material-master-data",
+  UPDATESERVICESOW:"sow/v2/service-statement-of-work/",
+  MASTERDTATA:'masterdata/master-data/',
+  // Agency Dashboard endpoint's  
 AGENCYDASHBOARD:'agency/dashboard-stats/',
 
 //Lawyer Dashboard endpoint's

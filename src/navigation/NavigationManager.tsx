@@ -33,6 +33,9 @@ import CreateMSA from '../screens/CreateMSA';
 import ApproverModal from '../components/Modals/ApproverModal';
 import SOWDetailScreen from '../screens/OrganizationModules/SOWDetailScreen';
 import CreateSOW from '../screens/CreateSOW';
+import CreateServiceSow from '../screens/OrganizationModules/CreateServiceSow';
+import SOWServiceDetailScreen from '../screens/OrganizationModules/SOWServiceDetailScreen';
+import SignWellEmbed from '../screens/SignWellEmbed';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -59,6 +62,9 @@ export type RootStackParamList = {
   ApproverModal:undefined,
   SOWDetailScreen:undefined,
   CreateSOW:undefined,
+  CreateServiceSow:undefined,
+  SOWServiceDetailScreen:undefined,
+  SignWellEmbed:undefined,
 };
 
 const NavigationManager = () => {
@@ -95,6 +101,8 @@ const NavigationManager = () => {
         <RootStack.Screen name="LinkedInLoginScreen" component={LinkedInLoginScreen} />
         <RootStack.Screen name="SubscriptionHistoryScreen" component={SubscriptionHistoryScreen} options={{ title: 'Subscription History ' }} />
         <RootStack.Screen name="HelpScreen" component={HelpScreen} options={{ title: 'Help Screen ' }} />
+        <RootStack.Screen name="SignWellEmbed" component={SignWellEmbed} options={{ title: 'SignWellEmbed  ' }} />
+
         <RootStack.Screen name="AIDraft" component={AICoreAdminScreen} options={{ title: 'AI Draft ' }} />
         <RootStack.Screen name="ContractPreviewScreen" component={ContractPreviewScreen} options={{ title: 'Contract Preview ' }} />
         <RootStack.Screen name="LawyerOrgProfile" component={LawyerOrgProfile} options={{ title: 'Lawyer Profile' }} />
@@ -103,10 +111,14 @@ const NavigationManager = () => {
 
  <RootStack.Screen name="CreateMSA" component={CreateMSA} options={{ title: 'Create MSA ' }} />
  <RootStack.Screen name="CreateSOW" component={CreateSOW} options={{ title: 'Create SOW ' }} />
+ <RootStack.Screen name="CreateServiceSow" component={CreateServiceSow} options={{ title: 'Create Service Sow ' }} />
+
 
   <RootStack.Screen name="ApproverModal" component={ApproverModal} options={{ title: 'Approver Modal ' }} />
 
  <RootStack.Screen name="SOWDetailScreen" component={SOWDetailScreen} options={{ title: 'SOW Detail Screen' }} />
+ <RootStack.Screen name="SOWServiceDetailScreen" component={SOWServiceDetailScreen} options={{ title: 'SOW Service Detail Screen' }} />
+
 
 
         <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}   

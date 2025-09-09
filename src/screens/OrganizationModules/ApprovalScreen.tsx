@@ -8,14 +8,18 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import Services from "../../Services/services";
 import { useFocusEffect } from "@react-navigation/native";
 
 const ApprovalScreen = () => {
   const [msaData, setMsaData] = useState<any[]>([]);
+  const [sowData, setSOWData] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+   const [activeTab, setActiveTab] = useState<"msa" | "sow">("msa");
   // Mock fetch data (replace with your getMSAList API)
   const fetchMSAList = async () => {
     try {
@@ -38,12 +42,36 @@ const ApprovalScreen = () => {
   // Initial load
   useEffect(() => {
     fetchMSAList();
+    fetchSOWList();
   }, []);
+
+
+
+    const fetchSOWList = async () => {
+    try {
+      if (!refreshing) setLoading(true);
+      const res = await Services.getSOWApprovalList();
+      if (res.success) {
+        setSOWData(res.data || []);
+      } else {
+        Alert.alert("Error", "Failed to load MSA data");
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Something went wrong");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+
 
   // Refresh when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchMSAList();
+          fetchSOWList();
     }, [])
   );
 
@@ -72,7 +100,25 @@ const ApprovalScreen = () => {
       setLoading(false);
     }
   };
+  const handleSOWAction = async (slug: string, status: string) => {
+    try {
+      setLoading(true);
+      const payload = { status };
+      const res = await Services.updateSOWStatus(slug, payload);
 
+      if (res.success) {
+        Alert.alert("Success", `SOW ${status} successfully`);
+        fetchSOWList();
+      } else {
+        Alert.alert("Error", res.error || "Failed to update status");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
   const renderItem = ({ item }: any) => (
     <>
 
@@ -128,7 +174,55 @@ const ApprovalScreen = () => {
       </View>
     </>
   );
+const renderSowItem = ({ item }: any) => (
+    <>
 
+      <View style={styles.card}>
+        {/* Row: MSA Number & Title */}
+        <View style={styles.row1}>
+          <Text style={styles.msaNo}>{item.sow_number}</Text>
+          <Text style={styles.msaTitle}>{item.title}</Text>
+        </View>
+
+        {/* Row: Agency / Resource */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Agency/Resource: </Text>
+          <Text style={styles.value}>
+            {item.masterdata_detail?.company_name ||
+              `${item.resource_detail?.user_detail?.first_name} ${item.resource_detail?.user_detail?.last_name}`}
+          </Text>
+        </View>
+
+        {/* Row: Date */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Date: </Text>
+          <Text style={styles.value}>
+            {new Date(item.start_date).toDateString()}
+          </Text>
+        </View>
+
+       
+
+        {/* Action Buttons */}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.button, styles.approve]}
+            onPress={() => handleSOWAction(item.slug, "approved")}
+          >
+            <Text style={styles.buttonText}>Approve</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.reject]}
+            onPress={() => handleSOWAction(item.slug, "rejected")}
+          >
+            <Text style={styles.buttonText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+
+
+      </View>
+    </>
+  );
 
   if (loading && !refreshing) {
     return (
@@ -140,23 +234,99 @@ const ApprovalScreen = () => {
 
   return (
     <>
-      <View style={styles.listContainer} >
+         {/* <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>MSA Approval List</Text>
         <FlatList
           data={msaData}
           keyExtractor={(item) => item.slug?.toString()}
           renderItem={renderItem}
           contentContainerStyle={msaData?.length === 0 && styles.center}
           ListEmptyComponent={
-            <Text style={styles.noData}>No data found</Text>
+            <Text style={styles.noData}>No MSA data found</Text>
+          }
+          scrollEnabled={false}
+          nestedScrollEnabled={true}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>SOW Approval List</Text>
+        <FlatList
+          data={sowData}
+          keyExtractor={(item) => item.slug?.toString()}
+          renderItem={renderSowItem}
+          contentContainerStyle={sowData?.length === 0 && styles.center}
+          ListEmptyComponent={
+            <Text style={styles.noData}>No SOW data found</Text>
+          }
+          scrollEnabled={false}
+          nestedScrollEnabled={true}
+        />
+      </View>
+    </ScrollView> */}
+     <View style={styles.container}>
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'msa' && styles.activeTab]}
+          onPress={() => setActiveTab('msa')}
+        >
+          <Text style={[styles.tabText, activeTab === 'msa' && styles.activeTabText]}>
+            MSA Approvals {msaData.length > 0 && `(${msaData.length})`}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'sow' && styles.activeTab]}
+          onPress={() => setActiveTab('sow')}
+        >
+          <Text style={[styles.tabText, activeTab === 'sow' && styles.activeTabText]}>
+            SOW Approvals {sowData.length > 0 && `(${sowData.length})`}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content based on active tab */}
+      {activeTab === 'msa' ? (
+        <FlatList
+          data={msaData}
+          keyExtractor={(item) => item.slug?.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={msaData?.length === 0 && styles.center}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No MSA approvals pending</Text>
+              <Text style={styles.emptyStateSubText}>All MSA documents are approved</Text>
+            </View>
           }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          showsVerticalScrollIndicator={false}
         />
-
-      </View>
-
+      ) : (
+        <FlatList
+          data={sowData}
+          keyExtractor={(item) => item.slug?.toString()}
+          renderItem={renderSowItem}
+          contentContainerStyle={sowData?.length === 0 && styles.center}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No SOW approvals pending</Text>
+              <Text style={styles.emptyStateSubText}>All SOW documents are approved</Text>
+            </View>
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      )}
+    </View>
     </>
   );
 };
@@ -166,6 +336,16 @@ export default ApprovalScreen;
 const styles = StyleSheet.create({
   container: {
     padding: 12,
+  },
+  section: {
+    flex: 1,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
   },
   center: {
     flex: 1,
@@ -235,12 +415,153 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 20,
   },
-  listContainer: {
+  listContainer1: {
     textAlign: "center",
     justifyContent: "center",
     flex: 1,
     color: "gray",
     fontSize: 16,
-    margin: 10
-  }
+    maxHeight:300
+
+
+  },
+    listContainer: {
+    textAlign: "center",
+    justifyContent: "center",
+    flex: 1,
+    color: "gray",
+    fontSize: 16,
+    maxHeight:300
+
+  },
+ 
+
+  // Tab styles
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: '#2E6EEE',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  activeTabText: {
+    color: '#2E6EEE',
+  },
+  // Card styles
+  // card: {
+  //   backgroundColor: "#FFFFFF",
+  //   borderRadius: 12,
+  //   padding: 16,
+  //   margin: 16,
+  //   marginVertical: 8,
+  //   shadowColor: "#000",
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.05,
+  //   shadowRadius: 4,
+  //   elevation: 2,
+  // },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  docNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  statusBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  docTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 12,
+  },
+  detailRow: {
+    flexDirection: "row",
+    marginBottom: 8,
+    flexWrap: "wrap",
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontWeight: "500",
+    color: "#4B5563",
+    marginRight: 6,
+    fontSize: 14,
+  },
+  detailValue: {
+    color: "#111827",
+    fontSize: 14,
+    flex: 1,
+  },
+  // actions: {
+  //   flexDirection: "row",
+  //   justifyContent: "flex-end",
+  //   marginTop: 16,
+  // },
+  // button: {
+  //   paddingVertical: 8,
+  //   paddingHorizontal: 16,
+  //   borderRadius: 6,
+  //   marginLeft: 10,
+  //   minWidth: 80,
+  //   alignItems: 'center',
+  // },
+  approveButton: {
+    backgroundColor: "#10B981",
+  },
+  rejectButton: {
+    backgroundColor: "#EF4444",
+  },
+  // buttonText: {
+  //   color: "#fff",
+  //   fontWeight: "600",
+  //   fontSize: 14,
+  // },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  emptyStateSubText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
 });

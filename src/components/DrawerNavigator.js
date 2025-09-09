@@ -11,6 +11,8 @@ import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
 import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
 import ApprovalScreen from '../screens/OrganizationModules/ApprovalScreen';
 import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
+import TimeSheetScreen from '../screens/OrganizationModules/TimeSheet';
+import AgencySupplierMasterdata from '../screens/Common/MasterData/AgencySupplierMasterdata';
 // Import other screens you want in the drawer
 
 const Drawer = createDrawerNavigator();
@@ -63,6 +65,17 @@ export const OrganisationDrawer = () => {
                 component={ApprovalScreen}
                 options={{
                     title: 'Approval',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
+              <Drawer.Screen
+                name="TimeSheet"
+                component={TimeSheetScreen}
+                options={{
+                    title: 'Time Sheet',
                     headerShown: true,
                     headerStyle: { backgroundColor: '#0E3386' },
                     headerTintColor: '#fff',
@@ -135,7 +148,17 @@ export const OrganisationDrawer = () => {
                 headerTitleStyle: { fontWeight: 'bold' },
               }}
             />
-            
+            <Drawer.Screen
+              name="AgencySupplierMasterdata"
+              component={AgencySupplierMasterdata}
+              options={{
+                title: 'Agency/Supplier Masterdata',
+                headerShown: true,
+                headerStyle: { backgroundColor: '#0E3386' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+              }}
+            />
              <Drawer.Screen
               name="HelpScreen"
               component={HelpScreen}

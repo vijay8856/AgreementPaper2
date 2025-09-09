@@ -1,148 +1,212 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
+  Image,
+  ScrollView,
+  SafeAreaView,
 } from 'react-native';
-import SignatureModal from '../components/Modals/SignatureModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/NavigationManager';
-import services from '../Services/services';
 
-type WebViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'WebViewScreen'>;
+import CreateDocument from './CreateDocument';
+import SignWellEmbed from './SignWellEmbed';
+// import SignedDocument from './SignedDocument';
+import { SignWellDocument, DocumentResponse, RootStackParamList, UserData } from '../navigation/types';
 
-const ESignatureScreen = () => {
-  const navigation = useNavigation<WebViewScreenNavigationProp>();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [docs, setDocs] = useState([]);
-  const [loading, setLoading] = useState(true);
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
-  type Recipient = {
-    id: number;
-    name: string;
-    email: string;
-    filename: string;
-    status: string;
-    recipients: Recipient[];
-    recipientNames?: string[];
-  };
+const Embed: React.FC = () => {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const [signwellRes, setSignwellRes] = useState<boolean | SignWellDocument>(false);
+  const [url, setUrl] = useState<string | null>(null);
+  const [requestingRedirectUrl, setRequestingRedirectUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("");
+  const [recipientName, setRecipientName] = useState<string>("");
+  const [recipientEmail, setRecipientEmail] = useState<string>("");
+  const [passcode, setPasscode] = useState<string>("");
+  const [isDocumentOpen, setIsDocumentOpen] = useState<boolean>(false);
+  const [isImageOpn, setisImageOpn] = useState<boolean>(false);
+  const [documentResponse, setDocumentResponse] = useState<DocumentResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  console.log("url", url);
+  console.log("requestingRedirectUrl", requestingRedirectUrl);
+  console.log("userId", userId);
 
-  const fetchEsignDocs = async () => {
-    try {
-      const response = await services.getEsignDocList({ limit: 10, offset: 0 });
 
-      if (response.success && response.data.results) {
-        const formattedDocs = response.data.results.map((doc: any, index: number) => {
-          const recipientNames =
-            doc.recipients?.map((r: any) => r.name).filter(Boolean) || [];
-          return {
-            id: index + 1,
-            filename: doc.filename || 'Unknown',
-            status: doc.status || 'Unknown',
-            recipientNames: recipientNames.join(' and '),
-          };
-        });
-
-        setDocs(formattedDocs);
-      } else {
-        console.log('API Error:', response.error);
-      }
-    } catch (error) {
-      console.log('Unexpected error:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleClear = (): void => {
+    setSignwellRes(false);
+    setFileName("");
+    setRecipientName("");
+    setRecipientEmail("");
+    setPasscode("");
+    setDocumentResponse(null);
+    setError(null);
+    setLoading(false);
+    setisImageOpn(false);
   };
 
   useEffect(() => {
-    fetchEsignDocs();
+    const fetchUserData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (userId) {
+          const userData = JSON.parse(userId);
+          setUserData(userId);
+          setUserId(userId);
+          console.log("userData.id", userData.id);
+
+        }
+      } catch (error) {
+        console.error("Error getting user data from AsyncStorage:", error);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="blue" />;
-  }
-
   return (
-    <>
-      <View style={styles.container}>
-        <Text style={styles.title}>E-Signature,</Text>
-        <Text style={styles.subtitle}>
-          With our seamless E-Signature functionality, you can securely sign documents online,
-          eliminating the need for physical paperwork and streamlining your workflow.
-        </Text>
-        <Image
-          source={require('../assets/images/E-signature.png')}
-          style={styles.image}
-          resizeMode="contain"
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => { setModalVisible(true)
-         }}
-        >
-          <Text style={styles.buttonText}>Sign Document</Text>
-        </TouchableOpacity>
-
-        <SignatureModal visible={modalVisible} onClose={() => setModalVisible(false)} />
+    <SafeAreaView style={styles.container}>
+      {/* Hero Section */}
+      <View style={styles.heroContainer}>
+        <View style={styles.heroContent}>
+          <Text style={styles.heroTitle}>E-Signature</Text>
+          <Text style={styles.heroDescription}>
+            With our seamless E-Signature functionality, you can securely sign
+            documents online, eliminating the need for physical paperwork and
+            streamlining your workflow.
+          </Text>
+          <TouchableOpacity
+            style={[styles.signButton, signwellRes && styles.disabledButton]}
+            onPress={() => {
+              setisImageOpn(true);
+              setIsDocumentOpen(true);
+            }}
+          // disabled={!!signwellRes}
+          >
+            <Text style={styles.signButtonText}>Sign Document</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.heroImage}>
+          <Image
+            source={require('../assets/images/E-signature.png')}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
       </View>
 
-      <View style={{ flex: 1, padding: 16 }}>
-        <FlatList
-          data={docs}
-          keyExtractor={(item: Recipient) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                flexDirection: 'row',
-                padding: 12,
-                borderBottomWidth: 1,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ flex: 0.1 }}>{item.id}</Text>
-              <View style={{ flex: 0.6 }}>
-                <Text>{item.filename}</Text>
-                <Text style={{ fontWeight: 'bold' }}>{item.recipientNames}</Text>
-              </View>
-              <View style={{ flex: 0.3, alignItems: 'flex-start' }}>
-                <Text
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 12,
-                    backgroundColor:
-                      item.status === 'Sent'
-                        ? '#ffe3b3'
-                        : item.status === 'Completed'
-                        ? '#b7f5c3'
-                        : '#f0f0f0',
-                    color: '#333',
-                    fontWeight: '500',
-                  }}
-                >
-                  {item.status}
-                </Text>
-              </View>
-            </View>
-          )}
-          // ListEmptyComponent={<Text>No documents found.</Text>}
+      <ScrollView style={styles.contentContainer}>
+        {/* {!isImageOpn && (
+          <View style={styles.signedDocumentContainer}>
+            <SignedDocument />
+          </View>
+        )} */}
+
+        <CreateDocument
+          signwellRes={signwellRes}
+          setSignwellRes={setSignwellRes}
+          setUrl={setUrl}
+          setRequestingRedirectUrl={setRequestingRedirectUrl}
+          fileName={fileName}
+          recipientName={recipientName}
+          recipientEmail={recipientEmail}
+          passcode={passcode}
+          setFileName={setFileName}
+          setRecipientName={setRecipientName}
+          setRecipientEmail={setRecipientEmail}
+          setPasscode={setPasscode}
+          isDocumentOpen={isDocumentOpen}
+          setIsDocumentOpen={setIsDocumentOpen}
+          handleClear={handleClear}
+          documentResponse={documentResponse}
+          setDocumentResponse={setDocumentResponse}
+          loading={loading}
+          setLoading={setLoading}
+          id={userId}
+          error={error}
+          setError={setError}
+
         />
-      </View>
-    </>
+
+        {signwellRes && (
+          <SignWellEmbed
+            embeddedSigningUrl={url}
+            id={typeof signwellRes === 'object' ? signwellRes.id || "" : ""}
+            documentId={typeof signwellRes === 'object' ? signwellRes.id || "" : ""}
+            requestingRedirectUrl={requestingRedirectUrl}
+          />
+
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
-export default ESignatureScreen;
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center',marginTop:40 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  subtitle: { fontSize: 16, textAlign: 'center', marginBottom: 20 },
-  image: { width: 200, height: 150, marginBottom: 30 },
-  button: { backgroundColor: '#0E3386', padding: 15, borderRadius: 8 },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  heroContainer: {
+    flexDirection: 'row',
+    padding: 20,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
+  heroContent: {
+    flex: 1,
+    paddingRight: 20,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  heroDescription: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  signButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#6c757d',
+  },
+  signButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  heroImage: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: 150,
+    height: 150,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  signedDocumentContainer: {
+    marginBottom: 20,
+  },
 });
+
+export default Embed;

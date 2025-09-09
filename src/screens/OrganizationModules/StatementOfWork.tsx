@@ -111,27 +111,32 @@ const onRefresh = async () => {
   }, [activeTab, startDate, endDate]);
 
 
-const handleViewDetails = async (item:any) => {
-    console.log("itemmm",item);
-    
-    setLoading(true); 
-    try {
-      const res = await Services.getSOWDetail(item);
+const handleViewDetails = async (item: any) => {
+  console.log("itemmm", item);
 
-      if (res.success) {
-        console.log("SOW Detail Data", res.data);
-        // navigation.navigate("MSADetailScreen", { data: res.data });
-        navigation.navigate("SOWDetailScreen", { data: res.data as MSAData });
+  setLoading(true);
+  try {
+    const res = await Services.getSOWDetail(item);
 
+    if (res.success) {
+      console.log("SOW Detail Data", res.data);
+
+      if (res.data?.sow_flow === 2) {
+        navigation.navigate("SOWServiceDetailScreen", { data: res.data as MSAData });
       } else {
-        console.log("Error", res.error);
+        navigation.navigate("SOWDetailScreen", { data: res.data as MSAData });
       }
-    } catch (error) {
-      console.log("Unexpected Error", error);
-    } finally {
-      setLoading(false); // Stop loading
+
+    } else {
+      console.log("Error", res.error);
     }
-  };
+  } catch (error) {
+    console.log("Unexpected Error", error);
+  } finally {
+    setLoading(false); // Stop loading
+  }
+};
+
 const getName = (item: any) => {
   if (item.masterdata_detail.name) {
     return `${item.masterdata_detail.name} `;
@@ -140,6 +145,8 @@ const getName = (item: any) => {
     return `${item.resource_detail.user_detail.first_name} ${item.resource_detail.user_detail.last_name}`;
   } else if (item.account_detail?.user_detail) {
     return `${item.account_detail.user_detail.first_name} ${item.account_detail.user_detail.last_name}`;
+  }else if (item.agency_detail?.company_name) {
+    return `${item.agency_detail.company_name} `;
   }
   return "";
 };
@@ -206,7 +213,7 @@ const renderStatusBadge = (status: string) => {
       
       <View style={styles.detailsRow}>
     <View style={styles.detailItem}>
-  <Text style={styles.detailLabel}>Resource</Text>
+  <Text style={styles.detailLabel}>Resource/Agency</Text>
   <Text style={styles.detailValue}>{getName(item)}</Text>
 </View>
 
@@ -228,8 +235,32 @@ const renderStatusBadge = (status: string) => {
 
         </View> */}
         <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Budget</Text>
-          <Text style={styles.detailValue}>{item.grand_total}</Text>
+           <Text style={styles.detailLabel}>Budget</Text>
+  <Text style={styles.detailValue}>
+    {(() => {
+      if (item.grand_total) {
+        return item.grand_total;
+      }
+
+      if (item.materials?.length > 0) {
+        const materialTotal = item.materials.reduce(
+          (sum, mat) => sum + parseFloat(mat.grand_total || 0),
+          0
+        );
+        return materialTotal.toFixed(2);
+      }
+
+      if (item.milestones?.length > 0) {
+        const milestoneTotal = item.milestones.reduce(
+          (sum, ms) => sum + parseFloat(ms.grand_total || 0),
+          0
+        );
+        return milestoneTotal.toFixed(2);
+      }
+
+      return "N/A"; // 👈 fallback if nothing is available
+    })()}
+  </Text>
         </View>
       </View>
 
@@ -442,7 +473,7 @@ const renderStatusBadge = (status: string) => {
           style={styles.createButton2}
           onPress={() => {
             setModalVisible(false);
-            navigation.navigate("CreateSOW", { type: "service" });
+            navigation.navigate("CreateServiceSow", { type: "service" });
           }}
         >
           <Text style={styles.createButtonText}>Create</Text>

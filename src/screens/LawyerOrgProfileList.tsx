@@ -81,6 +81,7 @@ export default function LawyerOrgProfile() {
     const [selectedLocation, setSelectedLocation] = useState("");
     const [searchText, setSearchText] = useState("");
     const [loading, setLoading] = useState(true);
+
     const [lawyers, setAllLawyer] = useState([]);
     const [page, setPage] = useState(1);
     const [pageCount, setPageCount] = useState(0);

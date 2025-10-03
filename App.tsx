@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import 'react-native-get-random-values'; 
 import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -11,7 +12,10 @@ import SplashScreen from './src/components/SplashScreen';
 import Toast from 'react-native-toast-message';
 import { REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE } from '@env';
 import 'react-native-gesture-handler';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { OrganisationDrawer } from './src/components/DrawerNavigator';
+// import UpdateChecker from './UpdateChecker';
+import { ToastProvider } from './src/components/ToastContext';
 function App(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +33,10 @@ function App(): React.JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <LoaderProvider>
+        {/* <UpdateChecker /> */}
+              <ToastProvider>
         <SafeAreaProvider>
+              <PaperProvider>
           {isLoading ? (
             <SplashScreen />
           ) : (
@@ -45,7 +52,9 @@ function App(): React.JSX.Element {
               </NavigationContainer>
             </StripeProvider>
           )}
+          </PaperProvider>
         </SafeAreaProvider>
+        </ToastProvider>
       </LoaderProvider>
     </GestureHandlerRootView>
     </>

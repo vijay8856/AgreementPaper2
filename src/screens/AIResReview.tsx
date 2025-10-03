@@ -1,4 +1,4 @@
-    
+
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -11,7 +11,8 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
-  
+  Image,
+
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -44,7 +45,7 @@ const AIReviewScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [tempSearchText, setTempSearchText] = useState('');
-
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
 
 
   type PickerItem = {
@@ -286,86 +287,79 @@ const AIReviewScreen = () => {
     }
   };
 
-const openPdfInExternalApp = async (file:any) => {
-  try {
-    let filePath = file.fileCopyUri || file.uri;
+  const openPdfInExternalApp = async (file: any) => {
+    try {
+      let filePath = file.fileCopyUri || file.uri;
 
-    // ✅ Copy content URI to accessible file path (for Android)
-    if (Platform.OS === 'android' && filePath.startsWith('content://')) {
-      const destPath = `${RNFS.CachesDirectoryPath}/${file.name}`;
-      await RNFS.copyFile(filePath, destPath);
-      filePath = destPath;
+      // ✅ Copy content URI to accessible file path (for Android)
+      if (Platform.OS === 'android' && filePath.startsWith('content://')) {
+        const destPath = `${RNFS.CachesDirectoryPath}/${file.name}`;
+        await RNFS.copyFile(filePath, destPath);
+        filePath = destPath;
+      }
+
+      const shareOptions = {
+        title: 'Open PDF with...',
+        url: `file://${filePath}`,
+        type: 'application/pdf',
+        failOnCancel: false,
+      };
+
+      await Share.open(shareOptions);
+    } catch (err) {
+      console.error('Could not open PDF:', err);
+      Alert.alert('Error', 'Could not open PDF in external app');
     }
-
-    const shareOptions = {
-      title: 'Open PDF with...',
-      url: `file://${filePath}`,
-      type: 'application/pdf',
-      failOnCancel: false,
-    };
-
-    await Share.open(shareOptions);  
-  } catch (err) {
-    console.error('Could not open PDF:', err);
-    Alert.alert('Error', 'Could not open PDF in external app');
-  }
-};
+  };
 
 
 
   // Process AI summary
-const getAiSummary = async () => {
-  if (!selectedText) {
-    Alert.alert('Error', 'Please select or type some text first');
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    const payload = {
-      message: selectedText,
-      contract_type: contractType,
-      line_of_business: businessLine,
-      country: country,
-    };
-
-    console.log('AI Review Payload:', payload);
-
-    const response = await Services.ai_Review(payload);
-    console.log('AI Review Response:', response);
-
-    if (!response.success || !response.data) {
-      throw new Error(
-        typeof response.error === 'string'
-          ? response.error
-          : 'AI analysis failed'
-      );
+  const getAiSummary = async () => {
+    if (!selectedText) {
+      Alert.alert('Error', 'Please select or type some text first');
+      return;
     }
 
-    setAiSummary(response.data.message || 'AI analysis completed');
-  } catch (error: any) {
-    console.error('AI Review Error:', error);
-    Alert.alert('Error', error.message || 'Failed to get AI summary');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    setIsLoading(true);
 
-const handleRun = async () => {
+    try {
+      const payload = {
+        message: selectedText,
+        contract_type: contractType,
+        line_of_business: businessLine,
+        country: country,
+      };
+
+      console.log('AI Review Payload:', payload);
+
+      const response = await Services.ai_Review(payload);
+      console.log('AI Review Response:', response);
+
+      if (!response.success || !response.data) {
+        throw new Error(
+          typeof response.error === 'string'
+            ? response.error
+            : 'AI analysis failed'
+        );
+      }
+
+      setAiSummary(response.data.message || 'AI analysis completed');
+    } catch (error: any) {
+      console.error('AI Review Error:', error);
+      Alert.alert('Error', error.message || 'Failed to get AI summary');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRun = async () => {
     if (!uploadedFile) {
       Alert.alert('Error', 'Please upload a file first');
       return;
     }
 
-    await openPdfInExternalApp(uploadedFile);
-
-    Toast.show({
-      type: 'info',
-      text1: 'Copy text from PDF',
-      text2: 'Then paste it back to analyze',
-    });
-    setFileViewerVisible(true);
+    setShowInstructionsModal(true);
   };
 
 
@@ -505,58 +499,60 @@ const handleRun = async () => {
             </TouchableOpacity>
           </View>
 
-          
- <View style={styles.selectionPanel}>
-  {/* Editable Selected Text Input (always visible) */}
-  <View style={styles.selectedTextContainer}>
-    <Text style={styles.selectedTextLabel}>Selected Text:</Text>
 
-    <TextInput
-      style={styles.editableInput}
-      multiline
-      value={selectedText}
-      onChangeText={setSelectedText}
-      placeholder="Select or paste text here..."
-      textAlignVertical="top"
-    />
+          <View style={styles.selectionPanel}>
+            {/* Editable Selected Text Input (always visible) */}
+            <View style={styles.selectedTextContainer}>
+              <Text style={styles.selectedTextLabel}>Selected Text:</Text>
 
-    {/* Copy to Clipboard Button */}
-    <TouchableOpacity
-      style={styles.copyButton}
-      onPress={handleCopyToClipboard}
-    >
-      <Icon name="content-copy" size={20} color="white" />
-      <Text style={styles.copyButtonText}>Copy to Clipboard</Text>
-    </TouchableOpacity>
-  </View>
+              <TextInput
+                style={styles.editableInput}
+                multiline
+                value={selectedText}
+                onChangeText={setSelectedText}
+                placeholder="Select or paste text here..."
+                textAlignVertical="top"
+              />
 
-  {/* AI Summary Section */}
-  <View style={styles.summaryContainer}>
-    <Text style={styles.summaryTitle}>AI Summary:</Text>
-    {isLoading ? (
-      <ActivityIndicator size="large" color="#0E3386" />
-    ) : aiSummary ? (
-      <ScrollView style={styles.summaryScroll}>
-        <Text style={styles.summaryText}>{aiSummary}</Text>
-      </ScrollView>
-    ) : (
-      <Text style={styles.summaryPlaceholder}>
-        {selectedText ? 'Press "Get Summary" to analyze' : 'Type or paste text above to analyze'}
-      </Text>
-    )}
-  </View>
+              {/* Copy to Clipboard Button */}
+              <TouchableOpacity
+                style={styles.copyButton}
+                onPress={handleCopyToClipboard}
+              >
+                <Icon name="content-copy" size={20} color="white" />
+                <Text style={styles.copyButtonText}>Copy to Clipboard</Text>
+              </TouchableOpacity>
+            </View>
 
-  {/* Get Summary Button */}
-  <TouchableOpacity
-    style={[styles.summaryButton, !selectedText && styles.disabledButton]}
-    onPress={getAiSummary}
-    disabled={!selectedText || isLoading}
-  >
-    <Text style={styles.summaryButtonText}>
-      {isLoading ? 'Processing...' : 'Get Summary'}
-    </Text>
-  </TouchableOpacity>
-</View>
+            {/* AI Summary Section */}
+            <View style={styles.summaryContainer}>
+              <Text style={styles.summaryTitle}>AI Summary:</Text>
+              {isLoading ? (
+                <ActivityIndicator size="large" color="#0E3386" />
+              ) : aiSummary ? (
+                <ScrollView style={styles.summaryScroll}>
+                  <Text style={styles.summaryText}>{aiSummary}</Text>
+                </ScrollView>
+              ) : (
+                <Text style={styles.summaryPlaceholder}>
+                  {selectedText ? 'Press "Get Summary" to analyze' : 'Type or paste text above to analyze'}
+                </Text>
+              )}
+            </View>
+
+            {/* Get Summary Button */}
+            <TouchableOpacity
+              style={[styles.summaryButton, !selectedText && styles.disabledButton]}
+              onPress={getAiSummary}
+              disabled={!selectedText || isLoading}
+            >
+              <Text style={styles.summaryButtonText}>
+                {isLoading ? 'Processing...' : 'Get Summary'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+
 
 
         </View>
@@ -612,24 +608,161 @@ const handleRun = async () => {
           </View>
         </View>
       </Modal>
+
+
+<Modal
+  visible={showInstructionsModal}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setShowInstructionsModal(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>PDF Instructions</Text>
+
+      {/* Properly aligned content with image and text */}
+      <View style={styles.instructionContainer}>
+        <Text style={styles.modalMessage}>Please open  </Text>
+        
+        <View style={styles.adobeContainer}>
+          <Image
+            source={require('../assets/images/acrobat.png')} 
+            style={styles.adobeIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.adobeText}>Adobe Acrobat</Text>
+        </View>
+        
+        <Text style={styles.modalMessage}>and copy the content which you want to review and paste later.</Text>
+      </View>
+
+      <View style={styles.modalButtons}>
+        <TouchableOpacity
+          style={[styles.modalButton, styles.cancelButton]}
+          onPress={() => setShowInstructionsModal(false)}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.modalButton, styles.okButton]}
+          onPress={async () => {
+            setShowInstructionsModal(false);
+            await openPdfInExternalApp(uploadedFile);
+            Toast.show({
+              type: 'info',
+              text1: 'Copy text from PDF',
+              text2: 'Then paste it back to analyze',
+            });
+            setFileViewerVisible(true);
+          }}
+        >
+          <Text style={styles.okButtonText}>OK</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+
       <Toast />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 30,
+    borderRadius: 10,
+    width: '90%',
+    maxWidth: 500,
+    
+  },
+    inlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+   instructionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 25,
+  },
+    adobeIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  adobeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color:'#666',
+    // color: '#D1432E', // Adobe's brand color
+  },
+   
+  adobeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+  },
+  modalTitle: {
+    
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  modalMessage: {
+    
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    minWidth: 80,
+  },
+  cancelButton: {
+    backgroundColor: '#0E3386',
+  },
+  okButton: {
+    backgroundColor: '#0E3386',
+  },
+  cancelButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  okButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
   editableInput: {
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 8,
-  padding: 10,
-  minHeight: 100,
-  maxHeight: 200,
-  fontSize: 16,
-  backgroundColor: '#fff',
-  marginBottom: 10,
-},
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    minHeight: 100,
+    maxHeight: 200,
+    fontSize: 16,
+    backgroundColor: '#fff',
+    marginBottom: 10,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F5F7FC',

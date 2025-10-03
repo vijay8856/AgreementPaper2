@@ -88,7 +88,7 @@ const ApprovalScreen = () => {
       const res = await Services.updateMSAStatus(slug, payload);
 
       if (res.success) {
-        Alert.alert("Success", `MSA ${status} successfully`);
+        Alert.alert("Success", `Master Service Agreement  ${status} successfully`);
         fetchMSAList(); // refresh list
       } else {
         Alert.alert("Error", res.error || "Failed to update status");

@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Services from '../Services/services';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 // Define the navigation stack type
 type RootStackParamList = {
   SignUp: undefined;
@@ -77,7 +78,14 @@ const SIGNUP_TYPES = [
   }, [navigation]);
 const handleVerifyCode = async (): Promise<void> => {
   if (otp.length !== 5) {
-    Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
+    
+     Toast.show({
+                type: 'info',
+                text1: 'Invalid OTP',
+                text2:  'Please enter a 5-digit OTP code',
+                position: 'top',
+              });
+    // Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
     return;
   }
 
@@ -91,24 +99,53 @@ const handleVerifyCode = async (): Promise<void> => {
     if (result.success) {
       const userType = result.data?.payload?.user_type;
    if (userType) {
+        await AsyncStorage.setItem("userData", JSON.stringify(result.data));
+         await AsyncStorage.setItem("userPayload", JSON.stringify(result.data.payload));
+          await AsyncStorage.setItem("userId", String(result.data.payload.id));
+
         await AsyncStorage.setItem('userType', userType);
+           
         console.log('User type saved:', userType);
       } 
       // Find matching type
       const matchedType = SIGNUP_TYPES.find(type => type.value === userType);
 
       if (matchedType) {
-        Alert.alert('Success', 'Email verified successfully!');
+           Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: result.success?.message || 'Email verified successfully!',
+                position: 'top',
+              });
+        // Alert.alert('Success', 'Email verified successfully!');
        navigation.navigate(matchedType.screen as keyof RootStackParamList);
       } else {
-        Alert.alert('Error', 'Unknown user type. Please contact support.');
+        Toast.show({
+                type: 'error',
+                text1: 'Error ',
+                text2: result.error?.message || 'Unknown user type. Please contact support.',
+                position: 'top',
+              });
+        // Alert.alert('Error', 'Unknown user type. Please contact support.');
       }
     } else {
-      Alert.alert('Error', result.error?.message || 'Verification failed');
+       Toast.show({
+                type: 'error',
+                text1: 'Error ',
+                text2: result.error?.message || 'Verification failed',
+                position: 'top',
+              });
+      // Alert.alert('Error', result.error?.message || 'Verification failed');
     }
   } catch (error) {
     console.error('Verification error:', error);
-    Alert.alert('Error', 'Something went wrong. Please try again.');
+     Toast.show({
+                type: 'error',
+                text1: 'Error ',
+                text2:   'Something went wrong. Please try again.',
+                position: 'top',
+              });
+    // Alert.alert('Error', 'Something went wrong. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -149,13 +186,31 @@ const handleVerifyCode = async (): Promise<void> => {
 
 
       if (result.success) {
-        Alert.alert('Success', 'Verification code resent successfully!');
+          Toast.show({
+                type: 'success',
+                text1: 'Done',
+                text2: result.success?.message || 'Verification code resent successfully!',
+                position: 'top',
+              });
+        // Alert.alert('Success', 'Verification code resent successfully!');
       } else {
-        Alert.alert('Error', result.error?.message || 'Failed to resend code');
+          Toast.show({
+                type: 'error',
+                text1: 'Failed to resent Code ',
+                text2: result.error?.message || 'Please Try Again',
+                position: 'top',
+              });
+        // Alert.alert('Error', result.error?.message || 'Failed to resend code');
       }
     } catch (error) {
       console.error('Resend error:', error);
-      Alert.alert('Error', 'Failed to resend verification code');
+       Toast.show({
+                type: 'error',
+                text1: 'Failed to resend verification code',
+                text2:  'Please Try Again',
+                position: 'top',
+              });
+      // Alert.alert('Error', 'Failed to resend verification code');
     } finally {
       setResendLoading(false);
     }
@@ -297,11 +352,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   resendLink: {
-    color: '#007AFF',
+    color: '#0E3386',
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0E3386',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',

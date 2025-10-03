@@ -27,8 +27,10 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Checkbox from '../components/CommanCheckbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { GOOGLE_WEB_CLIENT_ID } from '@env';
-
+import Icon from 'react-native-vector-icons/Ionicons'; 
 import { CommonActions } from '@react-navigation/native';
+import CustomAlert from '../components/CustomAlert';
+import { useIsFocused } from '@react-navigation/native';
 
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -50,7 +52,10 @@ const navigation = useNavigation<LoginScreenNavigationProp>();
   const [otpEmail, setOtpEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-
+const [alertVisible, setAlertVisible] = React.useState(false);
+const [passwordVisible, setPasswordVisible] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+const isFocused = useIsFocused();
 useEffect(() => {
   GoogleSignin.configure({
     webClientId:"601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
@@ -59,6 +64,8 @@ useEffect(() => {
     forceCodeForRefreshToken: true,
   });
 }, []);
+
+
   const handleSignup = () => {
 
     navigation.navigate('SignUp');
@@ -73,7 +80,7 @@ const handleLogin = async (loginType: 'google' | 'email') => {
   console.log("    come in try");
   
       await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signOut(); // optional, but ensures fresh login
+      await GoogleSignin.signOut(); 
 
       const userInfo = await GoogleSignin.signIn();
 
@@ -83,9 +90,9 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       const accessToken = tokens?.accessToken;
       const idToken = tokens?.idToken;
 
-      // console.log("accessToken", accessToken);
-      // console.log("tokens", tokens);
-      // console.log("userInfo", userInfo);
+      console.log("accessToken", accessToken);
+      console.log("tokens", tokens);
+      console.log("userInfo", userInfo);
 
       if (!accessToken) {
         await GoogleSignin.signOut();
@@ -103,82 +110,117 @@ const handleLogin = async (loginType: 'google' | 'email') => {
       let tokenResult = await Services.sendAccessToken(accessToken);
       console.log("sendAccessToken result", tokenResult);
 
-      if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
-  setLoading(false); // Stop loader before showing alert
-
-  Alert.alert(
-    'Account Not Found',
-    'No account was found with your Google account. Would you like to Google sign up instead?',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Google Sign Up',
-        onPress: async () => {
-          try {
-            setLoading(true); // Show loader again on signup
-            const tokenResult2 = await Services.googleSignup(accessToken);
-            console.log("googleSignup result", tokenResult2);
-
-            if (!tokenResult2.success) {
-              setLoading(false);
-              Toast.show({
-                type: 'error',
-                text1: 'Google Signup Failed',
-                text2: tokenResult2.error || 'Could not sign up with Google',
-                position: 'top',
-              });
-              return;
-            }
-
-            // Success: Save user data and navigate
-            const user = tokenResult2?.data?.user;
-console.log("useruser",user);
-
-            await AsyncStorage.setItem('first_Name', user?.first_name || '');
-            await AsyncStorage.setItem('last_Name', user?.last_name || '');
-            await AsyncStorage.setItem('email', user?.email || '');
-            await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-            await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
-            await AsyncStorage.setItem('hasLoggedIn', 'true');
-await AsyncStorage.setItem('userType', user?.user_type);
-await AsyncStorage.setItem('userId', user?.id);
-
-
-            Toast.show({
-              type: 'success',
-              text1: 'Signup successful!',
-              position: 'top',
-            });
-
-            setTimeout(() => {
-              setLoading(false);
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'AuthLoading' }],
-                })
-              );
-            }, 1000);
-          } catch (signupErr: any) {
-            setLoading(false);
-            Toast.show({
-              type: 'error',
-              text1: 'Signup Error',
-              text2: signupErr.message || 'Something went wrong during signup',
-              position: 'top',
-            });
-          }
-        }
-      }
-    ],
-    { cancelable: false }
-  );
-
+//       if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+//   setLoading(false); // Stop loader before showing alert
+// Alert.alert(
+//     'Account Not Found',
+//     'No account was found with your Google account. Would you like to sign up instead?',
+//     [
+//       {
+//         text: 'Cancel',
+//         style: 'cancel',
+//       },
+//       {
+//         text: 'Go to Signup',
+//         onPress: () => {
+//           // Navigate to Signup screen instead of calling googleSignup
+//           navigation.navigate('SignUp', { from: 'google' });
+//         },
+//       },
+//     ],
+//     { cancelable: false }
+//   );
+//   return; 
+// }
+if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+  setLoading(false);
+  setAlertVisible(true);
   return;
 }
+//   Alert.alert(
+//     'Account Not Found',
+//     'No account was found with your Google account. Would you like to Google sign up instead?',
+//     [
+//       {
+//         text: 'Cancel',
+//         style: 'cancel',
+//       },
+//       {
+//         text: 'Google Sign Up',
+//         onPress: async () => {
+//           try {
+//             setLoading(true); // Show loader again on signup
+//             const tokenResult2 = await Services.googleSignup(accessToken);
+//             console.log("googleSignup result", tokenResult2);
+
+//             if (!tokenResult2.success) {
+//               setLoading(false);
+//               Toast.show({
+//                 type: 'error',
+//                 text1: 'Google Signup Failed',
+//                 text2: tokenResult2.error || 'Could not sign up with Google',
+//                 position: 'top',
+//               });
+//               return;
+//             }
+
+//             // Success: Save user data and navigate
+//             const user = tokenResult2?.data?.user;
+// console.log("useruser",user);
+//   await AsyncStorage.multiSet([
+//         ['first_Name', user?.first_name || ''],
+//         ['last_Name', user?.last_name || ''],
+//         ['email', user?.email || ''],
+//         ['profilePic', user?.profile?.logo || ''],
+//         ['Token', tokenResult.data?.key || ''],
+//         ['hasLoggedIn', 'true'],
+//         ['userType', String(user?.user_type || '')],
+//         ['userId', String(user?.id || '')],
+//                     ['isActive', user?.profile?.is_active?.toString() || 'false'],
+
+//       ]);
+// //             await AsyncStorage.setItem('first_Name', user?.first_name || '');
+// //             await AsyncStorage.setItem('last_Name', user?.last_name || '');
+// //             await AsyncStorage.setItem('email', user?.email || '');
+// //             await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+// //             await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
+// //             await AsyncStorage.setItem('hasLoggedIn', 'true');
+// // await AsyncStorage.setItem('userType', user?.user_type);
+// // await AsyncStorage.setItem('userId', user?.id);
+
+
+//             Toast.show({
+//               type: 'success',
+//               text1: 'Signup successful!',
+//               position: 'top',
+//             });
+
+//             setTimeout(() => {
+//               setLoading(false);
+//               navigation.dispatch(
+//                 CommonActions.reset({
+//                   index: 0,
+//                   routes: [{ name: 'AuthLoading' }],
+//                 })
+//               );
+//             }, 1000);
+//           } catch (signupErr: any) {
+//             setLoading(false);
+//             Toast.show({
+//               type: 'error',
+//               text1: 'Signup Error',
+//               text2: signupErr.message || 'Something went wrong during signup',
+//               position: 'top',
+//             });
+//           }
+//         }
+//       }
+//     ],
+//     { cancelable: false }
+//   );
+
+//   return;
+// }
 
       else if (!tokenResult.success) {
         // Other login failure (not "Account not found")
@@ -194,15 +236,27 @@ await AsyncStorage.setItem('userId', user?.id);
 
       // Save user data and navigate to Dashboard
       const user = tokenResult?.data?.user;
-
-      await AsyncStorage.setItem('first_Name', user?.first_name || '');
-      await AsyncStorage.setItem('last_Name', user?.last_name || '');
-      await AsyncStorage.setItem('email', user?.email || '');
-      await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-      await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
-      await AsyncStorage.setItem('hasLoggedIn', 'true');
-await AsyncStorage.setItem('userType', user?.user_type);
-await AsyncStorage.setItem('userId', user?.id);
+      console.log("useruser",user);
+      
+await AsyncStorage.multiSet([
+                    ['first_Name', user?.first_name || ''],
+                    ['last_Name', user?.last_name || ''],
+                    ['email', user?.email || ''],
+                    ['profilePic', user?.profile?.logo || ''],
+                    ['Token', tokenResult.data?.key || ''],
+                    ['hasLoggedIn', 'true'],
+                    ['userType', String(user?.user_type || '')],
+                    ['userId', String(user?.id || '')],
+                    ['isActive', user?.profile?.is_active?.toString() || 'false'],
+                  ]);
+//       await AsyncStorage.setItem('first_Name', user?.first_name || '');
+//       await AsyncStorage.setItem('last_Name', user?.last_name || '');
+//       await AsyncStorage.setItem('email', user?.email || '');
+//       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+//       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
+//       await AsyncStorage.setItem('hasLoggedIn', 'true');
+// await AsyncStorage.setItem('userType', user?.user_type);
+// await AsyncStorage.setItem('userId', user?.id);
 
 
       Toast.show({
@@ -243,14 +297,17 @@ await AsyncStorage.setItem('userId', user?.id);
         setLoading(false);
         return;
       }
+// console.log("email",email);
+// console.log("password",password);
+
 
       const result = await Services.login(email, password);
 console.log("result login",result);
 
-      if (result.status === 200) {
+      if (result.data.status === 200) {
         Toast.show({
           type: 'success',
-          text1: 'Login successful!',
+          text1: result?.data?.message ||'Login successful!',
           position: 'top',
         });
 
@@ -283,7 +340,7 @@ console.log("result login",result);
         Toast.show({
           type: 'error',
           text1: 'Login Failed',
-          text2: result.error?.message || 'Invalid credentials',
+          text2: result.data?.message || 'Invalid credentials',
           position: 'top',
         });
       }
@@ -318,8 +375,8 @@ const handleLinkedinLogin = () => {
     <View style={styles.socialContainer}>
       <TouchableOpacity
         style={styles.socialButton}
-        onPress={() => handleLogin('google')}
-        disabled={loading}
+      onPress={() => isFocused && handleLogin('google')}
+  disabled={loading || !isFocused}
       >
         <Image
           source={require('../assets/images/search.png')}
@@ -340,22 +397,46 @@ const handleLinkedinLogin = () => {
     </View>
 
   );
-   const handleSendResetCode = async () => {
-    setLoading(true)
+  const handleSendResetCode = async () => {
+  setLoading(true);
+  try {
     const res = await Services.forgetPassword({ email: otpEmail });
-    
     if (res.success) {
       setResetStep(2);
-    setLoading(false)
-
     } else {
       Toast.show({
         type: 'error',
         text1: 'Failed to send code',
-        text2:res.error.email
+        text2: res.error?.email || 'Unknown error',
       });
     }
-  };
+  } catch (e) {
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: e.message || 'Something went wrong',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+  //  const handleSendResetCode = async () => {
+  //   setLoading(true)
+  //   const res = await Services.forgetPassword({ email: otpEmail });
+    
+  //   if (res.success) {
+  //     setResetStep(2);
+  //   setLoading(false)
+
+  //   } else {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Failed to send code',
+  //       text2:res.error.email
+  //     });
+  //   }
+  // };
 
 const handleResetPassword = async () => {
   const formData = new FormData();
@@ -423,15 +504,44 @@ const handleResetPassword = async () => {
             value={email}
             onChangeText={setEmail}
           />
+ <View style={styles.passwordWrapper}>
+            <TextInput
+              placeholder="Enter password"
+        value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
+              style={[styles.inputLoginPassword, { flex: 1, borderWidth: 0 }]}
+            />
+            <TouchableOpacity
+              onPress={() => setPasswordVisible((prev) => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={passwordVisible ? 'eye' : 'eye-off'}
+                size={22}
+                color="#555"
+              />
+            </TouchableOpacity>
+          </View>
+      {/* <TextInput
+            style={styles.input1}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter password"
-            placeholderTextColor="#888"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+        placeholder="Enter password"
+        placeholderTextColor="#888"
+        secureTextEntry={!showPassword}  // toggle here
+        value={password}
+        onChangeText={setPassword}
+      />
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => setShowPassword(!showPassword)}
+      >
+        <Icon
+          name={showPassword ? 'eye-off' : 'eye'}
+          size={22}
+          color="#888"
+        />
+      </TouchableOpacity> */}
           <View style={styles.signupbox}>
             <Text style={styles.signup}>Don't have an account?</Text>
             <TouchableOpacity onPress={handleSignup}>
@@ -536,7 +646,7 @@ const handleResetPassword = async () => {
         </View>
       </Modal> */}
 
-<Modal visible={passwordModalVisible} animationType="slide" transparent={true}>
+{/* <Modal visible={passwordModalVisible} animationType="slide" transparent={true}>
   <View style={styles.modalOverlay}>
     <View style={styles.modalContent}>
       {resetStep === 1 ? (
@@ -582,9 +692,87 @@ const handleResetPassword = async () => {
       </TouchableOpacity>
     </View>
   </View>
+</Modal> */}
+<Modal visible={passwordModalVisible} animationType="slide" transparent>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      {resetStep === 1 ? (
+        <>
+          <TextInput
+            placeholder="Enter your email"
+            value={otpEmail}
+            onChangeText={setOtpEmail}
+            style={styles.input1}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <TouchableOpacity style={styles.button2} onPress={handleSendResetCode} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Send OTP</Text>
+            )}
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <TextInput
+            placeholder="Enter OTP"
+            value={otpCode}
+            onChangeText={setOtpCode}
+            style={styles.input1}
+            keyboardType="number-pad"
+          />
+
+          {/* Password field with eye icon */}
+          <View style={styles.passwordWrapper2}>
+            <TextInput
+              placeholder="New Password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry={!passwordVisible}
+              style={[styles.inputNewPassword, { flex: 1, borderWidth: 0 }]}
+            />
+            <TouchableOpacity
+              onPress={() => setPasswordVisible((prev) => !prev)}
+              style={styles.eyeButton}
+            >
+              <Icon
+                name={passwordVisible ? 'eye' : 'eye-off'}
+                size={22}
+                color="#555"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
+            <Text style={styles.buttonText}>Reset Password</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      <TouchableOpacity
+        onPress={() => {
+          setPasswordModalVisible(false);
+          setResetStep(1);
+        }}
+        style={styles.buttonlink}
+      >
+        <Text style={styles.link2}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
 </Modal>
 
-
+<CustomAlert
+  visible={alertVisible}
+  onDismiss={() => setAlertVisible(false)}
+  onConfirm={() => {
+    setAlertVisible(false);
+    navigation.navigate("SignUp");
+  }}
+/>
 
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -595,6 +783,29 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+    inputContainer: {
+    fontSize: 16,
+    color: '#000',
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    justifyContent:'space-between',
+    paddingLeft:8
+  },
+  // input: {
+  //   flex: 1,
+  //   paddingVertical: 10,
+  //   fontSize: 16,
+  //   color: '#000',
+  // },
+  iconContainer: {
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   container: {
     flex: 1,
@@ -620,6 +831,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
   },
+  passwordWrapper: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 8,
+  marginBottom: 15,
+  paddingHorizontal: 10,
+},
+passwordWrapper2:{
+  flexDirection: 'row',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 8,
+  marginBottom: 15,
+  paddingHorizontal: 10,
+  maxWidth:290,
+
+},
+eyeButton: {
+  paddingHorizontal: 6,
+},
+
   baseTag: {
     fontSize: 12,
     marginBottom: 40,
@@ -660,7 +895,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   input: {
-    height: 50,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 10,
@@ -669,6 +903,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: '#000',
   },
+  
   fixedButtonContainer: {
     padding: 24,
     backgroundColor: '#fff',
@@ -699,7 +934,8 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'baseline',
     flexDirection: 'row',
-    gap: 5
+    gap: 5,
+    marginBottom:15
   },
   termsContainer: {
     marginTop: 20,
@@ -765,10 +1001,18 @@ modalContent: {
   alignItems: 'center',
 },
 
-  input1:{
+input1:{
  borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 8, width: '94%', marginVertical: 8,
+    paddingHorizontal: 10, paddingVertical: 10, width: '94%', marginVertical: 10,
   },
+  inputNewPassword:{
+     borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    width: '80%', 
+  },
+   inputLoginPassword:{
+     borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    width: '80%', 
+  }, 
   resetbutton:{
      backgroundColor: '#000078', 
     padding: 10, 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -15,7 +15,7 @@ import {
   RefreshControl
 } from 'react-native';
 import Services from '../../Services/services';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 const { width } = Dimensions.get('window');
 
@@ -35,12 +35,19 @@ const [modalVisible, setModalVisible] = useState(false);
   const tabs = [{label:"Contractor SOW" , value:1}, {label:"Service SOW" , value:2},{label:'Approved' , value:3}, {label:'Pending' , value:4}, {label:'Rejected' , value:5}];
 console.log("sowData",msaData);
 
+
+
 const formatDate = (date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;  // <-- API needs this format
 };
+
+
+
+
+
 const fetchMSAData = async (tab:any) => {
   try {
     setLoading(true);
@@ -90,7 +97,9 @@ if (startDate) params.date_from = formatDate(startDate);
   } finally {
     setLoading(false);
   }
+  
 };
+
 
 
 const onRefresh = async () => {
@@ -106,9 +115,12 @@ const onRefresh = async () => {
 
 
   // 👇 call API whenever activeTab changes
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
+    // When screen is focused again (after CreateSOW goBack), re-fetch
     fetchMSAData(activeTab);
-  }, [activeTab, startDate, endDate]);
+  }, [activeTab, startDate, endDate])
+);
 
 
 const handleViewDetails = async (item: any) => {

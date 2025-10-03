@@ -21,6 +21,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Services from "../../Services/services";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { Dimensions } from 'react-native';
+import { ActivityIndicator } from "react-native-paper";
 const { width } = Dimensions.get('window');
 
 const SOWDetailScreen = ({ route }: any) => {
@@ -31,6 +32,8 @@ const SOWDetailScreen = ({ route }: any) => {
   const [originalSlug, setOriginalSlug] = useState(data.slug);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   const [dropdownData, setDropdownData] = useState({
     account: [],
     cost_center: [],
@@ -201,6 +204,7 @@ const SOWDetailScreen = ({ route }: any) => {
 
   const handleSave = async () => {
     try {
+       setSaving(true);   
       const formData = new FormData();
 
       // Find the actual objects for dropdown values
@@ -260,17 +264,17 @@ const SOWDetailScreen = ({ route }: any) => {
       // Additional information
       formData.append('description', sowData.description || '');
       formData.append('comments', sowData.comments || '');
-
+        formData.append('approver', selectedApprover.id);
       // Status and approval - preserve existing values
       formData.append('status', sowData.status || 'pending_approval');
+formData.append('sow_flow', '1');
+      // // Approver selection - NEW FIELDS
+      // if (sowApprover === 'manual' && selectedApprover) {
 
-      // Approver selection - NEW FIELDS
-      if (sowApprover === 'manual' && selectedApprover) {
-        formData.append('approver', selectedApprover.id);
-        formData.append('sow_flow', '1'); // Manual approval flow
-      } else {
-        formData.append('sow_flow', '2'); // Automatic approval flow
-      }
+      //    // Manual approval flow
+      // } else {
+      //   formData.append('sow_flow', '2'); // Automatic approval flow
+      // }
 
       // Final calculated amount
       formData.append('grand_total', String(sowData.grand_total || 0));
@@ -294,9 +298,14 @@ const SOWDetailScreen = ({ route }: any) => {
     } catch (error) {
       Alert.alert("Error", "Failed to update SOW details. Please try again.");
       console.error("Update error:", error);
+          setSaving(false); 
     }
   };
-
+{saving && (
+  <View style={styles.loaderOverlay}>
+    <ActivityIndicator size="large" color="#000078" />
+  </View>
+)}
 
   const handleCancel = () => {
     // Reset to original data
@@ -995,6 +1004,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+    loaderOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
   ResourceDetailCardcontainer: {
     flex: 1,
     backgroundColor: "#fff",
@@ -1039,7 +1056,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   titleContainer: {
-    flexDirection: "row",
+    gap:10,
+    flexDirection: 'column',
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -1052,8 +1070,8 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   editButton: {
-    backgroundColor: "#072188",
-    paddingHorizontal: 16,
+    backgroundColor: "#0E3386",
+    paddingHorizontal: 23,
     paddingVertical: 8,
     borderRadius: 4,
     display: "flex",
@@ -1067,7 +1085,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   cancelButton: {
-    backgroundColor: "#6c757d",
+    borderColor:'#0E3386',
+    backgroundColor: "#0E3386",
+
+borderWidth:1,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 4,
@@ -1078,8 +1099,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   saveButton: {
-    backgroundColor: "#28a745",
-    paddingHorizontal: 16,
+    backgroundColor: "#0E3386",
+    paddingHorizontal: 23,
     paddingVertical: 8,
     borderRadius: 4,
   },

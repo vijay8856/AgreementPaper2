@@ -75,6 +75,11 @@ const AuthLoadingScreen = () => {
       const idToken = await AsyncStorage.getItem('idToken');
       const hasLoggedIn = await AsyncStorage.getItem('hasLoggedIn'); 
       const userType = await AsyncStorage.getItem('userType'); 
+console.log("hasLoggedIn",hasLoggedIn);
+console.log("token",token);
+console.log("idToken",idToken);
+console.log("userType",userType);
+
 
       if (token || idToken) {    
         // Decide which dashboard based on userType

@@ -2,7 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Image, Alert } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import Services from '../../../Services/services';
-
+import axios from 'axios';
+import { API_URL } from '../../../Axios/axiosData';
+import Toast from 'react-native-toast-message';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import MasterDataIdViewModal from '../../../components/Modals/MasterDataIdViewModal';
+type Organization = {
+  id: string;
+  user: number,
+  company_name: string;
+  email: string;
+  country_name: string;
+  state_name: string;
+  district: string;
+  is_active: boolean;
+  user_detail: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    contact_number: string;
+    experience: string;
+    linkedin_url: string;
+  };
+  about_company: string;
+  company_website: string;
+  is_connection: boolean;
+};
 const AgencySupplierMasterdata = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,17 +44,24 @@ const AgencySupplierMasterdata = () => {
     logo: null
   });
   const [tableData, setTableData] = useState([]);
- const [imageUri, setImageUri] = useState(null);
+  const [message, setMessage] = useState('');
+  const [imageUri, setImageUri] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [connectModalVisible, setConnectModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Organization | null>(null);
   const handleInputChange = (name, value) => {
     setFormData({
       ...formData,
       [name]: value
     });
   };
+  console.log("selectedSupplier", selectedSupplier);
 
-const pickImage = async () => {
+  const pickImage = async () => {
     try {
       const image = await ImagePicker.openPicker({
         width: 300,
@@ -41,14 +73,14 @@ const pickImage = async () => {
 
       if (image) {
         setImageUri(image.path);
-        
+
         // Create a file object for the form data
         const file = {
           uri: image.path,
           name: image.filename || 'profile_picture.jpg',
           type: image.mime,
         };
-        
+
         setImageFile(file);
         setFormData({
           ...formData,
@@ -62,9 +94,66 @@ const pickImage = async () => {
       }
     }
   };
+  const handleConnect = (item: Organization) => {
+    setSelectedSupplier(item);
+    setConnectModalVisible(true);
+  };
+  const sendConnection = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    else setRefreshing(true);
+
+    const payload = {
+      to_user: selectedSupplier?.id,
+      message: message?.trim() || '',
+    };
+
+    try {
+      const response = await Services.sendConnectionSupplier(payload);
 
 
-const handleSubmit = async () => {
+      if (response.success === true) {
+        setConnectModalVisible(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Connection sent successfully',
+          position: 'top',
+        });
+
+      } else if (
+        response.status === 400 &&
+        response.error?.message === 'Connection request pending' &&
+        setConnectModalVisible(false)
+      ) {
+        Toast.show({
+          type: 'info',
+          text1: 'Connection Already Pending',
+          text2: 'You have already sent a connection request.',
+          position: 'top',
+        });
+
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to send connection',
+          text2: response.error?.message || 'Something went wrong',
+          position: 'top',
+        });
+      }
+
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Unexpected error',
+        text2: 'Please try again later',
+        position: 'top',
+      });
+    }
+
+    setLoading(false);
+    setRefreshing(false);
+  };
+
+  const handleSubmit = async () => {
     try {
       // Validate required fields
       if (!formData.name || !formData.email || !formData.city || !formData.country || !formData.state || !formData.zip_code) {
@@ -74,7 +163,7 @@ const handleSubmit = async () => {
 
       // Create FormData object
       const data = new FormData();
-      
+
       // Append all fields to the FormData
       data.append('name', formData.name);
       data.append('email', formData.email);
@@ -86,7 +175,7 @@ const handleSubmit = async () => {
       data.append('state', formData.state);
       data.append('zip_code', formData.zip_code);
       data.append('website', formData.website);
-      
+
       // Append the image file if available
       if (formData.logo) {
         data.append('logo', formData.logo);
@@ -95,7 +184,7 @@ const handleSubmit = async () => {
       const response = await Services.createMasterData(data);
       console.log('Data created successfully:', response);
       setShowForm(false);
-      
+
       // Reset form
       setFormData({
         name: '',
@@ -112,10 +201,10 @@ const handleSubmit = async () => {
       });
       setImageUri(null);
       setImageFile(null);
-      
+
       // Refresh the table data
       fetchMasterData();
-      
+
       Alert.alert('Success', 'Master data created successfully');
     } catch (error) {
       console.error('Error creating data:', error);
@@ -136,27 +225,49 @@ const handleSubmit = async () => {
   useEffect(() => {
     fetchMasterData();
   }, []);
+  const handleViewProfile = (id) => {
+    axios
+      .get(`${API_URL}masterdata/master-data/${id}/`)
+      .then((response) => {
+        console.log("response ", response);
 
+        setSelectedProfile(response.data);
+        setModalVisible(true);
+      })
+      .catch((error) => {
+        // Handle error
+        Toast.error("Something went wrong");
+        console.error("Error fetching data:", error);
+      });
+  };
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedProfile(null);
+  };
+  const handleSendConnection = () => {
+    sendConnection()
+  }
   return (
     <View style={styles.container}>
       {/* Header with search and filters */}
       <View style={styles.header}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search Resources"
+          placeholder="Search "
         />
         <View style={styles.filterContainer}>
           <TouchableOpacity style={styles.filterButton}>
-            <Text>Select Rating</Text>
+
+            <Text style={styles.filtersText}>Select Rating</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterButton}>
-            <Text>Select Location</Text>
+            <Text style={styles.filtersText}>Select Location</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterButton}>
-            <Text>Reset</Text>
+            <Text style={styles.filtersText}>Reset</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.createButton}
           onPress={() => setShowForm(true)}
         >
@@ -193,10 +304,25 @@ const handleSubmit = async () => {
                 <View style={styles.statusIndicator} />
                 <Text> {item.status}</Text>
               </View>
-              <TouchableOpacity style={[styles.cell, styles.connectCell]}>
+              {/* <TouchableOpacity
+                                  style={[
+                                      styles.actionButton,
+                                      styles.connectButton,
+                                      (item?.is_connection || item?.connection_request === "PENDING") && styles.disabledButton
+                                  ]}
+                                  onPress={() => handleConnect(item)}
+                                  disabled={item?.is_connection || item?.connection_request === "PENDING"}
+                              >
+                                  <Text style={styles.buttonText}>Connect</Text>
+                              </TouchableOpacity> */}
+              <TouchableOpacity style={[styles.cell, styles.connectCell]}
+                onPress={() => handleConnect(item)}>
                 <Text style={styles.connectText}>Connect</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.cell, styles.actionCell]}>
+              <TouchableOpacity
+                style={[styles.cell, styles.actionCell]}
+                onPress={() => handleViewProfile(item.id)} // Pass the ID here
+              >
                 <Text style={styles.viewProfileText}>View Profile</Text>
               </TouchableOpacity>
             </View>
@@ -204,6 +330,61 @@ const handleSubmit = async () => {
         </View>
       </ScrollView>
 
+
+      <Modal
+        visible={connectModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setConnectModalVisible(false)}
+      >
+        <View style={styles.modalContainer2}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setConnectModalVisible(false)}
+            >
+              <Icon name="close" size={24} color="#666" />
+            </TouchableOpacity>
+
+            {selectedSupplier && (
+              <>
+                <Text style={styles.modalTitle}>Connect with {selectedSupplier.company_name}</Text>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Your Message (Optional)</Text>
+                  <TextInput
+                    style={[styles.input, styles.messageInput]}
+                    multiline
+                    numberOfLines={4}
+                    placeholder="Type your message here..."
+                    placeholderTextColor="#999"
+                    value={message}
+                    onChangeText={setMessage}
+                  />
+                </View>
+
+                <TouchableOpacity style={styles.connectActionButton} onPress={handleSendConnection}>
+                  <Text style={styles.connectActionButtonText}>Send Connection Request</Text>
+                </TouchableOpacity>
+
+                <View style={styles.contactInfo}>
+                  <Text style={styles.contactText}>
+                    Or contact directly: {selectedSupplier.mobile || selectedSupplier.email}
+                  </Text>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+
+
+      <MasterDataIdViewModal
+        show={modalVisible}
+        modalClose={closeModal}
+        profile={selectedProfile}
+      />
       {/* Create Master Data Modal */}
       <Modal
         visible={showForm}
@@ -213,7 +394,7 @@ const handleSubmit = async () => {
       >
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Create Master Data</Text>
-          
+
           <ScrollView>
             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               {imageUri ? (
@@ -229,7 +410,7 @@ const handleSubmit = async () => {
               value={formData.name}
               onChangeText={(text) => handleInputChange('name', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="Email*"
@@ -237,7 +418,7 @@ const handleSubmit = async () => {
               value={formData.email}
               onChangeText={(text) => handleInputChange('email', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="Mobile"
@@ -245,42 +426,42 @@ const handleSubmit = async () => {
               value={formData.mobile}
               onChangeText={(text) => handleInputChange('mobile', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="Address 1"
               value={formData.address_1}
               onChangeText={(text) => handleInputChange('address_1', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="Address 2"
               value={formData.address_2}
               onChangeText={(text) => handleInputChange('address_2', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="City*"
               value={formData.city}
               onChangeText={(text) => handleInputChange('city', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="Country*"
               value={formData.country}
               onChangeText={(text) => handleInputChange('country', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="State*"
               value={formData.state}
               onChangeText={(text) => handleInputChange('state', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="ZIP Code*"
@@ -288,7 +469,7 @@ const handleSubmit = async () => {
               value={formData.zip_code}
               onChangeText={(text) => handleInputChange('zip_code', text)}
             />
-            
+
             <TextInput
               style={styles.input}
               placeholder="Website"
@@ -298,13 +479,13 @@ const handleSubmit = async () => {
             />
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.closeButton]}
                 onPress={() => setShowForm(false)}
               >
                 <Text style={styles.submitButtonText}>Close</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.submitButton]}
                 onPress={handleSubmit}
               >
@@ -333,11 +514,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
+    marginHorizontal: 10
+
   },
   filterContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    // justifyContent: 'space-between',
+    marginBottom: 30,
   },
   filterButton: {
     borderWidth: 1,
@@ -345,14 +528,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     flex: 1,
-    marginHorizontal: 5,
     alignItems: 'center',
+    marginHorizontal: 10
+
+  },
+  filtersText: {
+    fontSize: 10
   },
   createButton: {
     backgroundColor: '#0E3386',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
+    marginHorizontal: 10
+
   },
   createButtonText: {
     color: '#fff',
@@ -486,6 +675,62 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  modalContainer2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    width: '90%',
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+  },
+  messageInput: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  connectActionButton: {
+    backgroundColor: '#0E3386',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  connectActionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  contactInfo: {
+    backgroundColor: '#F0F4FF',
+    borderRadius: 8,
+    padding: 12,
+  },
+  contactText: {
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
   },
 });
 

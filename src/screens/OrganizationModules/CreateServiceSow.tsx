@@ -12,7 +12,8 @@ import {
     ViewStyle,
     Alert,
     KeyboardAvoidingView,
-    FlatList
+    FlatList,
+    Pressable
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DocumentPicker from 'react-native-document-picker';
@@ -20,6 +21,7 @@ import DocumentPicker from 'react-native-document-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Services from '../../Services/services';
 import { Picker } from "@react-native-picker/picker";
+import { ActivityIndicator } from 'react-native-paper';
 // Define types
 type Material = {
     id: string;
@@ -69,6 +71,8 @@ const CreateServiceSow: React.FC = (navigation) => {
     // Main form state
     const [msa, setMsa] = useState<string>('');
     const [title, setTitle] = useState<string>('');
+    console.log("title", title);
+
     const [sowNumber, setSowNumber] = useState<string>('');
     const [startDate, setStartDate] = useState<Date>(new Date());
     const [endDate, setEndDate] = useState<Date>(new Date());
@@ -84,25 +88,26 @@ const CreateServiceSow: React.FC = (navigation) => {
     const [msaList, setMsaList] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-
+    const [selectedApprover, setSelectedApprover] = useState(null);
     const [currentFormType, setCurrentFormType] = useState<FormType>('milestone');
+    console.log("selected", selectedApprover);
 
     const [currencies, setCurrencies] = useState<any[]>([]);
     const [selectedCurrency, setSelectedCurrency] = useState("");
     const [masterMaterialList, setMasterMaterialList] = useState<any[]>([]);
     const [activeMaterialIndex, setActiveMaterialIndex] = useState<number | null>(null);
     const [fields, setFields] = useState<any>(null);
-      const [sowType, setSowType] = useState();
+    const [sowType, setSowType] = useState();
+    const [sowApprover, setSowApprover] = useState("");
+    const [approversList, setApproversList] = useState([]);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [taxGroup, setTaxGroup] = useState();
     const [sowFileds, setSowFileds] = useState<SowFieldsType>({
         cost_center: [],
         account: [],
         tax_group: [],
         sow_type: [],
     });
-
-       const [taxGroup, setTaxGroup] = useState();
-console.log("currencies",currencies);
-
     const materialOptions = [
         "Aluminum",
         "Brass",
@@ -134,41 +139,41 @@ console.log("currencies",currencies);
         "Wood",
     ];
 
-  const calculateGrandTotal = (rate: string, quantity: string, tax: string): string => {
-    const rateNum = parseFloat(rate) || 0;
-    const quantityNum = parseFloat(quantity) || 0;
-    const taxNum = parseFloat(tax) || 0;
-    
-    const subtotal = rateNum * quantityNum;
-    const taxAmount = subtotal * (taxNum / 100);
-    const grandTotal = subtotal + taxAmount;
-    
-    return grandTotal.toFixed(2);
-  };
+    const calculateGrandTotal = (rate: string, quantity: string, tax: string): string => {
+        const rateNum = parseFloat(rate) || 0;
+        const quantityNum = parseFloat(quantity) || 0;
+        const taxNum = parseFloat(tax) || 0;
 
-  useEffect(() => {
-    const fetchSOWFields = async () => {
-      try {
-        const response = await Services.getSOWFields();
-        console.log("response fetchSOWFields :", response);
+        const subtotal = rateNum * quantityNum;
+        const taxAmount = subtotal * (taxNum / 100);
+        const grandTotal = subtotal + taxAmount;
 
-        const payload = response?.data?.payload || {};
-        setSowFileds(payload);
-
-        // ✅ Default select first option if available (store ID instead of name)
-        if (payload?.sow_type?.length > 0) {
-          setSowType(payload.sow_type[0].id); // Store ID instead of name
-        }
-        if (payload?.tax_group?.length > 0) {
-          setTaxGroup(payload.tax_group[0].id); // Store ID instead of name
-        }
-      } catch (error) {
-        console.error("Error fetching SOW details:", error);
-      }
+        return grandTotal.toFixed(2);
     };
 
-    fetchSOWFields();
-  }, []);
+    useEffect(() => {
+        const fetchSOWFields = async () => {
+            try {
+                const response = await Services.getSOWFields();
+                console.log("response fetchSOWFields :", response);
+
+                const payload = response?.data?.payload || {};
+                setSowFileds(payload);
+
+                // ✅ Default select first option if available (store ID instead of name)
+                if (payload?.sow_type?.length > 0) {
+                    setSowType(payload.sow_type[0].id); // Store ID instead of name
+                }
+                if (payload?.tax_group?.length > 0) {
+                    setTaxGroup(payload.tax_group[0].id); // Store ID instead of name
+                }
+            } catch (error) {
+                console.error("Error fetching SOW details:", error);
+            }
+        };
+
+        fetchSOWFields();
+    }, []);
     {
         useEffect(() => {
             const fetchMaterialDetails = async () => {
@@ -209,6 +214,27 @@ console.log("currencies",currencies);
             fetchMaterialDetails();
         }, [items])
     }
+
+    //    useEffect(() => {
+    //     const fetchCoustomApprover = async () => {
+    //         try {
+    //             const data = {
+    //                 limit: 10,
+    //                 msa: "sow"
+    //             };
+    //             const response = await Services.getApproverCoustom(data);
+    //             console.log("fetchCoustomApprover", response.data);
+
+    //             if (response.success) {
+    //                 setApproversList(response.data || [])
+    //                 // setApproverCoustom(response.data);
+    //             }
+    //         } catch (err) {
+    //             console.error("Error loading approver", err);
+    //         }
+    //     };
+    //     fetchCoustomApprover();
+    // }, []);
     useEffect(() => {
         const fetchCurrencyDetails = async () => {
             try {
@@ -305,9 +331,9 @@ console.log("currencies",currencies);
             baseUnit: '',
             grandTotal: '',
             currency: '',
-            oldMaterialNumber: '',
+            oldMaterialNumber: '0', 
             taxGroup: '',
-            leadTime: '',
+            leadTime: '0', 
             orderUnit: ''
         };
     }
@@ -385,7 +411,8 @@ console.log("currencies",currencies);
                 tax: milestone.tax,
                 grand_total: milestone.grandTotal,
                 description: milestone.description,
-                comments: milestone.comments
+                comments: milestone.comments,
+                approver: selectedApprover?.id
             }));
 
             formData.append('milestones', JSON.stringify(milestoneData));
@@ -394,7 +421,7 @@ console.log("currencies",currencies);
         // Add materials if any
         if (materials.length > 0) {
             const materialData = materials.map(material => ({
-         material_number: Math.floor(1000 + Math.random() * 9000),
+                material_number: Math.floor(1000 + Math.random() * 9000),
                 description: material.description,
                 title: material.title,
                 currency: material.currency,
@@ -404,9 +431,10 @@ console.log("currencies",currencies);
                 tax: material.tax,
                 grand_total: material.grandTotal,
                 base_unit: material.baseUnit,
-                old_material_number: material.oldMaterialNumber,
-                lead_time: material.leadTime,
-                order_unit: material.orderUnit
+              old_material_number: parseInt(material.oldMaterialNumber) || 0, 
+  lead_time: parseInt(material.leadTime) || 0,
+                order_unit: material.orderUnit,
+                approver: selectedApprover?.id
             }));
 
             formData.append('materials', JSON.stringify(materialData));
@@ -457,7 +485,7 @@ console.log("currencies",currencies);
                 materials_count: items.filter(item => item.type === 'material').length,
                 attachments_count: attachments.length
             });
-console.log("formData",formData);
+            console.log("formData", formData);
 
             // Call API
             const response = await Services.createServiceSOW(formData);
@@ -467,11 +495,11 @@ console.log("formData",formData);
                 // Reset form or navigate away
             } else {
                 Alert.alert(
-  'Error',
-  response.error?.data
-    ? JSON.stringify(response.error.data)   // show backend error response
-    : response.error?.message || 'Failed to create SOW'
-);
+                    'Error',
+                    response.error?.data
+                        ? JSON.stringify(response.error.data)   // show backend error response
+                        : response.error?.message || 'Failed to create SOW'
+                );
 
             }
         } catch (error) {
@@ -566,47 +594,102 @@ console.log("formData",formData);
 
     // };
 
-      const updateFormData = (index: number, field: string, value: any) => {
-    const newItems = [...items];
-    
-    if (newItems[index].type === 'milestone') {
-      const milestoneData = { ...newItems[index].data as Milestone };
-      
-      // Update the field
-      milestoneData[field] = value;
-      
-      // Calculate grand total if rate, quantity, or tax changes
-      if (field === 'rate' || field === 'quantity' || field === 'tax') {
-        milestoneData.grandTotal = calculateGrandTotal(
-          milestoneData.rate,
-          milestoneData.quantity,
-          milestoneData.tax
-        );
-      }
-      
-      newItems[index].data = milestoneData;
-    } else {
-      const materialData = { ...newItems[index].data as Material };
-      
-      // Update the field
-      materialData[field] = value;
-      
-      // Calculate grand total if price, quantity, or tax changes
-      if (field === 'price' || field === 'quantity' || field === 'tax') {
-        materialData.grandTotal = calculateGrandTotal(
-          materialData.price,
-          materialData.quantity,
-          materialData.tax
-        );
-      }
-      
-      newItems[index].data = materialData;
-    }
-    
-    setItems(newItems);
-    console.log("newItems", newItems);
-  };
+    const updateFormData = (index: number, field: string, value: any) => {
+        const newItems = [...items];
 
+        if (newItems[index].type === 'milestone') {
+            const milestoneData = { ...newItems[index].data as Milestone };
+
+            // Update the field
+            milestoneData[field] = value;
+
+            // Calculate grand total if rate, quantity, or tax changes
+            if (field === 'rate' || field === 'quantity' || field === 'tax') {
+                milestoneData.grandTotal = calculateGrandTotal(
+                    milestoneData.rate,
+                    milestoneData.quantity,
+                    milestoneData.tax
+                );
+            }
+
+            newItems[index].data = milestoneData;
+        } else {
+            const materialData = { ...newItems[index].data as Material };
+
+            // Update the field
+            materialData[field] = value;
+
+            // Calculate grand total if price, quantity, or tax changes
+            if (field === 'price' || field === 'quantity' || field === 'tax') {
+                materialData.grandTotal = calculateGrandTotal(
+                    materialData.price,
+                    materialData.quantity,
+                    materialData.tax
+                );
+            }
+
+            newItems[index].data = materialData;
+        }
+
+        setItems(newItems);
+        console.log("newItems", newItems);
+    };
+    useEffect(() => {
+        const fetchCustomApprover = async () => {
+            try {
+                setLoading(true);
+                const params = { limit: 10, msa: "sow" };
+                const response = await Services.getApproverCoustom(params);
+
+                if (response.success) {
+                    setApproversList(response.data || []);
+                } else {
+                    console.warn("Failed to load approvers:", response.error);
+                }
+            } catch (err) {
+                console.error("Error loading approvers", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCustomApprover();
+    }, []);
+
+    // ✅ User taps an item
+    const handleSelectApprover = (approver: any) => {
+        setSelectedApprover(approver);
+        setModalVisible(false);
+    };
+    const renderApproverItem = ({ item }: { item: any }) => {
+        const isSelected = selectedApprover?.id === item.id;
+        return (
+            <TouchableOpacity
+                style={[styles.approverItem, isSelected && styles.selectedApproverItem]}
+                onPress={() => handleSelectApprover(item)}
+            >
+                <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                        {item.first_name?.charAt(0)}
+                        {item.last_name?.charAt(0)}
+                    </Text>
+                </View>
+
+                <View style={styles.approverInfo}>
+                    <Text style={styles.approverName}>
+                        {item.first_name} {item.last_name}
+                    </Text>
+                    <Text style={styles.approverDetails}>
+                        {item.email} | {item.contact_number}
+                    </Text>
+                </View>
+
+                <View style={styles.statusContainer}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.availableText}>Available</Text>
+                </View>
+            </TouchableOpacity>
+        );
+    };
     // Render a milestone form
     const renderMilestoneForm = (data: Milestone, index: number) => (
         <View key={data.id} style={styles.formContainer}>
@@ -653,21 +736,21 @@ console.log("formData",formData);
 
 
 
-      <Text style={styles.label}>Sow Type *</Text>
-                              <View style={styles.pickerContainer}>
-                                  <Picker
-                                      selectedValue={sowType}
-                                      onValueChange={(value) => setSowType(value)}
-                                  >
-                                      {sowFileds?.sow_type?.map((item: any) => (
-                                          <Picker.Item
-                                              key={item.id}
-                                              label={item.name}
-                                              value={item.id}
-                                          />
-                                      ))}
-                                  </Picker>
-                              </View>
+            <Text style={styles.label}>Sow Type *</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={sowType}
+                    onValueChange={(value) => setSowType(value)}
+                >
+                    {sowFileds?.sow_type?.map((item: any) => (
+                        <Picker.Item
+                            key={item.id}
+                            label={item.name}
+                            value={item.id}
+                        />
+                    ))}
+                </Picker>
+            </View>
 
 
 
@@ -675,7 +758,7 @@ console.log("formData",formData);
             <View style={styles.pickerContainer}>
                 <Picker
                     selectedValue={data.currency}
-              onValueChange={(value) => updateFormData(index, 'currency', value)}
+                    onValueChange={(value) => updateFormData(index, 'currency', value)}
 
                 >
                     <Picker.Item label="Select Currency" value="" />
@@ -703,23 +786,23 @@ console.log("formData",formData);
                 placeholder="Tax Group"
             /> */}
 
- <Text style={styles.label}>Tax Group *</Text>
-                            <View style={styles.pickerContainer}>
+            <Text style={styles.label}>Tax Group *</Text>
+            <View style={styles.pickerContainer}>
 
 
-                                <Picker
-                                    selectedValue={taxGroup}
-                                    onValueChange={(value) => setTaxGroup(value)}
-                                >
-                                    {sowFileds?.tax_group?.map((item: any) => (
-                                        <Picker.Item
-                                            key={item.id}
-                                            label={item.name}
-                                            value={item.id}
-                                        />
-                                    ))}
-                                </Picker>
-                            </View>
+                <Picker
+                    selectedValue={taxGroup}
+                    onValueChange={(value) => setTaxGroup(value)}
+                >
+                    {sowFileds?.tax_group?.map((item: any) => (
+                        <Picker.Item
+                            key={item.id}
+                            label={item.name}
+                            value={item.id}
+                        />
+                    ))}
+                </Picker>
+            </View>
 
 
 
@@ -750,14 +833,14 @@ console.log("formData",formData);
                 keyboardType="numeric"
             />
 
-             <Text style={styles.label}>Grand Total *</Text>
-      <TextInput
-        style={styles.input}
-        value={data.grandTotal}
-        editable={false} // Make it read-only since it's calculated
-        placeholder="GRAND TOTAL"
-        keyboardType="numeric"
-      />
+            <Text style={styles.label}>Grand Total *</Text>
+            <TextInput
+                style={styles.input}
+                value={data.grandTotal}
+                editable={false} // Make it read-only since it's calculated
+                placeholder="GRAND TOTAL"
+                keyboardType="numeric"
+            />
             <Text style={styles.label}>Description *</Text>
             <TextInput
                 style={[styles.input, styles.textArea]}
@@ -796,8 +879,9 @@ console.log("formData",formData);
             <Text style={styles.label}>Material Title *</Text>
             <View style={styles.pickerContainer}>
                 <Picker
-                    selectedValue={data.material}
-                    onValueChange={(value) => updateFormData(index, 'material', value)}
+                    selectedValue={data.title}
+                    // onValueChange={(value) => updateFormData(index, 'material', value)}
+                      onValueChange={(text) => updateFormData(index, 'title', text)}
                 >
                     <Picker.Item label="Select Material" value="" />
                     {materialOptions.map((item, idx) => (
@@ -878,14 +962,14 @@ console.log("formData",formData);
                 placeholder="ENTER BASE UNIT OF MEASURE"
             />
 
-         <Text style={styles.label}>Grand Total *</Text>
-      <TextInput
-        style={styles.input}
-        value={data.grandTotal}
-        editable={false} // Make it read-only since it's calculated
-        placeholder="GRAND TOTAL"
-        keyboardType="numeric"
-      />
+            <Text style={styles.label}>Grand Total *</Text>
+            <TextInput
+                style={styles.input}
+                value={data.grandTotal}
+                editable={false} // Make it read-only since it's calculated
+                placeholder="GRAND TOTAL"
+                keyboardType="numeric"
+            />
 
             <Text style={styles.label}>Currency *</Text>
             <View style={styles.pickerContainer}>
@@ -981,7 +1065,7 @@ console.log("formData",formData);
                                             <TouchableOpacity
                                                 style={styles.dropdownItem}
                                                 onPress={() => handleMsaSelect(item)}
-                                          
+
                                             >
                                                 <Text>{item.name}</Text>
                                             </TouchableOpacity>
@@ -1076,8 +1160,76 @@ console.log("formData",formData);
                         : renderMaterialForm(item.data as Material, index)
                 ))}
 
+
+                <View style={styles.radioContainer}>
+
+                    <View>
+                        {/* Radio button */}
+
+                        <Text style={styles.label}>SOW Approver *</Text>
+
+                        {/* Button to open modal */}
+                        <TouchableOpacity
+                            style={styles.selectButton}
+                            onPress={() => setModalVisible(true)}
+                        >
+                            <Text style={styles.selectButtonText}>
+                                {selectedApprover
+                                    ? `${selectedApprover.first_name} ${selectedApprover.last_name}`
+                                    : "Select Approver"}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {/* Show selected details */}
+                        {selectedApprover && (
+                            <View style={styles.selectedApproverContainer}>
+                                <View style={styles.avatarSmall}>
+                                    <Text style={styles.avatarSmallText}>
+                                        {selectedApprover.first_name?.charAt(0)}
+                                        {selectedApprover.last_name?.charAt(0)}
+                                    </Text>
+                                </View>
+                                <View>
+                                    <Text style={styles.approverLabel}>
+                                        {selectedApprover.first_name} {selectedApprover.last_name}
+                                    </Text>
+                                    <Text style={styles.approverEmail}>{selectedApprover.email}</Text>
+                                </View>
+                                <TouchableOpacity onPress={() => setModalVisible(true)}>
+                                    <Text style={styles.changeText}>Change</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+
+
+                </View>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 {/* Sow Approver Section */}
-                <View style={styles.formContainer}>
+                {/* <View style={styles.formContainer}>
                     <Text style={styles.sectionTitle}>Sow Approver</Text>
                     <TouchableOpacity
                         style={styles.input}
@@ -1085,7 +1237,7 @@ console.log("formData",formData);
                     >
                         <Text>Automatic Approver</Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 {/* Action Buttons */}
                 <View style={styles.actionContainer}>
@@ -1126,23 +1278,31 @@ console.log("formData",formData);
                     />
                 )}
 
-                {/* Approver Modal */}
                 <Modal
-                    visible={showApproverModal}
-                    transparent={true}
+                    visible={modalVisible}
                     animationType="slide"
+                    transparent
+                    onRequestClose={() => setModalVisible(false)}
                 >
-                    <View style={styles.modalContainer}>
+                    <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Select Approver</Text>
-                            <Text style={styles.modalOption}>Automatic Approver</Text>
-                            <Text style={styles.modalOption}>Manual Selection</Text>
-                            <TouchableOpacity
-                                style={styles.modalCloseButton}
-                                onPress={() => setShowApproverModal(false)}
-                            >
-                                <Text style={styles.modalCloseButtonText}>Close</Text>
-                            </TouchableOpacity>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Select Approver</Text>
+                                <Pressable onPress={() => setModalVisible(false)}>
+                                    <Text style={styles.closeButton}>✕</Text>
+                                </Pressable>
+                            </View>
+
+                            {loading ? (
+                                <ActivityIndicator style={{ marginTop: 20 }} />
+                            ) : (
+                                <FlatList
+                                    data={approversList}
+                                    renderItem={renderApproverItem}
+                                    keyExtractor={(item) => item.id.toString()}
+                                    style={styles.approversList}
+                                />
+                            )}
                         </View>
                     </View>
                 </Modal>
@@ -1152,6 +1312,97 @@ console.log("formData",formData);
 };
 
 const styles = StyleSheet.create({
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalContent: {
+        width: "90%",
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 16,
+    },
+    approversList: {
+        maxHeight: 400,
+    },
+
+    label: { fontSize: 16, fontWeight: "600", marginBottom: 8 },
+
+    selectButton: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        padding: 12,
+        backgroundColor: "#f8f8f8",
+    },
+    selectButtonText: { fontSize: 15, color: "#333" },
+
+    selectedApproverContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+    },
+    avatarSmall: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "#007AFF",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    avatarSmallText: { color: "#fff", fontWeight: "bold" },
+    approverLabel: { fontWeight: "600" },
+    approverEmail: { color: "#666" },
+    changeText: { marginLeft: 12, color: "#007AFF", fontWeight: "600" },
+
+
+
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottomWidth: 1,
+        borderColor: "#eee",
+        paddingVertical: 10,
+        marginBottom: 10
+    },
+    modalTitle: { fontSize: 18, fontWeight: "600" },
+    closeButton: { fontSize: 22, color: "#444" },
+
+
+    selectedApproverItem: { backgroundColor: "#e6f0ff" },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: "#007AFF",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 12,
+    },
+    avatarText: { color: "#fff", fontWeight: "bold" },
+    approverInfo: { flex: 1 },
+    approverName: { fontWeight: "600", fontSize: 16 },
+    approverDetails: { color: "#555", fontSize: 14 },
+    statusContainer: { flexDirection: "row", alignItems: "center" },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: "green",
+        marginRight: 4,
+    },
+    availableText: { fontSize: 12, color: "green" },
+    // modalContent: {
+    //     width: "90%",
+    //     backgroundColor: "#fff",
+    //     borderRadius: 10,
+    //     padding: 16,
+    // },
+
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
@@ -1213,12 +1464,6 @@ const styles = StyleSheet.create({
     actionButton: {
         marginLeft: 12,
     } as ViewStyle,
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 6,
-        color: '#333',
-    } as TextStyle,
     input: {
         borderWidth: 1,
         borderColor: '#ddd',
@@ -1305,18 +1550,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     } as ViewStyle,
-    modalContent: {
-        width: '80%',
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
-        alignItems: 'center',
-    } as ViewStyle,
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    } as TextStyle,
+
     modalOption: {
         fontSize: 16,
         padding: 10,
@@ -1373,6 +1607,86 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         overflow: "hidden",
     },
+
+    SelectResource: {
+        borderWidth: 1,
+        padding: 10,
+        borderColor: '#000078',
+        borderRadius: 5,
+        marginBottom: 10
+        // backgroundColor: '#f0f5ff',
+    },
+    radioText: {
+        fontSize: 14,
+    },
+    radioCircle: {
+        height: 20,
+        width: 20,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#000078',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    radioInnerCircle: {
+        height: 12,
+        width: 12,
+        borderRadius: 6,
+        backgroundColor: '#000078',
+    },
+    radioOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 4,
+        marginBottom: 8,
+        backgroundColor: '#fff',
+    },
+    radioSelected: {
+        borderColor: '#000078',
+        backgroundColor: '#f0f5ff',
+    },
+    radioOption2: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 12,
+        borderRadius: 4,
+        marginBottom: 8,
+
+    },
+    approverSection: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginVertical: 16,
+        padding: 12,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 4,
+    },
+
+    available: {
+        marginLeft: 4,
+        fontSize: 12,
+        color: "green",
+    },
+    approverItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+
+    radioContainer: {
+        marginVertical: 8,
+    },
+
+
+
 });
 
 export default CreateServiceSow;

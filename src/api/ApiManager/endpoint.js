@@ -37,7 +37,10 @@ DELETEUSERACCOUNT:'/accounts/delete/',
 AIDRAFT:"/settings/openai/analyze-contract/v2/",
 SAVEDRAFTTEMPLATE:'ai/draft-template/',
 ALLTEMPLATES:'/ai/draft-template/',
-
+ESIGN:'esign/document/',
+MSA_ALL_DROPDOWN_LIST_V2: "/msa/v2/msa/all-msa/",
+ NEW_AI_DRAFT_V2: "/ai/draft-contract/",
+ADDFAVORITES:'favorites/favorites/',
 //Organisation Api's endpoint's
 ORGANISATIONDASHBOARD:'organisation/dashboard/',
 ORGANISATIONUSERPROFILE:'accounts/user-profile/',
@@ -72,12 +75,16 @@ CREATESERVICESOW:"sow/v2/service-statement-of-work/",
   MASTERDTATA:'masterdata/master-data/',
   // Agency Dashboard endpoint's  
 AGENCYDASHBOARD:'agency/dashboard-stats/',
-
+AGENCYPROFILE:'agency/agency-profile/',
 //Lawyer Dashboard endpoint's
 TOPRESOURCE:"resources/resources-profile",
 GETORGANISATIONPROFILE:"/organisation/profile",
 
 
-JOBPROFILES:"job/public-job-post/relevant-jobs/"
+JOBPROFILES:"job/public-job-post/relevant-jobs/",
  
+
+LAWYERPROFILE:'lawyer-network/profile/',
+
+RESOURCEPROFILE:'resources/resources-profile/',
 };

@@ -210,10 +210,11 @@ import Services from "../Services/services";
 import DocumentPicker from "react-native-document-picker";
 import { launchImageLibrary } from "react-native-image-picker";
 import ApproverModal from "../components/Modals/ApproverModal";
+import Toast from "react-native-toast-message";
 const CreateMSA = ({ route, navigation }: any) => {
     const { type } = route.params;
-    console.log("log",type);
-    
+    console.log("log", type);
+
     const [fields, setFields] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -282,7 +283,7 @@ const CreateMSA = ({ route, navigation }: any) => {
     const [selectedApprover, setSelectedApprover] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const frequencyOptions = [
         { value: "1", label: "Recurring Monthly" },
@@ -310,18 +311,91 @@ const CreateMSA = ({ route, navigation }: any) => {
 
 
 
+    const validateForm = () => {
+        const newErrors: { [key: string]: string } = {};
 
+        // Required field validations
+        if (!msaName.trim()) newErrors.msaName = "MSA Name is required";
+        if (!industry) newErrors.industry = "Industry Material Group is required";
+        if (!description.trim()) newErrors.description = "Description is required";
+        if (!businessUnit) newErrors.businessUnit = "Business Unit is required";
+        if (!msaType) newErrors.msaType = "MSA Type is required";
+        if (!glAccount) newErrors.glAccount = "GL Account is required";
+        if (!taxService) newErrors.taxService = "Tax Service Type is required";
+        if (!taxGroup) newErrors.taxGroup = "Tax Group is required";
+
+        // Savings Percentage validation
+        if (!savingsPercentage.trim()) {
+            newErrors.savingsPercentage = "Savings Percentage is required";
+        } else if (isNaN(parseFloat(savingsPercentage)) || parseFloat(savingsPercentage) < 0) {
+            newErrors.savingsPercentage = "Savings Percentage must be a valid number";
+        }
+
+        // Payment Terms validation
+        if (!selectedPaymentTerm) newErrors.selectedPaymentTerm = "Payment Terms is required";
+        if (!frequency) newErrors.frequency = "Frequency is required";
+        if (!terminationClause) newErrors.terminationClause = "Termination Clause is required";
+        if (!confidentiality) newErrors.confidentiality = "Confidentiality and IP Ownership is required";
+
+        // Currency validation
+        if (!selectedCurrency) newErrors.selectedCurrency = "Currency is required";
+
+        // Budget validation
+        if (!budget.trim()) {
+            newErrors.budget = "Budget is required";
+        } else if (isNaN(parseFloat(budget)) || parseFloat(budget) <= 0) {
+            newErrors.budget = "Budget must be a valid positive number";
+        }
+
+        // Special Clauses validation
+        if (!specialClauses.trim()) newErrors.specialClauses = "Special Clauses is required";
+
+        // Comments validation
+        if (!comments.trim()) newErrors.comments = "Comments is required";
+
+        // Date validations
+        if (!startDate) newErrors.startDate = "Start Date is required";
+        if (!endDate) newErrors.endDate = "End Date is required";
+        if (startDate && endDate && startDate >= endDate) {
+            newErrors.endDate = "End Date must be after Start Date";
+        }
+
+        // Assignee validation - at least one must be selected
+        if (!assignAgency && !assignResource && !assignMasterData) {
+            newErrors.assignee = "Please select at least one assignee type";
+        } else {
+            // Validate individual assignee selections
+            if (assignAgency && !selectedAgency) newErrors.agency = "Please select an agency";
+            if (assignResource && !selectedResource) newErrors.resource = "Please select a resource";
+            if (assignMasterData && !selectedMasterData) newErrors.masterData = "Please select master data";
+        }
+
+        // Approver validation
+        if (isMSAApproverEnabled && !selectedApprover) {
+            newErrors.approver = "Please select an approver";
+        }
+
+        // Jurisdiction validation (only if jurisdiction is "yes")
+        if (jurisdiction === "yes") {
+            if (!selectedCountry) newErrors.selectedCountry = "Country is required";
+            if (!selectedState) newErrors.selectedState = "State is required";
+            if (!district.trim()) newErrors.district = "District is required";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const formatDate = (date: any) => {
-  if (!date) return '';
-  
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
-};
+        if (!date) return '';
+
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    };
     // Fetch data for each profile type
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -381,7 +455,13 @@ const CreateMSA = ({ route, navigation }: any) => {
 
 
 
-
+    const clearError = (fieldName: string) => {
+        setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors[fieldName];
+            return newErrors;
+        });
+    };
 
 
     // Handle switch toggles - only allow one to be active
@@ -506,7 +586,7 @@ const CreateMSA = ({ route, navigation }: any) => {
 
         const fetchStates = async () => {
             try {
-                const res = await Services.getCountryDetailsState({ country: selectedCountry });
+                const res = await Services.getCountryDetailsStateCreateMSA({ country: selectedCountry });
                 if (res.success) {
                     console.log("??????/////", res);
 
@@ -630,143 +710,98 @@ const CreateMSA = ({ route, navigation }: any) => {
         }
     };
 
-    // const formatDate = (date: any) => {
-    //     return date.toISOString().split('T')[0];
-    // };
 
-    // const handleSubmit = async () => {
-    //     // Validate required fields
-    //     if (!msaName || !industry || !description || !businessUnit || !msaType ||
-    //         !glAccount || !taxService || !taxGroup || !savingsPercentage ||
-    //         !paymentTerms || !frequency || !terminationClause) {
-    //         Alert.alert("Error", "Please fill all required fields");
-    //         return;
-    //     }
+    const handleSubmit = async () => {
+        // Validate required fields
+        // if (!msaName || !industry || !description || !businessUnit || !msaType ||
+        //     !glAccount || !taxService || !taxGroup || !savingsPercentage ||
+        //     !selectedPaymentTerm || !frequency || !terminationClause || !selectedCurrency || !budget) {
+        //   Alert.alert("Error", "Please fill all required fields");
+        //   return;
+        // }
+        if (!validateForm()) {
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Please fix all errors before submitting',
+                position: 'top',
+            });
+            return;
+        }
+        // Validate approver if enabled
+        if (isMSAApproverEnabled && !selectedApprover) {
+            Alert.alert("Error", "Please select an approver");
+            return;
+        }
 
-    //     try {
-    //         // Prepare the data for API
-    //         const formData = {
-    //             name: msaName,
-    //             msa_number: refNumber,
-    //             msa_type: msaType,
-    //             unpsc_code: industry,
-    //             business_unit: businessUnit,
-    //             gl_account: glAccount,
-    //             tax_service_type: taxService,
-    //             tax_group: taxGroup,
-    //             savings_percentage: savingsPercentage,
-    //             payment_term: paymentTerms,
-    //             frequency: frequency,
-    //             termination_clause: terminationClause,
-    //             confidentiality_ownership: confidentiality,
-    //             special_clause: specialClauses,
-    //             comments: comments,
-    //             description: description,
-    //             start_date: formatDate(startDate),
-    //             end_date: formatDate(endDate),
-    //             currency_code: currency,
-    //             budget: budget,
-    //             jurisdiction_country: jurisdiction === "yes" ? "India" : "",
-    //             jurisdiction_state: jurisdiction === "yes" ? "Madhya Pradesh" : "",
-    //             jurisdiction_district: jurisdiction === "yes" ? "Indore" : "",
-    //             assign_msa_agency: assignAgency,
-    //             assign_msa_resource: assignResource,
-    //             assign_msa_masterdata: assignMasterData,
-    //         };
+        try {
+            if (jurisdiction === "yes" && (!selectedCountry || !selectedState || !district)) {
+                Alert.alert("Error", "Please fill all jurisdiction fields");
+                return;
+            }
 
-    //         // Call your API to create MSA
-    //         // const response = await Services.createMSA(formData);
+            const attachmentData = files.map(file => ({
+                name: file.name || file.fileName,
+                type: file.type || 'application/octet-stream',
+                uri: file.uri || file.path,
+                fileType: file.fileType || 'other'
+            }));
+            // Prepare the data for API
+            const formData = {
+                msa_number: refNumber || null,
+                name: msaName,
+                budget: parseFloat(budget),
+                start_date: `${formatDate(startDate)} 00:00:00`,
+                end_date: `${formatDate(endDate)} 23:59:59`,
+                description: description,
+                savings_percentage: parseFloat(savingsPercentage),
+                comments: comments,
+                status: "pending_approval",
+                is_active: true,
+                msa_type: parseInt(msaType),
+                msa_flow: type === "contractor" ? 1 : 2, // 1 for Contractor, 2 for Service
+                unpsc_code: parseInt(industry),
+                business_unit: parseInt(businessUnit),
+                gl_account: parseInt(glAccount),
+                resource: assignResource && selectedResource ? selectedResource.id : null,
+                agency: assignAgency && selectedAgency ? selectedAgency.id : null,
+                tax_service_type: parseInt(taxService),
+                tax_group: parseInt(taxGroup),
+                approver: isMSAApproverEnabled && selectedApprover ? selectedApprover.id : null,
+                currency_code: selectedCurrency,
+                organisation: null,
+                masterdata: assignMasterData && selectedMasterData ? selectedMasterData.id : null,
+                for_organisation: false,
+                attachments: files.map(file => file.name || file.fileName),
+                attachment_data: attachmentData,
+                payment_term: parseInt(selectedPaymentTerm),
+                frequency: parseInt(frequency),
+                termination_clause: parseInt(terminationClause),
+                confidentiality_ownership: parseInt(confidentiality),
+                special_clause: specialClauses,
+                jurisdiction_country: jurisdiction === "yes" ? selectedCountry : "N/A",
+                jurisdiction_state: jurisdiction === "yes" ? selectedState : "N/A",
+                jurisdiction_district: jurisdiction === "yes" ? district : "N/A"
+            };
+            // Call your API to create MSA
 
-    //         Alert.alert("Success", "MSA created successfully!");
-    //         navigation.goBack();
-    //     } catch (error) {
-    //         console.error("Error creating MSA:", error);
-    //         Alert.alert("Error", "Failed to create MSA");
-    //     }
-    // };
- const handleSubmit = async () => {
-    // Validate required fields
-    if (!msaName || !industry || !description || !businessUnit || !msaType ||
-        !glAccount || !taxService || !taxGroup || !savingsPercentage ||
-        !selectedPaymentTerm || !frequency || !terminationClause || !selectedCurrency || !budget) {
-      Alert.alert("Error", "Please fill all required fields");
-      return;
-    }
+            console.log("formData", formData);
 
-    // Validate approver if enabled
-    if (isMSAApproverEnabled && !selectedApprover) {
-      Alert.alert("Error", "Please select an approver");
-      return;
-    }
+            const response = await Services.createMSA(formData);
+            console.log("createMSA", response);
 
-    try {
-         if (jurisdiction === "yes" && (!selectedCountry || !selectedState || !district)) {
-    Alert.alert("Error", "Please fill all jurisdiction fields");
-    return;
-  }
-        
- const attachmentData = files.map(file => ({
-      name: file.name || file.fileName,
-      type: file.type || 'application/octet-stream',
-      uri: file.uri || file.path,
-      fileType: file.fileType || 'other'
-    }));
-      // Prepare the data for API
-      const formData = {
-        msa_number: refNumber || null,
-        name: msaName,
-        budget: parseFloat(budget),
-        start_date: `${formatDate(startDate)} 00:00:00`,
-        end_date: `${formatDate(endDate)} 23:59:59`,
-        description: description,
-        savings_percentage: parseFloat(savingsPercentage),
-        comments: comments,
-        status: "pending_approval",
-        is_active: true,
-        msa_type: parseInt(msaType),
-        msa_flow: type === "contractor" ? 1 : 2, // 1 for Contractor, 2 for Service
-        unpsc_code: parseInt(industry),
-        business_unit: parseInt(businessUnit),
-        gl_account: parseInt(glAccount),
-        resource: assignResource && selectedResource ? selectedResource.id : null,
-        agency: assignAgency && selectedAgency ? selectedAgency.id : null,
-        tax_service_type: parseInt(taxService),
-        tax_group: parseInt(taxGroup),
-        approver: isMSAApproverEnabled && selectedApprover ? selectedApprover.id : null,
-        currency_code: selectedCurrency,
-        organisation: null,
-        masterdata: assignMasterData && selectedMasterData ? selectedMasterData.id : null,
-        for_organisation: false,
-         attachments: files.map(file => file.name || file.fileName),
-      attachment_data: attachmentData,
-        payment_term: parseInt(selectedPaymentTerm),
-        frequency: parseInt(frequency),
-        termination_clause: parseInt(terminationClause),
-        confidentiality_ownership: parseInt(confidentiality),
-        special_clause: specialClauses,
-        jurisdiction_country: jurisdiction === "yes" ? selectedCountry : "",
-        jurisdiction_state: jurisdiction === "yes" ? selectedState : "",
-        jurisdiction_district: jurisdiction === "yes" ? district : ""
-      };
-// Call your API to create MSA
-
-console.log("formData",formData);
-
-      const response = await Services.createMSA(formData);
-console.log("createMSA",response);
-      
-      if (response.success) {
-        Alert.alert("Success", "MSA created successfully!");
-        navigation.goBack();
-      } else {
-        console.error("Error creating MSA:", response.error);
-        Alert.alert("Error", response.error?.message || "Failed to create MSA");
-      }
-    } catch (error) {
-      console.error("Error creating MSA:", error);
-      Alert.alert("Error", "Failed to create MSA");
-    }
-  };
+            if (response.success) {
+                Alert.alert("Success", "MSA created successfully!");
+                navigation.goBack();
+            } else {
+                console.error("Error creating MSA:", response.error);
+                Alert.alert("Error", response.error?.message || "Failed to create MSA");
+            }
+        } catch (error) {
+            console.error("Error creating MSA:", error);
+            Alert.alert("Error", "Failed to create MSA");
+        }
+    };
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -863,18 +898,25 @@ console.log("createMSA",response);
                 {/* MSA Name */}
                 <Text style={styles.label}>MSA Name *</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, errors.msaName && styles.inputError]}
                     placeholder="MSA NAME"
                     value={msaName}
-                    onChangeText={setMsaName}
+                    onChangeText={(text) => {
+                        setMsaName(text);
+                        clearError('msaName');
+                    }}
                 />
+                {errors.msaName && <Text style={styles.errorText}>{errors.msaName}</Text>}
 
                 {/* Industry Material Group */}
                 <Text style={styles.label}>Industry Material Group *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.industry && styles.pickerError]}>
                     <Picker
                         selectedValue={industry}
-                        onValueChange={(val) => setIndustry(val)}
+                        onValueChange={(val) => {
+                            setIndustry(val);
+                            clearError('industry');
+                        }}
                     >
                         <Picker.Item label="Select Industry Material Group" value="" />
                         {fields?.unpsc_code?.map((item: any) => (
@@ -882,20 +924,25 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.industry && <Text style={styles.errorText}>{errors.industry}</Text>}
 
                 {/* Description */}
-                <Text style={styles.label}>Description *</Text>
+               <Text style={styles.label}>Description *</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, errors.description && styles.inputError]}
                     placeholder="Description"
                     value={description}
-                    onChangeText={setDescription}
+                    onChangeText={(text) => {
+                        setDescription(text);
+                        clearError('description');
+                    }}
                     multiline
                     numberOfLines={4}
                 />
-
+                {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
                 {/* Select Assignee */}
                 <Text style={styles.label}>Select Assignee *</Text>
+                {errors.assignee && <Text style={styles.errorText}>{errors.assignee}</Text>}
                 <View style={styles.checkboxContainer}>
                     <View style={styles.checkboxRow}>
                         <Switch
@@ -905,6 +952,7 @@ console.log("createMSA",response);
                         <Text style={styles.checkboxLabel}>MSA For Agency/Supplier</Text>
                     </View>
                     {assignAgency && renderSelectedProfile(selectedAgency, 'Agency')}
+                    {errors.agency && <Text style={styles.errorText}>{errors.agency}</Text>}
 
                     <View style={styles.checkboxRow}>
                         <Switch
@@ -914,6 +962,7 @@ console.log("createMSA",response);
                         <Text style={styles.checkboxLabel}>MSA For Resource/Services</Text>
                     </View>
                     {assignResource && renderSelectedProfile(selectedResource, 'Resource')}
+                    {errors.resource && <Text style={styles.errorText}>{errors.resource}</Text>}
 
                     <View style={styles.checkboxRow}>
                         <Switch
@@ -923,6 +972,7 @@ console.log("createMSA",response);
                         <Text style={styles.checkboxLabel}>MSA with Master data</Text>
                     </View>
                     {assignMasterData && renderSelectedProfile(selectedMasterData, 'Master Data')}
+                    {errors.masterData && <Text style={styles.errorText}>{errors.masterData}</Text>}
                 </View>
 
                 {/* Reference Number */}
@@ -934,12 +984,15 @@ console.log("createMSA",response);
                     onChangeText={setRefNumber}
                 />
 
-                {/* Business Unit */}
+                   {/* Business Unit */}
                 <Text style={styles.label}>Business Unit *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.businessUnit && styles.pickerError]}>
                     <Picker
                         selectedValue={businessUnit}
-                        onValueChange={(val) => setBusinessUnit(val)}
+                        onValueChange={(val) => {
+                            setBusinessUnit(val);
+                            clearError('businessUnit');
+                        }}
                     >
                         <Picker.Item label="Select Business Unit" value="" />
                         {fields?.business_unit?.map((item: any) => (
@@ -947,13 +1000,17 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.businessUnit && <Text style={styles.errorText}>{errors.businessUnit}</Text>}
 
                 {/* MSA Type */}
                 <Text style={styles.label}>MSA Type *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.msaType && styles.pickerError]}>
                     <Picker
                         selectedValue={msaType}
-                        onValueChange={(val) => setMsaType(val)}
+                        onValueChange={(val) => {
+                            setMsaType(val);
+                            clearError('msaType');
+                        }}
                     >
                         <Picker.Item label="Select MSA Type" value="" />
                         {fields?.msa_type?.map((item: any) => (
@@ -961,13 +1018,17 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.msaType && <Text style={styles.errorText}>{errors.msaType}</Text>}
 
                 {/* GL Account */}
                 <Text style={styles.label}>GL Account *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.glAccount && styles.pickerError]}>
                     <Picker
                         selectedValue={glAccount}
-                        onValueChange={(val) => setGlAccount(val)}
+                        onValueChange={(val) => {
+                            setGlAccount(val);
+                            clearError('glAccount');
+                        }}
                     >
                         <Picker.Item label="Select GL Account" value="" />
                         {fields?.gl_account?.map((item: any) => (
@@ -975,33 +1036,46 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.glAccount && <Text style={styles.errorText}>{errors.glAccount}</Text>}
+
                 <View style={styles.divider} />
-                {/* Date and Currency Row */}
+                  {/* Date and Currency Row */}
                 <View style={styles.row}>
                     <View style={styles.column}>
                         <Text style={styles.label}>Start Date *</Text>
                         <TouchableOpacity
-                            style={styles.dateInput}
-                            onPress={() => showDatePicker("start")}
+                            style={[styles.dateInput, errors.startDate && styles.inputError]}
+                            onPress={() => {
+                                showDatePicker("start");
+                                clearError('startDate');
+                            }}
                         >
                             <Text>{formatDate(startDate)}</Text>
                         </TouchableOpacity>
+                        {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>End Date *</Text>
                         <TouchableOpacity
-                            style={styles.dateInput}
-                            onPress={() => showDatePicker("end")}
+                            style={[styles.dateInput, errors.endDate && styles.inputError]}
+                            onPress={() => {
+                                showDatePicker("end");
+                                clearError('endDate');
+                            }}
                         >
                             <Text>{formatDate(endDate)}</Text>
                         </TouchableOpacity>
+                        {errors.endDate && <Text style={styles.errorText}>{errors.endDate}</Text>}
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>Currency *</Text>
-                        <View style={styles.pickerContainer}>
+                        <View style={[styles.pickerContainer, errors.selectedCurrency && styles.pickerError]}>
                             <Picker
                                 selectedValue={selectedCurrency}
-                                onValueChange={(val) => setSelectedCurrency(val)}
+                                onValueChange={(val) => {
+                                    setSelectedCurrency(val);
+                                    clearError('selectedCurrency');
+                                }}
                             >
                                 <Picker.Item label="Select Currency" value="" />
                                 {currencies.map((item: any) => (
@@ -1013,6 +1087,7 @@ console.log("createMSA",response);
                                 ))}
                             </Picker>
                         </View>
+                        {errors.selectedCurrency && <Text style={styles.errorText}>{errors.selectedCurrency}</Text>}
                     </View>
 
                 </View>
@@ -1020,21 +1095,28 @@ console.log("createMSA",response);
                 {/* Budget */}
                 <Text style={styles.label}>Budget *</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, errors.budget && styles.inputError]}
                     placeholder="Budget"
                     value={budget}
-                    onChangeText={setBudget}
+                    onChangeText={(text) => {
+                        setBudget(text);
+                        clearError('budget');
+                    }}
                     keyboardType="numeric"
                 />
+                {errors.budget && <Text style={styles.errorText}>{errors.budget}</Text>}
 
-                {/* Tax Information Row */}
+                 {/* Tax Information Row */}
                 <View style={styles.row}>
                     <View style={styles.column}>
                         <Text style={styles.label}>Tax Service Type *</Text>
-                        <View style={styles.pickerContainer}>
+                        <View style={[styles.pickerContainer, errors.taxService && styles.pickerError]}>
                             <Picker
                                 selectedValue={taxService}
-                                onValueChange={(val) => setTaxService(val)}
+                                onValueChange={(val) => {
+                                    setTaxService(val);
+                                    clearError('taxService');
+                                }}
                             >
                                 <Picker.Item label="Select Tax Service" value="" />
                                 {fields?.tax_service_type?.map((item: any) => (
@@ -1042,13 +1124,17 @@ console.log("createMSA",response);
                                 ))}
                             </Picker>
                         </View>
+                        {errors.taxService && <Text style={styles.errorText}>{errors.taxService}</Text>}
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>Tax Group *</Text>
-                        <View style={styles.pickerContainer}>
+                        <View style={[styles.pickerContainer, errors.taxGroup && styles.pickerError]}>
                             <Picker
                                 selectedValue={taxGroup}
-                                onValueChange={(val) => setTaxGroup(val)}
+                                onValueChange={(val) => {
+                                    setTaxGroup(val);
+                                    clearError('taxGroup');
+                                }}
                             >
                                 <Picker.Item label="Select Tax Group" value="" />
                                 {fields?.tax_group?.map((item: any) => (
@@ -1056,39 +1142,53 @@ console.log("createMSA",response);
                                 ))}
                             </Picker>
                         </View>
+                        {errors.taxGroup && <Text style={styles.errorText}>{errors.taxGroup}</Text>}
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>Savings Percentage *</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, errors.savingsPercentage && styles.inputError]}
                             placeholder="SAVINGS PERCENTAGE"
                             value={savingsPercentage}
-                            onChangeText={setSavingsPercentage}
+                            onChangeText={(text) => {
+                                setSavingsPercentage(text);
+                                clearError('savingsPercentage');
+                            }}
                             keyboardType="numeric"
                         />
+                        {errors.savingsPercentage && <Text style={styles.errorText}>{errors.savingsPercentage}</Text>}
                     </View>
                 </View>
+
                 <View style={styles.divider} />
+
                 {/* Payment Terms */}
                 <Text style={styles.label}>Payment Terms *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.selectedPaymentTerm && styles.pickerError]}>
                     <Picker
                         selectedValue={selectedPaymentTerm}
-                        onValueChange={(val) => setSelectedPaymentTerm(val)}
+                        onValueChange={(val) => {
+                            setSelectedPaymentTerm(val);
+                            clearError('selectedPaymentTerm');
+                        }}
                     >
                         <Picker.Item label="Select Payment Term" value="" />
-                        {paymentTermsList?.map((item: any) => (   // ✅ safe optional chaining
+                        {paymentTermsList?.map((item: any) => (
                             <Picker.Item key={item.id} label={item.name} value={item.id} />
                         ))}
                     </Picker>
                 </View>
+                {errors.selectedPaymentTerm && <Text style={styles.errorText}>{errors.selectedPaymentTerm}</Text>}
 
                 {/* Confidentiality and IP Ownership */}
                 <Text style={styles.label}>Confidentiality and IP Ownership *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.confidentiality && styles.pickerError]}>
                     <Picker
                         selectedValue={confidentiality}
-                        onValueChange={(val) => setConfidentiality(val)}
+                        onValueChange={(val) => {
+                            setConfidentiality(val);
+                            clearError('confidentiality');
+                        }}
                     >
                         <Picker.Item label="Select Confidentiality" value="" />
                         {confidentialityOptions.map((item) => (
@@ -1096,13 +1196,17 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.confidentiality && <Text style={styles.errorText}>{errors.confidentiality}</Text>}
 
                 {/* Frequency */}
                 <Text style={styles.label}>Frequency *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.frequency && styles.pickerError]}>
                     <Picker
                         selectedValue={frequency}
-                        onValueChange={(val) => setFrequency(val)}
+                        onValueChange={(val) => {
+                            setFrequency(val);
+                            clearError('frequency');
+                        }}
                     >
                         <Picker.Item label="Select Frequency" value="" />
                         {frequencyOptions.map((item) => (
@@ -1110,21 +1214,32 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.frequency && <Text style={styles.errorText}>{errors.frequency}</Text>}
+
+                {/* Special Clauses */}
                 <View style={styles.column}>
                     <Text style={styles.label}>Special Clauses *</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors.specialClauses && styles.inputError]}
                         placeholder="SPECIAL CLAUSES"
                         value={specialClauses}
-                        onChangeText={setSpecialClauses}
+                        onChangeText={(text) => {
+                            setSpecialClauses(text);
+                            clearError('specialClauses');
+                        }}
                     />
+                    {errors.specialClauses && <Text style={styles.errorText}>{errors.specialClauses}</Text>}
                 </View>
+
                 {/* Termination Clause */}
                 <Text style={styles.label}>Termination Clause *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, errors.terminationClause && styles.pickerError]}>
                     <Picker
                         selectedValue={terminationClause}
-                        onValueChange={(val) => setTerminationClause(val)}
+                        onValueChange={(val) => {
+                            setTerminationClause(val);
+                            clearError('terminationClause');
+                        }}
                     >
                         <Picker.Item label="Select Termination Clause" value="" />
                         {terminationClauseOptions.map((item) => (
@@ -1132,9 +1247,9 @@ console.log("createMSA",response);
                         ))}
                     </Picker>
                 </View>
+                {errors.terminationClause && <Text style={styles.errorText}>{errors.terminationClause}</Text>}
 
-
-
+ {/* Jurisdiction */}
                 <View>
                     <Text style={styles.label}>Location/Jurisdiction *</Text>
                     <View style={styles.radioContainer}>
@@ -1142,7 +1257,12 @@ console.log("createMSA",response);
                             <RadioButton
                                 value="yes"
                                 status={jurisdiction === "yes" ? "checked" : "unchecked"}
-                                onPress={() => setJurisdiction("yes")}
+                                onPress={() => {
+                                    setJurisdiction("yes");
+                                    clearError('selectedCountry');
+                                    clearError('selectedState');
+                                    clearError('district');
+                                }}
                             />
                             <Text style={styles.radioLabel}>Yes</Text>
                         </View>
@@ -1162,53 +1282,66 @@ console.log("createMSA",response);
                             {/* Country */}
                             <Text style={styles.label}>Country *</Text>
                             <TouchableOpacity
-                                style={styles.dropdownButton}
-                                onPress={openCountryModal}
+                                style={[styles.dropdownButton, errors.selectedCountry && styles.inputError]}
+                                onPress={() => {
+                                    openCountryModal();
+                                    clearError('selectedCountry');
+                                }}
                             >
                                 <Text style={selectedCountry ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
                                     {selectedCountry || "Select Country"}
                                 </Text>
                             </TouchableOpacity>
+                            {errors.selectedCountry && <Text style={styles.errorText}>{errors.selectedCountry}</Text>}
 
                             {/* State */}
                             <Text style={styles.label}>State *</Text>
                             <TouchableOpacity
-                                style={[styles.dropdownButton, !selectedCountry && styles.dropdownDisabled]}
-                                onPress={openStateModal}
+                                style={[styles.dropdownButton, !selectedCountry && styles.dropdownDisabled, errors.selectedState && styles.inputError]}
+                                onPress={() => {
+                                    openStateModal();
+                                    clearError('selectedState');
+                                }}
                                 disabled={!selectedCountry}
                             >
                                 <Text style={selectedState ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
                                     {selectedState || (selectedCountry ? "Select State" : "Select country first")}
                                 </Text>
                             </TouchableOpacity>
+                            {errors.selectedState && <Text style={styles.errorText}>{errors.selectedState}</Text>}
 
                             {/* District */}
                             <Text style={styles.label}>District *</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, errors.district && styles.inputError]}
                                 placeholder="Enter District"
                                 value={district}
-                                onChangeText={setDistrict}
+                                onChangeText={(text) => {
+                                    setDistrict(text);
+                                    clearError('district');
+                                }}
                             />
+                            {errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
                         </View>
                     )}
                 </View>
-
-
 
                 <View style={styles.divider} />
 
                 {/* Comments */}
                 <Text style={styles.label}>Comments *</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, errors.comments && styles.inputError]}
                     placeholder="Comments"
                     value={comments}
-                    onChangeText={setComments}
+                    onChangeText={(text) => {
+                        setComments(text);
+                        clearError('comments');
+                    }}
                     multiline
                     numberOfLines={4}
                 />
-
+                {errors.comments && <Text style={styles.errorText}>{errors.comments}</Text>}
                 {/* Previous Contract / Other */}
                 <View style={styles.container}>
                     <Text style={styles.label}>Previous Contract / Other *</Text>
@@ -1261,6 +1394,7 @@ console.log("createMSA",response);
 
                 {/* Select Approver */}
                 <Text style={styles.label}>Select Approver *</Text>
+                {errors.approver && <Text style={styles.errorText}>{errors.approver}</Text>}
 
                 <View style={styles.checkboxRow}>
                     <Switch
@@ -1274,7 +1408,6 @@ console.log("createMSA",response);
                 {isMSAApproverEnabled && selectedApprover && (
                     <View style={styles.selectedApproverContainer}>
                         <View style={styles.approverInfo}>
-                            {/* <Text style={styles.approverName}>{selectedApprover.name}</Text> */}
                             <Text style={styles.approverName}>
                                 {`${(selectedApprover as any)?.first_name ?? ""} ${(selectedApprover as any)?.last_name ?? ""}`}
                             </Text>
@@ -1383,6 +1516,20 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginBottom: 16,
         textAlign: "center"
+    },
+    inputError: {
+        borderColor: 'red',
+        borderWidth: 1,
+    },
+    pickerError: {
+        borderColor: 'red',
+        borderWidth: 1,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 4,
+        marginLeft: 8,
     },
     label: {
         fontSize: 14,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const InviteAgencyScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -20,6 +21,54 @@ const InviteAgencyScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTagged, setIsTagged] = useState(false);
     const [loading, setLoading] = useState(false);
+
+
+
+
+
+
+    const[userType,setUserType]=useState('')
+
+
+
+useEffect(() => {
+  const fetchAllData = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      if (keys.length > 0) {
+        const result = await AsyncStorage.multiGet(keys);
+
+        const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
+          if (value !== null) {
+            try {
+              acc[key] = JSON.parse(value);
+            } catch {
+              acc[key] = value;
+            }
+          }
+          return acc;
+        }, {});
+
+        // 🔑 user_type lives inside the parsed userData object
+        const typeFromStorage =
+          dataObj.userData?.user_type || // preferred location
+          dataObj.userType;              // or the separate key if it exists
+
+        if (typeFromStorage) {
+          setUserType(typeFromStorage);
+        }
+
+        console.log("User type is:", typeFromStorage);
+      }
+    } catch (error) {
+      console.error("Error fetching all AsyncStorage data:", error);
+    }
+  };
+
+  fetchAllData();
+}, []);
+
+
 const handleSubmit = async () => {
   // Simple validation (you can expand this)
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -37,13 +86,15 @@ const handleSubmit = async () => {
     last_name: lastName,
     email: email,
     password: password,
-    user_type: 'AGENCY_USER',
+    user_type: userType,
     is_authorized: isTagged, // true if tagged, false otherwise
   };
 
   try {
      setLoading(true);
     const res = await Services.inviteUsers(payload);
+    console.log("payloadpayload",payload);
+    
     setLoading(false); 
     if (res.success) {
       Toast.show({ type: 'success', text1: 'Agency invited successfully' });
@@ -66,12 +117,11 @@ const handleSubmit = async () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header */}
         <LinearGradient
-          colors={['#0E3386', '#1A3B8B']}
+          colors={['#0E3386', '#0E3386']}
           style={styles.header}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
         >
-          <Text style={styles.headerTitle}>Invite New Agency</Text>
         </LinearGradient>
 
         {/* Form */}
@@ -174,8 +224,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   header: {
-    padding: 24,
-    paddingTop: 50,
+    padding: 15,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },

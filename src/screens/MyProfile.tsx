@@ -40,55 +40,145 @@ const MyProfile = () => {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState(1);
   const [otpEmail, setOtpEmail] = useState('');
+  
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
 const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 const [deletePassword, setDeletePassword] = useState('');
 const [showDeletePassword, setShowDeletePassword] = useState(false);
-
-
+const [userEmail, setUserEmail] = useState("");
+const [searchQuery, setSearchQuery] = useState('');
+const [filteredLanguages, setFilteredLanguages] = useState([]);
   useEffect(() => {
     fetchUserProfile();
     fetchLanguages();
   }, []);
 
-  const handleImagePick = async () => {
+
+
+useEffect(() => {
+  if (languages && languages.length > 0) {
+    setFilteredLanguages(languages);
+  }
+}, [languages]);
+
+useEffect(() => {
+  if (searchQuery.trim() === '') {
+    setFilteredLanguages(languages);
+  } else {
+    const filtered = languages.filter(language =>
+      language.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredLanguages(filtered);
+  }
+}, [searchQuery, languages]);
+useEffect(() => {
+  const fetchUserData = async () => {
     try {
-      const image = await ImagePicker.openPicker({
-        width: 300,
-        height: 300,
-        cropping: true,
-        compressImageQuality: 0.8,
-        mediaType: 'photo',
-      });
+      const storedUser = await AsyncStorage.getItem("userData");
+      console.log("storedUser",storedUser);
+      
+      if (storedUser) {
 
-      console.log('Picked Image:', image);
+        const parsedUser = JSON.parse(storedUser);
+      console.log("parsedUser",parsedUser);
 
-      if (image && image.path) {
-        setUserData(prev => ({
-          ...prev,
-          profile_pic: image.path,
-          profile_file: {
-            uri: image.path,
-            type: image.mime || 'image/jpeg',
-            name: image.filename || 'profile.jpg',
-          },
-        }));
-      } else {
-        console.log('No image selected');
+        setUserEmail(parsedUser?.email || "");
+        setOtpEmail(parsedUser?.email || ""); // auto fill otpEmail also
       }
     } catch (error) {
-      if (error.message?.includes('cancelled')) {
-        console.log('User cancelled picker');
-      } else {
-        console.log('Image Picker Error:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to pick image',
-        });
-      }
+      console.log("Error fetching userData:", error);
     }
   };
+  fetchUserData();
+}, []);
+
+const handleImagePick = async () => {
+  try {
+    const image = await ImagePicker.openPicker({
+      width: 300,
+      height: 300,
+      cropping: true,
+      compressImageQuality: 0.8,
+      mediaType: 'photo',
+    });
+
+    console.log('Picked Image:', image);
+
+    if (image && image.path) {
+      setUserData(prev => ({
+        ...prev,
+        profile_pic: image.path,
+        profile_file: {
+          uri: image.path,
+          type: image.mime || 'image/jpeg',
+          name: image.filename || 'profile.jpg',
+        },
+      }));
+    } else {
+      console.log('No image selected');
+    }
+  } catch (error) {
+    console.log('Full Error Object:', error);
+    console.log('Error Message:', error.message);
+    console.log('Error Code:', error.code);
+    
+    if (error.message?.includes('cancelled') || error.code === 'E_PICKER_CANCELLED') {
+      console.log('User cancelled picker');
+    } else if (error.message?.includes('permission')) {
+      console.log('Permission denied');
+      Toast.show({
+        type: 'error',
+        text1: 'Permission denied',
+        text2: 'Please enable photo library access',
+      });
+    } else {
+      console.log('Image Picker Error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to pick image',
+        text2: 'Please try again',
+      });
+    }
+  }
+};
+  // const handleImagePick = async () => {
+  //   try {
+  //     const image = await ImagePicker.openPicker({
+  //       width: 300,
+  //       height: 300,
+  //       cropping: true,
+  //       compressImageQuality: 0.8,
+  //       mediaType: 'photo',
+  //     });
+
+  //     console.log('Picked Image:', image);
+
+  //     if (image && image.path) {
+  //       setUserData(prev => ({
+  //         ...prev,
+  //         profile_pic: image.path,
+  //         profile_file: {
+  //           uri: image.path,
+  //           type: image.mime || 'image/jpeg',
+  //           name: image.filename || 'profile.jpg',
+  //         },
+  //       }));
+  //     } else {
+  //       console.log('No image selected');
+  //     }
+  //   } catch (error) {
+  //     if (error.message?.includes('cancelled')) {
+  //       console.log('User cancelled picker');
+  //     } else {
+  //       console.log('Image Picker Error:', error);
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: 'Failed to pick image',
+  //       });
+  //     }
+  //   }
+  // };
 useEffect(() => {
   const loadData = async () => {
     try {
@@ -269,40 +359,130 @@ const handleUpdateProfile = async () => {
     ]);
   };
 
-  const renderLanguageModal = () => (
-    <Modal visible={languageModal} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Language</Text>
-          <FlatList
-            data={languages}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }: any) => (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedLanguage(item);
-                  setUserData(prev => ({ ...prev, language: item.id })); // ID for API
-                  setLanguageModal(false);
-                }}
-                style={styles.languageItem}
-              >
-                <Text>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <TouchableOpacity onPress={() => setLanguageModal(false)}>
-            <Text style={{ color: 'blue', textAlign: 'center', marginTop: 10 }}>Close</Text>
+  // const renderLanguageModal = () => (
+  //   <Modal visible={languageModal} transparent animationType="slide">
+  //     <View style={styles.modalOverlay}>
+  //       <View style={styles.modalContent}>
+  //         <Text style={styles.modalTitle}>Select Language</Text>
+  //         <FlatList
+  //           data={languages}
+  //           keyExtractor={(item, index) => index.toString()}
+  //           renderItem={({ item }: any) => (
+  //             <TouchableOpacity
+  //               onPress={() => {
+  //                 setSelectedLanguage(item);
+  //                 setUserData(prev => ({ ...prev, language: item.id })); // ID for API
+  //                 setLanguageModal(false);
+  //               }}
+  //               style={styles.languageItem}
+  //             >
+  //               <Text>{item.name}</Text>
+  //             </TouchableOpacity>
+  //           )}
+  //         />
+  //         <TouchableOpacity onPress={() => setLanguageModal(false)}>
+  //           <Text style={{ color: 'blue', textAlign: 'center', marginTop: 10 }}>Close</Text>
+  //         </TouchableOpacity>
+  //       </View>
+  //     </View>
+  //   </Modal>
+  // );
+const renderLanguageModal = () => (
+  <Modal visible={languageModal} transparent animationType="fade">
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent2}>
+        {/* Modal Header */}
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle2}>Select Language</Text>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={() => setLanguageModal(false)}
+          >
+            <Icon name="close" size={24} color="#6B7280" />
           </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
-  );
 
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Icon name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search languages..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus={true}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={() => setSearchQuery('')}
+            >
+              <Icon name="close" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Languages List */}
+        <FlatList
+          data={filteredLanguages}
+          keyExtractor={(item) => item.id?.toString() || item.name}
+          showsVerticalScrollIndicator={false}
+          style={styles.languagesList}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedLanguage(item);
+                setUserData(prev => ({ ...prev, language: item.id }));
+                setLanguageModal(false);
+                setSearchQuery('');
+              }}
+              style={[
+                styles.languageItem,
+                selectedLanguage?.id === item.id && styles.selectedLanguageItem
+              ]}
+            >
+              <Text style={[
+                styles.languageName,
+                selectedLanguage?.id === item.id && styles.selectedLanguageName
+              ]}>
+                {item.name}
+              </Text>
+              {selectedLanguage?.id === item.id && (
+                <Icon name="checkmark" size={20} color="#0E3386" />
+              )}
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Icon name="search-off" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyStateText}>No languages found</Text>
+              <Text style={styles.emptyStateSubtext}>
+                Try adjusting your search terms
+              </Text>
+            </View>
+          }
+        />
+
+        {/* Results Count */}
+        <View style={styles.resultsContainer}>
+          <Text style={styles.resultsText}>
+            {filteredLanguages.length} {filteredLanguages.length === 1 ? 'language' : 'languages'} found
+          </Text>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
   const handleSendResetCode = async () => {
+       setLoading(true);
     const res = await Services.forgetPassword({ email: otpEmail });
     console.log(".......res", res);
 
     if (res.success) {
+       setLoading(false);
+
       setResetStep(2);
     } else {
       Toast.show({
@@ -317,17 +497,21 @@ const handleUpdateProfile = async () => {
     const formData = new FormData();
     formData.append('code', otpCode);
     formData.append('password', newPassword);
+       setLoading(true);
 
     try {
       const res = await Services.forgetPasswordReset(formData);
 
       if (res.success) {
+       setLoading(false);
+
         setPasswordModalVisible(false);
         setResetStep(1);
         Toast.show({
           type: 'success',
           text1: 'Password updated',
         });
+
       } else {
         Toast.show({
           type: 'error',
@@ -346,168 +530,519 @@ const handleUpdateProfile = async () => {
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} size="large" />;
 
-  return (
-    <ScrollView style={styles.container}
-      contentContainerStyle={{ paddingBottom: 50 }}
-    >
-      {renderLanguageModal()}
+//   return (
+//     <ScrollView style={styles.container}
+//       contentContainerStyle={{ paddingBottom: 50 }}
+//     >
+//       {renderLanguageModal()}
 
-      <View style={styles.profileSection}>
-<TouchableOpacity onPress={handleImagePick}>
-  {userData?.profile_pic ? (
-    <Image
-      source={{ 
-        uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
-        cache: 'reload'
-      }}
-      style={styles.avatar}
-      onError={(e) => {
-        console.log('Image loading error:', e.nativeEvent.error);
-        // Fallback to initials if image fails to load
-      }}
-    />
-  ) : (
-    <View style={styles.initialsCircle}>
-      <Text style={styles.initialsText}>
-        {userData?.first_name?.charAt(0) || ''}
-      </Text>
+//       <View style={styles.profileSection}>
+// <TouchableOpacity onPress={handleImagePick}>
+//   {userData?.profile_pic ? (
+//     <Image
+//       source={{ 
+//         uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+//         cache: 'reload'
+//       }}
+//       style={styles.avatar}
+//       onError={(e) => {
+//         console.log('Image loading error:', e.nativeEvent.error);
+//         // Fallback to initials if image fails to load
+//       }}
+//     />
+//   ) : (
+//     <View style={styles.initialsCircle}>
+//       <Text style={styles.initialsText}>
+//         {userData?.first_name?.charAt(0) || ''}
+//       </Text>
+//     </View>
+//   )}
+// <Text style={styles.changeProfile}>Change Profile</Text>
+
+// </TouchableOpacity>
+
+
+//         {editMode ? (
+//           <>
+//             <TextInput
+//               style={styles.input}
+//               value={userData.first_name}
+//               onChangeText={(text) => setUserData({ ...userData, first_name: text })}
+//               placeholder="First Name"
+//             />
+//             <TextInput
+//               style={styles.input}
+//               value={userData.last_name}
+//               onChangeText={(text) => setUserData({ ...userData, last_name: text })}
+//               placeholder="Last Name"
+//             />
+//             <TextInput
+//               style={styles.input}
+//               value={userData.email}
+//               editable={false}
+//               placeholder="Email"
+//             />
+
+
+//             <TextInput
+//               style={styles.input}
+//               placeholder="Contact Number"
+//               value={contactNumber}
+//               onChangeText={setContactNumber}
+//               keyboardType="phone-pad"
+//               maxLength={10}
+//             />
+
+//             <TextInput
+//               style={styles.input}
+//               placeholder="LinkedIn URL"
+//               value={linkedinUrl}
+//               onChangeText={setLinkedinUrl}
+//             />
+
+//             <TextInput
+//               style={styles.input}
+//               placeholder="Age"
+//               value={age}
+//               onChangeText={setAge}
+//               maxLength={3}
+//               keyboardType="numeric"
+//             />
+
+//             <TouchableOpacity onPress={() => setLanguageModal(true)} style={styles.input}>
+//               <Text>{selectedLanguage.name || 'Select Language'}</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
+//               <Text style={styles.logoutText}>Save</Text>
+//             </TouchableOpacity>
+//           </>
+//         ) : (
+//           <>
+//             <Text style={styles.name}>{`${userData.first_name || ''} ${userData.last_name || ''}`}</Text>
+//             <Text style={styles.email}>{userData.email || ''}</Text>
+//             <Text style={styles.email}>Language: {selectedLanguage.name || 'N/A'}</Text>
+//             <TouchableOpacity style={styles.editIcon} onPress={() => setEditMode(true)}>
+//               <Icon name="create-outline" size={24} color="#000" />
+//             </TouchableOpacity>
+//           </>
+//         )}
+//       </View>
+
+//       <View style={styles.settingsSection}>
+//         <Text style={styles.settingsHeader}>Settings</Text>
+//         <TouchableOpacity
+//           style={styles.settingsItem}
+//           onPress={() => setPasswordModalVisible(true)}
+//         >
+//           <Text style={styles.settingsText}>Change Password</Text>
+//         </TouchableOpacity>
+
+//         <TouchableOpacity
+//           style={styles.settingsItem}
+//           onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
+//         >
+//           <Text style={styles.settingsText}>Privacy Policy</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity
+//           style={styles.settingsItem}
+//           onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}
+//         >
+//           <Text style={styles.settingsText}>Terms and Conditions</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity
+//   style={styles.settingsItem}
+//   onPress={() => setDeleteModalVisible(true)}
+// >
+//   <Text style={styles.settingsText}>Delete Account</Text>
+// </TouchableOpacity>
+//       </View>
+
+//       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+//         <Text style={styles.logoutText}>Logout</Text>
+//       </TouchableOpacity>
+
+//       <Modal visible={passwordModalVisible} animationType="slide" transparent>
+//   <View style={styles.fullWhiteBackdrop}>
+//     {resetStep === 1 ? (
+//       <>
+//         <TextInput
+//           placeholder="Email"
+//           value={userEmail}         // show logged-in user email
+//           editable={false}          // make it read-only
+//           style={[styles.input1, { backgroundColor: "#f0f0f0" }]} // grey bg to indicate disabled
+//         />
+//         <TouchableOpacity style={styles.button} onPress={handleSendResetCode}>
+//           <Text style={styles.buttonText}>Send OTP</Text>
+//         </TouchableOpacity>
+//       </>
+//     ) : (
+//       <>
+//         <TextInput
+//           placeholder="Enter OTP"
+//           value={otpCode}
+//           onChangeText={setOtpCode}
+//           style={styles.input1}
+//         />
+//         <TextInput
+//           placeholder="New Password"
+//           value={newPassword}
+//           onChangeText={setNewPassword}
+//           secureTextEntry
+//           style={styles.input1}
+//         />
+//         <TouchableOpacity style={styles.resetbutton2} onPress={handleResetPassword}>
+//           <Text style={styles.buttonText}>Reset Password</Text>
+//         </TouchableOpacity>
+//       </>
+//     )}
+
+//     <TouchableOpacity
+//       onPress={() => {
+//         setPasswordModalVisible(false);
+//         setResetStep(1);
+//       }}
+//       style={styles.buttonlink}
+//     >
+//       <Text style={styles.link}>Cancel</Text>
+//     </TouchableOpacity>
+//   </View>
+// </Modal>
+
+//       <Modal visible={deleteModalVisible} animationType="slide" transparent>
+//   <View style={styles.fullWhiteBackdrop}>
+//     <Text style={styles.modalTitle}>Confirm Account Deletion</Text>
+
+//     <View style={[styles.input1, { flexDirection: 'row', alignItems: 'center' }]}>
+//   <TextInput
+//     style={{ flex: 1 }}
+//     placeholder="Enter your password"
+//     value={deletePassword}
+//     onChangeText={setDeletePassword}
+//     secureTextEntry={!showDeletePassword}
+//     autoCapitalize="none"
+//   />
+//   <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
+//     <Icon
+//       name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
+//       size={22}
+//       color="#555"
+//     />
+//   </TouchableOpacity>
+// </View>
+
+    
+//     {/* <TextInput
+//       placeholder="Enter your password"
+//       value={deletePassword}
+//       onChangeText={setDeletePassword}
+//       secureTextEntry
+//       style={styles.input1}
+//     /> */}
+
+//     <TouchableOpacity
+//       style={styles.resetbutton}
+//       onPress={async () => {
+//         try {
+//      const result = await Services.deleteUserAccount(deletePassword);
+
+// if (result.success) {
+//   Toast.show({ type: 'success', text1: 'Account deleted successfully' });
+//   await AsyncStorage.clear();
+//   setDeleteModalVisible(false);
+
+//   navigation.reset({
+//     index: 0,
+//     routes: [{ name: 'Login' as never }],
+//   });
+// } else {
+//   Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
+// }
+
+//         } catch (error) {
+//           Alert.alert('Error', 'Failed to delete account. Please check your password.');
+//         }
+//       }}
+//     >
+//       <Text style={styles.buttonText}>Delete</Text>
+//     </TouchableOpacity>
+
+//     <TouchableOpacity
+//       onPress={() => setDeleteModalVisible(false)}
+//       style={styles.buttonlink}
+//     >
+//       <Text style={styles.link}>Cancel</Text>
+//     </TouchableOpacity>
+//   </View>
+// </Modal>
+
+//     </ScrollView>
+//   );
+
+return (
+  <ScrollView 
+    style={styles.container}
+    contentContainerStyle={styles.scrollContent}
+    showsVerticalScrollIndicator={false}
+  >
+    {renderLanguageModal()}
+
+    {/* Profile Header Section */}
+    <View style={styles.profileHeader}>
     </View>
-  )}
-  <Text style={{ color: 'blue' }}>Change Picture</Text>
-</TouchableOpacity>
 
+    {/* Profile Section */}
+    <View style={styles.profileCard}>
+      <TouchableOpacity style={styles.avatarContainer} onPress={handleImagePick}>
+        {userData?.profile_pic ? (
+          <Image
+            source={{ 
+              uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+              cache: 'reload'
+            }}
+            style={styles.avatar}
+            onError={(e) => {
+              console.log('Image loading error:', e.nativeEvent.error);
+            }}
+          />
+        ) : (
+          <View style={styles.initialsCircle}>
+            <Text style={styles.initialsText}>
+              {userData?.first_name?.charAt(0) || ''}
+            </Text>
+          </View>
+        )}
+        <View style={styles.changeProfileButton}>
+          <Icon name="camera" size={16} color="#fff" />
+          <Text style={styles.changeProfileText}>Change Photo</Text>
+        </View>
+      </TouchableOpacity>
 
-        {editMode ? (
-          <>
+      {editMode ? (
+        <View style={styles.editForm}>
+          <View style={styles.inputRow}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                value={userData.first_name}
+                onChangeText={(text) => setUserData({ ...userData, first_name: text })}
+                placeholder="Enter first name"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                value={userData.last_name}
+                onChangeText={(text) => setUserData({ ...userData, last_name: text })}
+                placeholder="Enter last name"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Email Address</Text>
             <TextInput
-              style={styles.input}
-              value={userData.first_name}
-              onChangeText={(text) => setUserData({ ...userData, first_name: text })}
-              placeholder="First Name"
-            />
-            <TextInput
-              style={styles.input}
-              value={userData.last_name}
-              onChangeText={(text) => setUserData({ ...userData, last_name: text })}
-              placeholder="Last Name"
-            />
-            <TextInput
-              style={styles.input}
+              style={[styles.input, styles.disabledInput]}
               value={userData.email}
               editable={false}
               placeholder="Email"
             />
+          </View>
 
-
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Contact Number</Text>
             <TextInput
               style={styles.input}
-              placeholder="Contact Number"
+              placeholder="Enter contact number"
               value={contactNumber}
               onChangeText={setContactNumber}
               keyboardType="phone-pad"
               maxLength={10}
             />
+          </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>LinkedIn URL</Text>
             <TextInput
               style={styles.input}
-              placeholder="LinkedIn URL"
+              placeholder="Enter LinkedIn profile URL"
               value={linkedinUrl}
               onChangeText={setLinkedinUrl}
             />
+          </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Age</Text>
             <TextInput
               style={styles.input}
-              placeholder="Age"
+              placeholder="Enter your age"
               value={age}
               onChangeText={setAge}
               maxLength={3}
               keyboardType="numeric"
             />
+          </View>
 
-            <TouchableOpacity onPress={() => setLanguageModal(true)} style={styles.input}>
-              <Text>{selectedLanguage.name || 'Select Language'}</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Preferred Language</Text>
+            <TouchableOpacity 
+              style={styles.languageSelector}
+              onPress={() => setLanguageModal(true)}
+            >
+              <Text style={styles.languageText}>
+                {selectedLanguage.name || 'Select Language'}
+              </Text>
+              <Icon name="chevron-down" size={20} color="#666" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
-              <Text style={styles.logoutText}>Save</Text>
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setEditMode(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <Text style={styles.name}>{`${userData.first_name || ''} ${userData.last_name || ''}`}</Text>
-            <Text style={styles.email}>{userData.email || ''}</Text>
-            <Text style={styles.email}>Language: {selectedLanguage.name || 'N/A'}</Text>
-            <TouchableOpacity style={styles.editIcon} onPress={() => setEditMode(true)}>
-              <Icon name="create-outline" size={24} color="#000" />
+            <TouchableOpacity 
+              style={styles.saveButton}
+              onPress={handleUpdateProfile}
+            >
+              <Text style={styles.saveButtonText}>Save Changes</Text>
             </TouchableOpacity>
-          </>
-        )}
-      </View>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.profileInfo}>
+          <Text style={styles.userName}>
+            {`${userData.first_name || ''} ${userData.last_name || ''}`}
+          </Text>
+          <Text style={styles.userEmail}>{userData.email || ''}</Text>
+          <View style={styles.languageInfo}>
+            <Icon name="language" size={16} color="#666" />
+            <Text style={styles.languageInfoText}>
+              {selectedLanguage.name || 'No language selected'}
+            </Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => setEditMode(true)}
+          >
+            <Icon name="create-outline" size={18} color="#fff" />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
 
-      <View style={styles.settingsSection}>
-        <Text style={styles.settingsHeader}>Settings</Text>
-        <TouchableOpacity
-          style={styles.settingsItem}
-          onPress={() => setPasswordModalVisible(true)}
-        >
-          <Text style={styles.settingsText}>Change Password</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.settingsItem}
-          onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
-        >
-          <Text style={styles.settingsText}>Privacy Policy</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.settingsItem}
-          onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}
-        >
-          <Text style={styles.settingsText}>Terms and Conditions</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-  style={styles.settingsItem}
-  onPress={() => setDeleteModalVisible(true)}
->
-  <Text style={styles.settingsText}>Delete Account</Text>
-</TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Logout</Text>
+    {/* Settings Section */}
+    <View style={styles.settingsCard}>
+      <Text style={styles.settingsTitle}>Account Settings</Text>
+      
+      <TouchableOpacity
+        style={styles.settingsItem}
+        onPress={() => setPasswordModalVisible(true)}
+      >
+        <View style={styles.settingsItemLeft}>
+          <View style={[styles.settingsIcon, { backgroundColor: '#E3F2FD' }]}>
+            <Icon name="lock-closed-outline" size={20} color="#1976D2" />
+          </View>
+          <Text style={styles.settingsItemText}>Change Password</Text>
+        </View>
+        <Icon name="chevron-forward" size={20} color="#999" />
       </TouchableOpacity>
 
-      <Modal visible={passwordModalVisible} animationType="slide" transparent>
-        <View style={styles.fullWhiteBackdrop}>
+      <TouchableOpacity
+        style={styles.settingsItem}
+        onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
+      >
+        <View style={styles.settingsItemLeft}>
+          <View style={[styles.settingsIcon, { backgroundColor: '#E8F5E8' }]}>
+            <Icon name="shield-checkmark-outline" size={20} color="#388E3C" />
+          </View>
+          <Text style={styles.settingsItemText}>Privacy Policy</Text>
+        </View>
+        <Icon name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.settingsItem}
+        onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}
+      >
+        <View style={styles.settingsItemLeft}>
+          <View style={[styles.settingsIcon, { backgroundColor: '#FFF3E0' }]}>
+            <Icon name="document-text-outline" size={20} color="#F57C00" />
+          </View>
+          <Text style={styles.settingsItemText}>Terms and Conditions</Text>
+        </View>
+        <Icon name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.settingsItem}
+        onPress={() => setDeleteModalVisible(true)}
+      >
+        <View style={styles.settingsItemLeft}>
+          <View style={[styles.settingsIcon, { backgroundColor: '#FFEBEE' }]}>
+            <Icon name="trash-outline" size={20} color="#D32F2F" />
+          </View>
+          <Text style={[styles.settingsItemText, { color: '#D32F2F' }]}>Delete Account</Text>
+        </View>
+        <Icon name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+    </View>
+
+    {/* Logout Button */}
+    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+      <Icon name="log-out-outline" size={20} color="#D32F2F" />
+      <Text style={styles.logoutText}>Logout</Text>
+    </TouchableOpacity>
+
+    {/* Change Password Modal */}
+    <Modal visible={passwordModalVisible} animationType="slide" transparent>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Change Password</Text>
+          <ScrollView>
           {resetStep === 1 ? (
             <>
-              <TextInput
-                placeholder="Enter your email"
-                value={otpEmail}
-                onChangeText={setOtpEmail}
-                style={styles.input1}
-              />
-              <TouchableOpacity style={styles.button} onPress={handleSendResetCode}>
-                <Text style={styles.buttonText}>Send OTP</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  value={userEmail}
+                  editable={false}
+                  style={styles.disabledInput}
+                />
+              </View>
+              <TouchableOpacity style={styles.primaryButton} onPress={handleSendResetCode}>
+                <Text style={styles.primaryButtonText}>Send Verification Code</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <TextInput
-                placeholder="Enter OTP"
-                value={otpCode}
-                onChangeText={setOtpCode}
-                style={styles.input1}
-              />
-              <TextInput
-                placeholder="New Password"
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry
-                style={styles.input1}
-              />
-              <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
-                <Text style={styles.buttonText}>Reset Password</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Verification Code</Text>
+                <TextInput
+                  placeholder="Enter the code sent to your email"
+                  value={otpCode}
+                  onChangeText={setOtpCode}
+                  style={styles.input}
+                />
+              </View>
+             <View style={[styles.inputContainer, {height:70 }]} >
+
+                <Text style={styles.inputLabel}>New Password</Text>
+                <TextInput
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                  style={styles.input}
+                />
+              </View>
+              <TouchableOpacity style={styles.primaryButton} onPress={handleResetPassword}>
+                <Text style={styles.primaryButtonText}>Reset Password</Text>
               </TouchableOpacity>
             </>
           )}
@@ -516,244 +1051,713 @@ const handleUpdateProfile = async () => {
               setPasswordModalVisible(false);
               setResetStep(1);
             }}
-            style={styles.buttonlink}
+            style={styles.secondaryButton}
           >
-            <Text style={styles.link}>Cancel</Text>
+            <Text style={styles.secondaryButtonText}>Cancel</Text>
+          </TouchableOpacity>
+</ScrollView>
+
+        </View>
+      </View>
+    </Modal>
+
+    {/* Delete Account Modal */}
+    <Modal visible={deleteModalVisible} animationType="slide" transparent>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalContent}>
+          <View style={styles.warningIcon}>
+            <Icon name="warning-outline" size={40} color="#D32F2F" />
+          </View>
+          <Text style={styles.modalTitle}>Delete Account</Text>
+          <Text style={styles.modalSubtitle}>
+            This action cannot be undone. All your data will be permanently deleted.
+          </Text>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Enter your password to confirm</Text>
+            <View style={styles.passwordInput}>
+              <TextInput
+                placeholder="Your password"
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+                secureTextEntry={!showDeletePassword}
+                autoCapitalize="none"
+                style={styles.passwordTextInput}
+              />
+              <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
+                <Icon
+                  name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color="#555"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.dangerButton}
+            onPress={async () => {
+              try {
+                const result = await Services.deleteUserAccount(deletePassword);
+                if (result.success) {
+                  Toast.show({ type: 'success', text1: 'Account deleted successfully' });
+                  await AsyncStorage.clear();
+                  setDeleteModalVisible(false);
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' as never }],
+                  });
+                } else {
+                  Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
+                }
+              } catch (error) {
+                Alert.alert('Error', 'Failed to delete account. Please check your password.');
+              }
+            }}
+          >
+            <Text style={styles.dangerButtonText}>Delete Account Permanently</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setDeleteModalVisible(false)}
+            style={styles.secondaryButton}
+          >
+            <Text style={styles.secondaryButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      </Modal>
+      </View>
+    </Modal>
+  </ScrollView>
+);
 
-      <Modal visible={deleteModalVisible} animationType="slide" transparent>
-  <View style={styles.fullWhiteBackdrop}>
-    <Text style={styles.modalTitle}>Confirm Account Deletion</Text>
-
-    <View style={[styles.input1, { flexDirection: 'row', alignItems: 'center' }]}>
-  <TextInput
-    style={{ flex: 1 }}
-    placeholder="Enter your password"
-    value={deletePassword}
-    onChangeText={setDeletePassword}
-    secureTextEntry={!showDeletePassword}
-    autoCapitalize="none"
-  />
-  <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
-    <Icon
-      name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
-      size={22}
-      color="#555"
-    />
-  </TouchableOpacity>
-</View>
-
-    
-    {/* <TextInput
-      placeholder="Enter your password"
-      value={deletePassword}
-      onChangeText={setDeletePassword}
-      secureTextEntry
-      style={styles.input1}
-    /> */}
-
-    <TouchableOpacity
-      style={styles.resetbutton}
-      onPress={async () => {
-        try {
-     const result = await Services.deleteUserAccount(deletePassword);
-
-if (result.success) {
-  Toast.show({ type: 'success', text1: 'Account deleted successfully' });
-  await AsyncStorage.clear();
-  setDeleteModalVisible(false);
-
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'Login' as never }],
-  });
-} else {
-  Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
-}
-
-        } catch (error) {
-          Alert.alert('Error', 'Failed to delete account. Please check your password.');
-        }
-      }}
-    >
-      <Text style={styles.buttonText}>Delete</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      onPress={() => setDeleteModalVisible(false)}
-      style={styles.buttonlink}
-    >
-      <Text style={styles.link}>Cancel</Text>
-    </TouchableOpacity>
-  </View>
-</Modal>
-
-    </ScrollView>
-  );
 };
 
 export default MyProfile;
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//     padding: 20
+//   },
+//   profileSection: {
+//     alignItems: 'center',
+//     marginTop: 20
+//   },
+//   changeProfile:{borderWidth:1,borderRadius:5,padding:2, margin:1 ,color:"#fff", backgroundColor:"#0E3386",borderColor:"#0E3386",paddingHorizontal:3},
+//   avatarContainer: {
+//     marginBottom: 20
+//   },
+//   avatar: {
+//     width: 100,
+//     height: 100,
+//     borderRadius: 50,
+//     backgroundColor:"gray"
+//   },
+//   initialsCircle: {
+//     width: 100,
+//     height: 100,
+//     borderRadius: 50,
+//     backgroundColor: '#ccc',
+//     justifyContent: 'center',
+//     alignItems: 'center'
+//   },
+//   initialsText: {
+//     fontSize: 32,
+//     color: '#fff'
+//   },
+//   name: {
+//     fontSize: 22,
+//     fontWeight: 'bold'
+//   },
+//   email: {
+//     fontSize: 16,
+//     color: '#777',
+//     marginVertical: 4
+//   },
+//   editIcon: {
+//     marginTop: 10
+//   },
+//   input: {
+//     borderWidth: 1,
+//     borderColor: '#ccc',
+//     borderRadius: 8,
+//     paddingHorizontal: 10,
+//     paddingVertical: 8,
+//     width: '100%',
+//     marginVertical: 8,
+//   },
+//   input1: {
+//     borderWidth: 1,
+//     borderColor: '#ccc',
+//     borderRadius: 8,
+//     paddingHorizontal: 10,
+//     paddingVertical: 8,
+
+//     width: '94%',
+//     marginVertical: 8,
+//   },
+//   settingsSection: {
+//     marginTop: 30
+//   },
+//   settingsHeader: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     marginBottom: 10
+//   },
+//   settingsItem: {
+//     paddingVertical: 10
+//   },
+//   settingsText: {
+//     fontSize: 16
+//   },
+//   logoutButton: {
+//     backgroundColor: '#000078',
+//     paddingVertical: 12,
+//     marginTop: 30,
+//     borderRadius: 8,
+//     marginBottom: 20,
+//   },
+//   logoutText: {
+//     color: '#fff',
+//     textAlign: 'center',
+//     fontSize: 16
+//   },
+//   saveButton: {
+//     backgroundColor: '#000078',
+//     paddingVertical: 12,
+//     borderRadius: 8,
+//     marginTop: 10,
+//     width: '100%',
+//     alignItems: 'center',
+//   },
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(0, 0, 0, 0.4)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   modalContent: {
+//     backgroundColor: '#fff',
+//     padding: 20,
+//     borderRadius: 10,
+//     width: '85%',
+//     maxHeight: '80%',
+//   },
+//   modalTitle: {
+//     fontWeight: 'bold',
+//     fontSize: 18,
+//     marginBottom: 10
+//   },
+//   languageItem: {
+//     paddingVertical: 10,
+//     borderBottomWidth: 0.5,
+//     borderBottomColor: '#ccc',
+//   },
+//   fullWhiteBackdrop: {
+//     flex: 1,
+//     backgroundColor: '#ffffff',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     paddingHorizontal: 20,
+//   },
+//   resetbutton: {
+//     backgroundColor: '#000078',
+//     padding: 10,
+//     borderRadius: 8,
+//     paddingHorizontal: '35%',
+//     marginTop: 10,
+//     alignItems: 'center'
+//   },
+//   resetbutton2: {
+//     backgroundColor: '#000078',
+//     padding: 10,
+//     borderRadius: 8,
+//     paddingHorizontal: '26%',
+//     marginTop: 10,
+//     alignItems: 'center'
+//   },
+//   button: {
+//     backgroundColor: '#000078',
+//     padding: 10,
+//     borderRadius: 8,
+//     paddingHorizontal: '32%',
+//     marginTop: 10,
+//     alignItems: 'center'
+//   },
+//   buttonlink: {
+//     backgroundColor: '#000078',
+//     padding: 10,
+//     paddingHorizontal: '35%',
+//     borderRadius: 8,
+//     marginTop: 10,
+//     alignItems: 'center'
+//   },
+//   buttonText: {
+//     color: '#fff',
+//     fontWeight: 'bold'
+//   },
+//   link: {
+//     color: '#fff',
+//     fontWeight: 'bold'
+//   },
+
+
+
+// });
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20
+    backgroundColor: '#F8FAFC',
   },
-  profileSection: {
-    alignItems: 'center',
-    marginTop: 20
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  profileHeader: {
+    backgroundColor: '#0E3386',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  profileCard: {
+    backgroundColor: '#fff',
+    margin: 20,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   avatarContainer: {
-    marginBottom: 20
+    alignItems: 'center',
+    marginBottom: 20,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor:"gray"
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: '#0E3386',
   },
   initialsCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#ccc',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#0E3386',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
   },
   initialsText: {
-    fontSize: 32,
-    color: '#fff'
+    fontSize: 36,
+    color: '#fff',
+    fontWeight: '600',
   },
-  name: {
-    fontSize: 22,
-    fontWeight: 'bold'
+  changeProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0E3386',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 10,
   },
-  email: {
-    fontSize: 16,
-    color: '#777',
-    marginVertical: 4
+  changeProfileText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
   },
-  editIcon: {
-    marginTop: 10
+  editForm: {
+    width: '100%',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inputContainer: {
+    marginBottom: 16,
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    width: '100%',
-    marginVertical: 8,
-  },
-  input1: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-
-    width: '94%',
-    marginVertical: 8,
-  },
-  settingsSection: {
-    marginTop: 30
-  },
-  settingsHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10
-  },
-  settingsItem: {
-    paddingVertical: 10
-  },
-  settingsText: {
-    fontSize: 16
-  },
-  logoutButton: {
-    backgroundColor: '#000078',
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    marginTop: 30,
-    borderRadius: 8,
-    marginBottom: 20,
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
-  logoutText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 16
+  disabledInput: {
+    backgroundColor: '#F3F4F6',
+    color: '#6B7280',
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+  },
+  languageText: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  cancelButtonText: {
+    color: '#374151',
+    fontSize: 16,
+    fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#000078',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 10,
-    width: '100%',
+    flex: 1,
+    backgroundColor: '#0E3386',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  profileInfo: {
     alignItems: 'center',
   },
-  modalOverlay: {
+  userName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 12,
+  },
+  languageInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  languageInfoText: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 6,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0E3386',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  settingsCard: {
+    backgroundColor: '#fff',
+    margin: 20,
+    marginTop: 0,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  settingsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  settingsItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  settingsIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+  },
+  settingsItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    margin: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  logoutText: {
+    color: '#D32F2F',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '85%',
-    maxHeight: '80%',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 500,
   },
   modalTitle: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 10
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  languageItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#ccc',
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
   },
-  fullWhiteBackdrop: {
+  warningIcon: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  primaryButton: {
+    backgroundColor: '#0E3386',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  secondaryButtonText: {
+    color: '#374151',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  dangerButton: {
+    backgroundColor: '#D32F2F',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dangerButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  passwordInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+  },
+  passwordTextInput: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+
+
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
+  },
+  modalContent2: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 0,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  modalTitle2: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  closeButton: {
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#374151',
+    paddingVertical: 8,
+  },
+  clearButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+  },
+  languagesList: {
+    maxHeight: 300,
+  },
+  listContent: {
+    paddingVertical: 8,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
     paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F9FAFB',
   },
-  resetbutton: {
-    backgroundColor: '#000078',
-    padding: 10,
-    borderRadius: 8,
-    paddingHorizontal: '35%',
-    marginTop: 10,
-    alignItems: 'center'
+  selectedLanguageItem: {
+    backgroundColor: '#F0F7FF',
   },
-  button: {
-    backgroundColor: '#000078',
-    padding: 10,
-    borderRadius: 8,
-    paddingHorizontal: '32%',
-    marginTop: 10,
-    alignItems: 'center'
+  languageName: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
   },
-  buttonlink: {
-    backgroundColor: '#000078',
-    padding: 10,
-    paddingHorizontal: '35%',
-    borderRadius: 8,
-    marginTop: 10,
-    alignItems: 'center'
+  selectedLanguageName: {
+    color: '#0E3386',
+    fontWeight: '600',
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold'
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
   },
-  link: {
-    color: '#fff',
-    fontWeight: 'bold'
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 12,
+    marginBottom: 4,
   },
-
-
-
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  resultsContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    backgroundColor: '#F9FAFB',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  resultsText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
 });

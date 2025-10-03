@@ -34,6 +34,12 @@ export type RootStackParamList = {
   LawyerDashboard: undefined;
   OrganizationProfileModal:undefined,
  MSADetailScreen: { data: any }; 
+   SignWellEmbed: {
+    embeddedSigningUrl: string | null;
+    documentId?: string;
+    requestingRedirectUrl: string | null;
+    handleClear: () => void;
+  };
 };
 export type AuthStackParamList = {
   Login: undefined;
@@ -106,4 +112,37 @@ export interface SignWellEmbedProps {
   id: string;
   requestingRedirectUrl: string | null;
   handleClear: () => void;
+}
+
+// types/index.ts
+export interface ContractStatus {
+  approved: number;
+  pending_approval: number;
+  completed: number;
+}
+
+export interface SpendDataItem {
+  contract_status: ContractStatus;
+}
+
+export interface CountryPercent {
+  country: string;
+  percentage: number;
+}
+
+export interface OrganisationUser {
+  user_detail: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+export interface MapListItem {
+  // Define your map item properties here
+}
+
+export interface GifGalleryItem {
+  src: any;
+  value: string;
 }

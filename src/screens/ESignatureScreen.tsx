@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +17,10 @@ import CreateDocument from './CreateDocument';
 import SignWellEmbed from './SignWellEmbed';
 // import SignedDocument from './SignedDocument';
 import { SignWellDocument, DocumentResponse, RootStackParamList, UserData } from '../navigation/types';
+import SignedDocument from './SignedDocument';
+import Toast from 'react-native-toast-message';
+import { useFocusEffect } from '@react-navigation/native';
+import  { useCallback } from 'react';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -38,8 +43,15 @@ const Embed: React.FC = () => {
   console.log("url", url);
   console.log("requestingRedirectUrl", requestingRedirectUrl);
   console.log("userId", userId);
-
-
+  const [allData, setAllData] = useState({});
+const [refreshKey, setRefreshKey] = useState(0);  
+useFocusEffect(
+  useCallback(() => {
+    // increment key each time the screen is focused
+    setRefreshKey(prev => prev + 1);
+    // if SignedDocument fetches data itself, you can also call a fetch function here.
+  }, [])
+);
   const handleClear = (): void => {
     setSignwellRes(false);
     setFileName("");
@@ -51,25 +63,60 @@ const Embed: React.FC = () => {
     setLoading(false);
     setisImageOpn(false);
   };
+  console.log("signwellRes", signwellRes);
+
+
+ useEffect(() => {
+  const fetchAllData = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      if (keys.length > 0) {
+        const result = await AsyncStorage.multiGet(keys);
+console.log("kry",result);
+
+        type AsyncData = Record<string, any>;
+
+        const dataObj = result.reduce<AsyncData>((acc, [key, value]) => {
+          if (value !== null) {
+            try {
+              acc[key] = JSON.parse(value);
+            } catch (e) {
+              acc[key] = value;
+            }
+          }
+          return acc;
+        }, {});
+
+        setAllData(dataObj);
+
+        // userId may be number or string → normalize
+        setUserId(String(dataObj?.userId ?? ""));
+        console.log("All AsyncStorage userId:", dataObj?.userId);
+      }
+    } catch (error) {
+      console.error("Error fetching all AsyncStorage data:", error);
+    }
+  };
+
+  fetchAllData();
+}, []);
+
+
+
+
+
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userId = await AsyncStorage.getItem("userId");
-        if (userId) {
-          const userData = JSON.parse(userId);
-          setUserData(userId);
-          setUserId(userId);
-          console.log("userData.id", userData.id);
+    if (signwellRes && typeof signwellRes === "object") {
+      navigation.navigate("SignWellEmbed", {
+        embeddedSigningUrl: url,
+        documentId: signwellRes.id,
+        requestingRedirectUrl: requestingRedirectUrl,
+        handleClear: handleClear,
 
-        }
-      } catch (error) {
-        console.error("Error getting user data from AsyncStorage:", error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+      });
+    }
+  }, [signwellRes]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,13 +148,15 @@ const Embed: React.FC = () => {
           />
         </View>
       </View>
-
+      <ScrollView>
+        <View style={styles.signedDocumentContainer}>
+  <SignedDocument 
+         key={refreshKey}
+        />    
+        </View>
+      </ScrollView>
       <ScrollView style={styles.contentContainer}>
-        {/* {!isImageOpn && (
-          <View style={styles.signedDocumentContainer}>
-            <SignedDocument />
-          </View>
-        )} */}
+
 
         <CreateDocument
           signwellRes={signwellRes}
@@ -135,16 +184,25 @@ const Embed: React.FC = () => {
 
         />
 
-        {signwellRes && (
-          <SignWellEmbed
-            embeddedSigningUrl={url}
-            id={typeof signwellRes === 'object' ? signwellRes.id || "" : ""}
-            documentId={typeof signwellRes === 'object' ? signwellRes.id || "" : ""}
-            requestingRedirectUrl={requestingRedirectUrl}
-          />
 
-        )}
+        {/* {signwellRes && typeof signwellRes === "object" && (
+  <SignWellEmbed
+    embeddedSigningUrl={url}
+    documentId={signwellRes.id}   // ✅ use actual API doc id
+    requestingRedirectUrl={requestingRedirectUrl}
+    onCompleted={(e) => console.log("Document completed:", e)}
+    onClosed={(e) => console.log("Signing closed:", e)}
+    onError={(e) => console.log("Error:", e)}
+    handleClear={handleClear}
+  />
+)} */}
+
+
       </ScrollView>
+      <Toast 
+      position="top" 
+      topOffset={Platform.OS === 'ios' ? 50 : 10} 
+    />
     </SafeAreaView>
   );
 };
@@ -177,7 +235,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   signButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#001f8e',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,

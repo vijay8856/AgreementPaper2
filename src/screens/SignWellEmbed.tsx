@@ -1,376 +1,617 @@
-// import React, { useEffect, useRef, useState } from 'react';
-// import { View, StyleSheet, Alert, ActivityIndicator, Text } from 'react-native';
-// import { WebView } from 'react-native-webview';
-// import { useRoute, useNavigation } from '@react-navigation/native';
-// import { RouteProp } from '@react-navigation/native';
-// import { StackNavigationProp } from '@react-navigation/stack';
 
-// import Services from '../Services/services';
-// import { RootStackParamList } from '../navigation/types';
 
-// type SignWellEmbedRouteProp = RouteProp<RootStackParamList, 'SignWellScreen'>;
-// type SignWellEmbedNavigationProp = StackNavigationProp<RootStackParamList, 'SignWellScreen'>;
+// import React, { useState, useEffect } from "react";
+// import { View, ActivityIndicator } from "react-native";
+// import { WebView } from "react-native-webview";
 
-// const SignWellEmbed: React.FC<Props> = ({ embeddedSigningUrl, id, requestingRedirectUrl, documentId }) => {
-//   const route = useRoute<SignWellEmbedRouteProp>();
-//   const navigation = useNavigation<SignWellEmbedNavigationProp>();
-//   console.log("embeddedSigningUrl",embeddedSigningUrl);
-  
-//   const webviewRef = useRef<WebView>(null);
-//   const [loading, setLoading] = useState<boolean>(true);
-//   const [error, setError] = useState<string | null>(null);
+// const SignWellEmbed = ({
+//   embeddedSigningUrl,
+//   id,
+//   documentId,
+//   requestingRedirectUrl,
+//   onCompleted,
+//   onClosed,
+//   onError,
+// }:any) => {
+//   const [loading, setLoading] = useState(true);
+//   const [uri, setUri] = useState(null);
 
+//   // This mimics your web useEffect
 //   useEffect(() => {
+//     if (embeddedSigningUrl) {
+//       // Add query params like "start=edit_recipients" (optional, same as web)
+//       const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+//       setUri(urlWithParams);
+//     }
+
 //     return () => {
-//       if (webviewRef.current) {
-//         webviewRef.current.stopLoading();
-//       }
+//       // Cleanup if needed
+//       setUri(null);
 //     };
-//   }, []);
+//   }, [embeddedSigningUrl]);
 
-//   const handleMessage = async (event: any) => {
-//     try {
-//       const data = JSON.parse(event.nativeEvent.data);
-//       console.log("Message from SignWell:", data);
+//   // Handle SignWell redirects/events
+//   const handleNavigationChange = (event:any) => {
+//     const { url } = event;
 
-//       if (data.event === "completed" && documentId) {
-//         const response = await Services.checkStatusSignWellDocument(documentId);
-        
-//         if (response && response.data) {
-//           const recipients = response.data.recipients.map((item: any) => {
-//             const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
-//             return {
-//               ...itemRest,
-//               bounced_detail: bounced_details,
-//               recipient_id: id,
-//               signing_order: itemRest.signing_order || 0,
-//             };
-//           });
-
-//           const payload = {
-//             signwell_doc_id: response.data.id,
-//             custom_requester_name: response.data.custom_requester_name,
-//             embedded_edit_url: response.data.embedded_edit_url,
-//             requester_email_address: response.data.requester_email_address,
-//             status: response.data.status,
-//             subject: response.data.subject,
-//             filename: response.data.name,
-//             recipients,
-//           };
-
-//           const saveRes = await Services.sendeSignDocsSaga(payload);
-//           if (saveRes.success) {
-//             Alert.alert("Success", "Document signed and saved successfully!");
-//             navigation.goBack();
-//           } else {
-//             Alert.alert("Error", "Failed to save document.");
-//           }
-//         }
-//       }
-
-//       if (data.event === "closed") {
-//         Alert.alert("Closed", "The signing window was closed.");
-//         navigation.goBack();
-//       }
-
-//       if (data.event === "error") {
-//         setError("There was an error with the signing process.");
-//         Alert.alert("Error", "There was an error with SignWell.");
-//       }
-//     } catch (err) {
-//       console.error("Error parsing SignWell message:", err);
+//     if (url.includes("completed")) {
+//       onCompleted && onCompleted({ id: documentId });
+//     } else if (url.includes("closed")) {
+//       onClosed && onClosed({ id: documentId });
+//     } else if (url.includes("error")) {
+//       onError && onError({ id: documentId });
+//     } else if (requestingRedirectUrl && url.startsWith(requestingRedirectUrl)) {
+//       onCompleted && onCompleted({ id: documentId });
 //     }
 //   };
 
-//   const handleLoadStart = () => {
-//     setLoading(true);
-//     setError(null);
+//   if (!uri) return null;
+
+//   return (
+//     <View style={{ flex: 1 ,height:1000}}>
+//       {loading && <ActivityIndicator size="large" color="#00BFFF" />}
+//       <WebView
+//         source={{ uri }}
+//         onLoadEnd={() => setLoading(false)}
+//         onNavigationStateChange={handleNavigationChange}
+//         javaScriptEnabled
+//         domStorageEnabled
+//         originWhitelist={["*"]}
+//         startInLoadingState
+//         style={{ flex: 1 }}
+//       />
+//     </View>
+//   );
+// };
+
+// export default SignWellEmbed;
+
+// import React, { useState, useEffect } from "react";
+// import { View, ActivityIndicator, StyleSheet } from "react-native";
+// import { WebView } from "react-native-webview";
+// import Services from "../Services/services";
+// const SignWellEmbed = ({ route, navigation }: any) => {
+//   const { embeddedSigningUrl, documentId, requestingRedirectUrl, handleClear,  onCompleted,
+//   onClosed,
+//   onError, } =
+//     route.params || {};
+
+
+
+
+
+
+
+
+//   const [loading, setLoading] = useState(true);
+//   const [uri, setUri] = useState<string | null>(null);
+// console.log("documentId",documentId);
+
+//   // build signing url
+//   useEffect(() => {
+//     if (embeddedSigningUrl) {
+//       const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+//       setUri(urlWithParams);
+//     }
+//     return () => setUri(null);
+//   }, [embeddedSigningUrl]);
+
+//   // helper: extract docId from signwell url
+//   const extractDocIdFromUrl = (url: string) => {
+//     const match = url.match(/document\/([a-f0-9-]+)\//);
+//     return match ? match[1] : null;
 //   };
 
-//   const handleLoadEnd = () => {
-//     setLoading(false);
+//   // const handleNavigationChange = async (event: any) => {
+//   //   const { url } = event;
+//   //   console.log("🌐 Navigated:", url);
+
+//   //   // check if we're on the document "done" page (SignWell keeps it simple)
+//   //   if (url.includes("signwell_embedded_iframe=1") && url.includes("document/")) {
+//   //     try {
+//   //       const idFromUrl = extractDocIdFromUrl(url) || documentId;
+//   //       console.log("📄 Extracted documentId:", idFromUrl);
+
+//   //       if (!idFromUrl) {
+//   //         console.warn("⚠️ Could not extract documentId from URL");
+//   //         return;
+//   //       }
+
+//   //       // 1. check signwell status
+//   //       const response = await Services.checkStatusSignWellDocument(idFromUrl);
+//   //       console.log("✅ checkStatusSignWellDocument:", response);
+
+//   //       if (response?.status) {
+//   //         // 2. normalize recipients
+//   //         const recipients = response.data?.recipients?.map((item: any) => {
+//   //           const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
+//   //           return {
+//   //             ...itemRest,
+//   //             signing_order: itemRest.signing_order ?? 0,
+//   //             bounced_detail: bounced_details,
+//   //             recipient_id: id,
+//   //           };
+//   //         });
+
+//   //         // 3. build payload
+//   //         const payload = {
+//   //           signwell_doc_id: response.data.id,
+//   //           custom_requester_name: response.data.custom_requester_name,
+//   //           embedded_edit_url: response.data.embedded_edit_url,
+//   //           requester_email_address: response.data.requester_email_address,
+//   //           status: response.data.status,
+//   //           subject: response.data.subject,
+//   //           filename: response.data.name,
+//   //           recipients,
+//   //         };
+
+//   //         // 4. send to backend
+//   //         const saveRes = await Services.sendEsignDocsAction(payload);
+//   //         console.log("📩 sendEsignDocsAction:", saveRes);
+//   //       }
+
+//   //       onCompleted && onCompleted({ id: idFromUrl });
+//   //     } catch (err) {
+//   //       console.error("❌ Error during completion:", err);
+//   //       onError && onError(err);
+//   //     }
+//   //   } else if (url.includes("closed")) {
+//   //     console.log("❌ SignWell closed:", documentId);
+//   //     handleClear && handleClear();
+//   //     onClosed && onClosed({ id: documentId });
+//   //   } else if (url.includes("error")) {
+//   //     console.log("⚠️ SignWell error:", documentId);
+//   //     onError && onError({ id: documentId });
+//   //   } else if (requestingRedirectUrl && url.startsWith(requestingRedirectUrl)) {
+//   //     onCompleted && onCompleted({ id: documentId });
+//   //   }
+//   // };
+// const handleNavigationChange = async (event: any) => {
+//   const { url } = event;
+//   console.log("🌐 Navigated:", url);
+
+//   if (url.includes("closed")) {
+//     console.log("❌ SignWell closed:", documentId);
+//     handleClear && handleClear();
+//     onClosed && onClosed({ id: documentId });
+//     return;
+//   }
+
+//   if (url.includes("error")) {
+//     console.log("⚠️ SignWell error:", documentId);
+//     onError && onError({ id: documentId });
+//     return;
+//   }
+
+//   if (requestingRedirectUrl && url.startsWith(requestingRedirectUrl)) {
+//     onCompleted && onCompleted({ id: documentId });
+//     return;
+//   }
+
+//   if (url.includes("signwell_embedded_iframe=1") && url.includes("document/")) {
+//     try {
+//       const finalDocId = documentId || extractDocIdFromUrl(url);
+//       console.log("📄 Using documentId for API calls:", finalDocId);
+
+//       if (!finalDocId) {
+//         console.warn("⚠️ Could not determine documentId");
+//         return;
+//       }
+
+//       const response = await Services.checkStatusSignWellDocument(finalDocId);
+//       console.log("✅ checkStatusSignWellDocument:", response);
+
+//       if (response?.status) {
+//         const recipients = response.data?.recipients?.map((item: any) => {
+//           const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
+//           return {
+//             ...itemRest,
+//             signing_order: itemRest.signing_order ?? 0,
+//             bounced_detail: bounced_details,
+//             recipient_id: id,
+//           };
+//         });
+
+//         const payload = {
+//           signwell_doc_id: response.data.id,
+//           custom_requester_name: response.data.custom_requester_name,
+//           embedded_edit_url: response.data.embedded_edit_url,
+//           requester_email_address: response.data.requester_email_address,
+//           status: response.data.status,
+//           subject: response.data.subject,
+//           filename: response.data.name,
+//           recipients,
+//         };
+
+//         const saveRes = await Services.sendeSignDocsSaga(payload);
+//         console.log("📩 sendeSignDocsSaga:", saveRes);
+//       }
+
+//       onCompleted && onCompleted({ id: finalDocId });
+//     } catch (err) {
+//       console.error("❌ Error during completion:", err);
+//       onError && onError(err);
+//     }
+//   }
+// };
+
+
+//   if (!uri) return null;
+
+//   return (
+//     <View style={styles.container}>
+//       {loading && <ActivityIndicator size="large" color="#00BFFF" />}
+//       <WebView
+//         source={{ uri }}
+//         onLoadEnd={() => setLoading(false)}
+//         onNavigationStateChange={handleNavigationChange}
+//         javaScriptEnabled
+//         domStorageEnabled
+//         originWhitelist={["*"]}
+//         startInLoadingState
+//         style={{ flex: 1 }}
+//       />
+//     </View>
+//   );
+// };
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: "#fff",height:1000, },
+// });
+// export default SignWellEmbed;
+
+
+// import React, { useState, useEffect } from "react";
+// import { View, ActivityIndicator, StyleSheet, BackHandler } from "react-native";
+// import { WebView } from "react-native-webview";
+// import Services from "../Services/services";
+
+// const SignWellEmbed = ({ route, navigation }: any) => {
+//   const { 
+//     embeddedSigningUrl, 
+//     documentId, 
+//     requestingRedirectUrl, 
+//     handleClear 
+//   } = route.params || {};
+
+//   const [loading, setLoading] = useState(true);
+//   const [uri, setUri] = useState<string | null>(null);
+//   const [isDocumentCompleted, setIsDocumentCompleted] = useState(false);
+
+//   console.log("documentId", documentId);
+
+//   // Build signing URL
+//   useEffect(() => {
+//     if (embeddedSigningUrl) {
+//       const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+//       setUri(urlWithParams);
+//     }
+//     return () => setUri(null);
+//   }, [embeddedSigningUrl]);
+
+//   // Handle Android back button
+//   useEffect(() => {
+//     const backHandler = BackHandler.addEventListener(
+//       'hardwareBackPress',
+//       () => {
+//         handleCloseDocument();
+//         return true;
+//       }
+//     );
+
+//     return () => backHandler.remove();
+//   }, []);
+
+//   const handleCloseDocument = () => {
+//     console.log("❌ Document closed by user");
+//     handleClear && handleClear();
+//     navigation.goBack();
 //   };
 
-//   const handleError = (syntheticEvent: any) => {
-//     const { nativeEvent } = syntheticEvent;
-//     setLoading(false);
-//     setError(`Failed to load document: ${nativeEvent.description}`);
-//     console.error('WebView error:', nativeEvent);
+//   const handleDocumentCompleted = async (finalDocId: string) => {
+//     try {
+//       console.log("✅ Document completed, finalDocId:", finalDocId);
+
+//       // 1. Check SignWell status
+//       const response = await Services.checkStatusSignWellDocument(finalDocId);
+//       console.log("✅ checkStatusSignWellDocument:", response);
+
+//       if (response?.status) {
+//         // 2. Normalize recipients
+//         const recipients = response.data?.recipients?.map((item: any) => {
+//           const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
+//           return {
+//             ...itemRest,
+//             signing_order: itemRest.signing_order ?? 0,
+//             bounced_detail: bounced_details,
+//             recipient_id: id,
+//           };
+//         });
+
+//         // 3. Build payload
+//         const payload = {
+//           signwell_doc_id: response.data.id,
+//           custom_requester_name: response.data.custom_requester_name,
+//           embedded_edit_url: response.data.embedded_edit_url,
+//           requester_email_address: response.data.requester_email_address,
+//           status: response.data.status,
+//           subject: response.data.subject,
+//           filename: response.data.name,
+//           recipients,
+//         };
+
+//         // 4. Send to backend (only when document is completed/sent)
+//         const saveRes = await Services.sendeSignDocsSaga(payload);
+//         console.log("📩 sendeSignDocsSaga response:", saveRes);
+
+//         // Mark as completed
+//         setIsDocumentCompleted(true);
+
+//         // Navigate back after a short delay
+//         setTimeout(() => {
+//           navigation.goBack();
+//         }, 1500);
+//       }
+//     } catch (err) {
+//       console.error("❌ Error during completion:", err);
+//     }
 //   };
 
-//   if (!embeddedSigningUrl) {
+//   const extractDocIdFromUrl = (url: string) => {
+//     const match = url.match(/document\/([a-f0-9-]+)\//);
+//     return match ? match[1] : null;
+//   };
+
+//   const handleNavigationChange = async (event: any) => {
+//     const { url } = event;
+//     console.log("🌐 Navigated:", url);
+
+//     // Check if document was completed (sent)
+//     if (url.includes("signwell_embedded_iframe=1#") || url.includes("signwell_embedded_iframe=1#")) {
+//       const finalDocId = documentId || extractDocIdFromUrl(url);
+//       if (finalDocId && !isDocumentCompleted) {
+//         await handleDocumentCompleted(finalDocId);
+//       }
+//       return;
+//     }
+
+//     // Check if document was closed without sending
+//     if (url.includes("closed") || url.includes("action=closed")) {
+//       console.log("❌ SignWell closed without sending:", documentId);
+//       handleCloseDocument();
+//       return;
+//     }
+
+//     // Check for errors
+//     if (url.includes("error")) {
+//       console.log("⚠️ SignWell error:", documentId);
+//       handleCloseDocument();
+//       return;
+//     }
+
+//     // Check for redirect URL completion
+//     if (requestingRedirectUrl && url.startsWith(requestingRedirectUrl)) {
+//       const finalDocId = documentId || extractDocIdFromUrl(url);
+//       if (finalDocId && !isDocumentCompleted) {
+//         await handleDocumentCompleted(finalDocId);
+//       }
+//       return;
+//     }
+//   };
+
+//   if (!uri) {
 //     return (
 //       <View style={styles.container}>
-//         <Text style={styles.errorText}>No signing URL provided</Text>
+//         <ActivityIndicator size="large" color="#00BFFF" />
 //       </View>
 //     );
 //   }
-//  console.log("embeddedSigningUrl, documentId,",embeddedSigningUrl);
-//           console.log("documentId",documentId);
+
 //   return (
 //     <View style={styles.container}>
 //       {loading && (
 //         <View style={styles.loadingContainer}>
-//           <ActivityIndicator size="large" color="#007bff" />
-//           <Text style={styles.loadingText}>Loading document...</Text>
+//           <ActivityIndicator size="large" color="#00BFFF" />
 //         </View>
 //       )}
-      
-//       {error ? (
-//         <View style={styles.errorContainer}>
-//           <Text style={styles.errorText}>{error}</Text>
-//         </View>
-//       ) : (
-//         <WebView
-//           ref={webviewRef}
-//           source={{ uri: embeddedSigningUrl }}
-//           // onMessage={handleMessage}
-//           onLoadStart={handleLoadStart}
-//           onLoadEnd={handleLoadEnd}
-//           onError={handleError}
-//           onHttpError={handleError}
-//           javaScriptEnabled={true}
-//           domStorageEnabled={true}
-//           startInLoadingState={true}
-//           style={styles.webview}
-//         />
-//       )}
+//       <WebView
+//         source={{ uri }}
+//         onLoadEnd={() => setLoading(false)}
+//         onNavigationStateChange={handleNavigationChange}
+//         javaScriptEnabled
+//         domStorageEnabled
+//         originWhitelist={["*"]}
+//         startInLoadingState
+//         style={{ flex: 1 }}
+//       />
 //     </View>
 //   );
 // };
 
 // const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//   },
-//   webview: {
-//     flex: 1,
-//     height:1000
+//   container: { 
+//     flex: 1, 
+//     backgroundColor: "#fff" 
 //   },
 //   loadingContainer: {
-//     flex: 1,
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
 //     justifyContent: 'center',
 //     alignItems: 'center',
-//     padding: 20,
-//   },
-//   loadingText: {
-//     marginTop: 10,
-//     fontSize: 16,
-//     color: '#666',
-//   },
-//   errorContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 20,
-//   },
-//   errorText: {
-//     fontSize: 16,
-//     color: '#dc3545',
-//     textAlign: 'center',
-//   },
+//     backgroundColor: 'rgba(255, 255, 255, 0.8)',
+//     zIndex: 999
+//   }
 // });
 
 // export default SignWellEmbed;
 
 
+import React, { useState, useEffect, useRef } from "react";
+import { View, ActivityIndicator, StyleSheet, BackHandler, Linking, Alert, Button } from "react-native";
+import { WebView } from "react-native-webview";
+import Services from "../Services/services";
 
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  Linking,
-  Platform,
-} from 'react-native';
-import { WebView } from 'react-native-webview';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+const SignWellEmbed = ({ route, navigation }: any) => {
+  const { 
+    embeddedSigningUrl, 
+    documentId, 
+    requestingRedirectUrl, 
+    handleClear 
+  } = route.params || {};
 
-import Services from '../Services/services';
-import { RootStackParamList } from '../navigation/types';
-
-type SignWellEmbedRouteProp = RouteProp<RootStackParamList, 'SignWellScreen'>;
-type SignWellEmbedNavigationProp = StackNavigationProp<RootStackParamList, 'SignWellScreen'>;
-
-interface Props {
-  embeddedSigningUrl?: string | null;
-  id: string;
-  requestingRedirectUrl?: string | null;
-  documentId?: string;
-}
-
-const SignWellEmbed: React.FC<Props> = ({
-  embeddedSigningUrl,
-  id,
-  requestingRedirectUrl,
-  documentId
-}) => {
-  const route = useRoute<SignWellEmbedRouteProp>();
-  const navigation = useNavigation<SignWellEmbedNavigationProp>();
-  
-  const signingUrl = embeddedSigningUrl || route.params?.embeddedSigningUrl;
-  const docId = documentId || route.params?.documentId;
-  const redirectUrl = requestingRedirectUrl || route.params?.requestingRedirectUrl;
-  
-  console.log("Signing URL:", signingUrl);
-  console.log("Redirect URL:", redirectUrl);
-  console.log("Document ID:", docId);
-  
-  const webviewRef = useRef<WebView>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isPdf, setIsPdf] = useState<boolean>(false);
-
+  const [loading, setLoading] = useState(true);
+  const [uri, setUri] = useState<string | null>(null);
+  const [isDocumentCompleted, setIsDocumentCompleted] = useState(false);
+const [isDesktop, setIsDesktop] = useState(true);
+  console.log("documentId", documentId);
+const isCompletedRef = useRef(false);
+  // Build signing URL
   useEffect(() => {
-    // Check if URL points to a PDF
-    if (signingUrl && signingUrl.toLowerCase().endsWith('.pdf')) {
-      setIsPdf(true);
+    if (embeddedSigningUrl) {
+      const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+      setUri(urlWithParams);
     }
-  }, [signingUrl]);
+    return () => setUri(null);
+  }, [embeddedSigningUrl]);
+  // useEffect(() => {
+  //   if (embeddedSigningUrl) {
+  //     const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+  //     console.log("🌐 Opening SignWell URL in browser:", urlWithParams);
+  //     Linking.openURL(urlWithParams).catch(err => {
+  //       console.error("❌ Failed to open URL:", err);
+  //       Alert.alert("Error", "Unable to open signing link.");
+  //     });
+  //   }
+  // }, [embeddedSigningUrl]);
+  // Handle Android back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleCloseDocument();
+        return true;
+      }
+    );
 
-  const handleMessage = async (event: any) => {
+    return () => backHandler.remove();
+  }, []);
+
+  // Safe navigation back function
+  const safeGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } 
+  };
+
+  const handleCloseDocument = () => {
+    console.log("❌ Document closed by user");
+    handleClear && handleClear();
+    safeGoBack();
+  };
+console.log("Initial ref:", isCompletedRef); 
+// 👉 { current: false }
+
+  const handleDocumentCompleted = async (finalDocId: string) => {
+      if (isCompletedRef.current) return;
+console.log("Initial ref value:", isCompletedRef.current); 
+
+        isCompletedRef.current = true;
     try {
-      const data = JSON.parse(event.nativeEvent.data);
-      console.log("Message from SignWell:", data);
+      console.log("✅ Document completed, finalDocId:", finalDocId);
 
-      if (data.event === "completed" && docId) {
-        const response = await Services.checkStatusSignWellDocument(docId);
-        
-        if (response && response.data) {
-          const recipients = response.data.recipients.map((item: any) => {
-            const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
-            return {
-              ...itemRest,
-              bounced_detail: bounced_details,
-              recipient_id: id,
-              signing_order: itemRest.signing_order || 0,
-            };
-          });
+      // 1. Check SignWell status
+      const response = await Services.checkStatusSignWellDocument(finalDocId);
+      console.log("✅ checkStatusSignWellDocument:", response);
 
-          const payload = {
-            signwell_doc_id: response.data.id,
-            custom_requester_name: response.data.custom_requester_name,
-            embedded_edit_url: response.data.embedded_edit_url,
-            requester_email_address: response.data.requester_email_address,
-            status: response.data.status,
-            subject: response.data.subject,
-            filename: response.data.name,
-            recipients,
+      if (response?.status) {
+        // 2. Normalize recipients
+        const recipients = response.data?.recipients?.map((item: any) => {
+          const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
+          return {
+            ...itemRest,
+            signing_order: itemRest.signing_order ?? 0,
+            bounced_detail: bounced_details,
+            recipient_id: id,
           };
+        });
 
-          const saveRes = await Services.sendeSignDocsSaga(payload);
-          if (saveRes.success) {
-            Alert.alert("Success", "Document signed and saved successfully!");
-            navigation.goBack();
-          } else {
-            Alert.alert("Error", "Failed to save document.");
-          }
-        }
-      }
+        // 3. Build payload
+        const payload = {
+          signwell_doc_id: response.data.id,
+          custom_requester_name: response.data.custom_requester_name,
+          embedded_edit_url: response.data.embedded_edit_url,
+          requester_email_address: response.data.requester_email_address,
+          status: response.data.status,
+          subject: response.data.subject,
+          filename: response.data.name,
+          recipients,
+        };
 
-      if (data.event === "closed") {
-        Alert.alert("Closed", "The signing window was closed.");
-        navigation.goBack();
-      }
+        // 4. Send to backend (only when document is completed/sent)
+        const saveRes = await Services.sendeSignDocsSaga(payload);
+        console.log("📩 sendeSignDocsSaga response:", saveRes);
 
-      if (data.event === "error") {
-        setError("There was an error with the signing process.");
-        Alert.alert("Error", "There was an error with SignWell.");
+        // Mark as completed
+        setIsDocumentCompleted(true);
+handleClear && handleClear();
+        // Navigate back after a short delay
+        setTimeout(() => {
+          safeGoBack();
+        }, 10000);
       }
     } catch (err) {
-      console.error("Error parsing SignWell message:", err);
+      console.error("❌ Error during completion:", err);
     }
   };
 
-  const handleLoadStart = () => {
-    setLoading(true);
-    setError(null);
+  const extractDocIdFromUrl = (url: string) => {
+    const match = url.match(/document\/([a-f0-9-]+)\//);
+    return match ? match[1] : null;
   };
 
-  const handleLoadEnd = () => {
-    setLoading(false);
-  };
+  const handleNavigationChange = async (event: any) => {
+    const { url } = event;
+    console.log("🌐 Navigated:", url);
 
-  const handleError = (syntheticEvent: any) => {
-    const { nativeEvent } = syntheticEvent;
-    setLoading(false);
-    setError(`Failed to load document: ${nativeEvent.description}`);
-    console.error('WebView error:', nativeEvent);
-  };
+    // Check if document was completed (sent)
+    if (url.includes("signwell_embedded_iframe=1#") || url.includes("signwell_embedded_iframe=1#")) {
+      const finalDocId = documentId || extractDocIdFromUrl(url);
+      if (finalDocId && !isDocumentCompleted) {
+        await handleDocumentCompleted(finalDocId);
+      }
+      return;
+    }
 
-  const openInBrowser = () => {
-    if (signingUrl) {
-      Linking.openURL(signingUrl).catch(err => {
-        Alert.alert("Error", "Failed to open document in browser");
-        console.error('Failed to open URL:', err);
-      });
+    // Check if document was closed without sending
+    if (url.includes("closed") || url.includes("action=closed")) {
+      console.log("❌ SignWell closed without sending:", documentId);
+      handleCloseDocument();
+      return;
+    }
+
+    // Check for errors
+    if (url.includes("error")) {
+      console.log("⚠️ SignWell error:", documentId);
+      handleCloseDocument();
+      return;
+    }
+
+    // Check for redirect URL completion
+    if (requestingRedirectUrl && url.startsWith(requestingRedirectUrl)) {
+      const finalDocId = documentId || extractDocIdFromUrl(url);
+      if (finalDocId && !isDocumentCompleted) {
+        await handleDocumentCompleted(finalDocId);
+      }
+      return;
     }
   };
 
-  // For PDFs, we need a different approach
-  const pdfHtml = (url: string) => `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-      <style>
-        body, html {
-          margin: 0;
-          padding: 0;
-          height: 100%;
-          overflow: hidden;
-          background-color: #f0f0f0;
-        }
-        .container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100%;
-        }
-        .pdf-container {
-          width: 100%;
-          height: 100%;
-        }
-        iframe {
-          width: 100%;
-          height: 100%;
-          border: none;
-        }
-        .fallback {
-          padding: 20px;
-          text-align: center;
-        }
-        .button {
-          background-color: #3498db;
-          color: white;
-          padding: 10px 15px;
-          border-radius: 5px;
-          text-decoration: none;
-          display: inline-block;
-          margin-top: 10px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="pdf-container">
-          <iframe src="https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}" />
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  if (!signingUrl) {
+  if (!uri) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>No signing URL provided</Text>
+        <ActivityIndicator size="large" color="#00BFFF" />
       </View>
     );
   }
@@ -379,95 +620,349 @@ const SignWellEmbed: React.FC<Props> = ({
     <View style={styles.container}>
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007bff" />
-          <Text style={styles.loadingText}>Loading document...</Text>
+          <ActivityIndicator size="large" color="#00BFFF" />
         </View>
       )}
-      
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.button} onPress={openInBrowser}>
-            <Text style={styles.buttonText}>Open in Browser</Text>
-          </TouchableOpacity>
-        </View>
-      ) : isPdf ? (
-        // Render PDF using Google Docs viewer
-        <WebView
-          ref={webviewRef}
-          source={{ html: pdfHtml(signingUrl) }}
-          onLoadStart={handleLoadStart}
-          onLoadEnd={handleLoadEnd}
-          onError={handleError}
-          javaScriptEnabled={true}
-          style={styles.webview}
-        />
-      ) : (
-        // Render regular web content
-        <WebView
-          ref={webviewRef}
-          source={{ uri: signingUrl }}
-          onMessage={handleMessage}
-          onLoadStart={handleLoadStart}
-          onLoadEnd={handleLoadEnd}
-          onError={handleError}
-          onHttpError={handleError}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          style={styles.webview}
-          sharedCookiesEnabled={true}
-          thirdPartyCookiesEnabled={true}
-          userAgent="Mozilla/5.0 (Linux; Android 10; Pixel 3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Mobile Safari/537.36"
-        />
-      )}
+      {/* <WebView
+        source={{ uri }}
+        onLoadEnd={() => setLoading(false)}
+        onNavigationStateChange={handleNavigationChange}
+        javaScriptEnabled
+        domStorageEnabled
+        originWhitelist={["*"]}
+        startInLoadingState
+        style={{ flex: 1 }}
+      /> */}
+      {/* <WebView
+         style={{ flex: 1 ,width:"200%",height:'auto'}}
+  source={{ uri }}
+       onLoadEnd={() => setLoading(false)}
+        onNavigationStateChange={handleNavigationChange}
+  userAgent={
+    isDesktop
+      ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+      : "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
+  }
+/> */}
+<WebView
+  source={{ uri }}
+  onLoadEnd={() => setLoading(false)}
+  onNavigationStateChange={handleNavigationChange}
+  javaScriptEnabled
+  domStorageEnabled
+  originWhitelist={["*"]}
+  startInLoadingState
+  style={{ flex: 1 }}
+  // 👇 Force desktop user agent (Chrome on Windows)
+  userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+/>
+
+
+<Button
+  title={isDesktop ? "Switch to Mobile View" : "Switch to Desktop View"}
+  onPress={() => setIsDesktop(!isDesktop)}
+/>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  webview: {
-    flex: 1,
-    height:1000
+  container: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
   },
   loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    zIndex: 1,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#dc3545',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    zIndex: 999
+  }
 });
 
 export default SignWellEmbed;
+
+
+
+// import React, { useState, useEffect } from "react";
+// import { View, ActivityIndicator, StyleSheet, BackHandler, Alert } from "react-native";
+// import { WebView } from "react-native-webview";
+// import Services from "../Services/services";
+
+// const SignWellEmbed = ({ route, navigation }: any) => {
+//   const { 
+//     embeddedSigningUrl, 
+//     documentId, 
+//     requestingRedirectUrl, 
+//     handleClear 
+//   } = route.params || {};
+
+//   const [loading, setLoading] = useState(true);
+//   const [uri, setUri] = useState<string | null>(null);
+//   const [isDocumentCompleted, setIsDocumentCompleted] = useState(false);
+
+//   console.log("📄 documentId:", documentId);
+
+//   // Build signing URL
+//   useEffect(() => {
+//     if (embeddedSigningUrl) {
+//       const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+//       setUri(urlWithParams);
+//     }
+//     return () => setUri(null);
+//   }, [embeddedSigningUrl]);
+
+//   // Handle Android back button
+//   useEffect(() => {
+//     const backHandler = BackHandler.addEventListener(
+//       "hardwareBackPress",
+//       () => {
+//         handleCloseDocument();
+//         return true;
+//       }
+//     );
+
+//     return () => backHandler.remove();
+//   }, []);
+
+//   const safeGoBack = () => {
+//     if (navigation.canGoBack()) {
+//       navigation.goBack();
+//     }
+//   };
+
+//   // 🔴 Handle Close
+//   const handleCloseDocument = () => {
+//     console.log("❌ Document closed by user");
+//     handleClear && handleClear();
+//     Alert.alert("Closed", "You closed the signing process.");
+//     safeGoBack();
+//   };
+
+//   // 🟢 Handle Completed
+//   const handleDocumentCompleted = async (finalDocId: string) => {
+//     try {
+//       console.log("✅ Document completed, finalDocId:", finalDocId);
+
+//       const response = await Services.checkStatusSignWellDocument(finalDocId);
+//       console.log("✅ checkStatusSignWellDocument:", response);
+
+//       if (response?.status) {
+//         const recipients = response.data?.recipients?.map((item: any) => {
+//           const { id, bounced_details, attachment_requests, ...itemRest } = item || {};
+//           return {
+//             ...itemRest,
+//             signing_order: itemRest.signing_order ?? 0,
+//             bounced_detail: bounced_details,
+//             recipient_id: id,
+//           };
+//         });
+
+//         const payload = {
+//           signwell_doc_id: response.data.id,
+//           custom_requester_name: response.data.custom_requester_name,
+//           embedded_edit_url: response.data.embedded_edit_url,
+//           requester_email_address: response.data.requester_email_address,
+//           status: response.data.status,
+//           subject: response.data.subject,
+//           filename: response.data.name,
+//           recipients,
+//         };
+
+//         // Save to backend
+//         await Services.sendeSignDocsSaga(payload);
+
+//         setIsDocumentCompleted(true);
+//         Alert.alert("Completed", "The document has been signed successfully.");
+
+//         // Go back after short delay
+//         setTimeout(() => {
+//           safeGoBack();
+//         }, 3000);
+//       }
+//     } catch (err) {
+//       console.error("❌ Error during completion:", err);
+//       handleError("Something went wrong while completing the document.");
+//     }
+//   };
+
+//   // ⚠️ Handle Error
+//   const handleError = (msg: string) => {
+//     console.log("⚠️ SignWell error:", msg);
+//     Alert.alert("Error", msg);
+//     handleClear && handleClear();
+//     safeGoBack();
+//   };
+
+//   const extractDocIdFromUrl = (url: string) => {
+//     const match = url.match(/document\/([a-f0-9-]+)\//);
+//     return match ? match[1] : null;
+//   };
+
+//   // 📡 Watch navigation inside WebView for events
+//   const handleNavigationChange = async (event: any) => {
+//     const { url } = event;
+//     console.log("🌐 Navigated:", url);
+
+//     // Completed
+//     if (url.includes("signwell_embedded_iframe=1#")) {
+//       const finalDocId = documentId || extractDocIdFromUrl(url);
+//       if (finalDocId && !isDocumentCompleted) {
+//         await handleDocumentCompleted(finalDocId);
+//       }
+//       return;
+//     }
+
+//     // Closed
+//     if (url.includes("closed") || url.includes("action=closed")) {
+//       handleCloseDocument();
+//       return;
+//     }
+
+//     // Error
+//     if (url.includes("error")) {
+//       handleError("There was an error in the signing process.");
+//       return;
+//     }
+
+//     // Redirect after completion
+//     if (requestingRedirectUrl && url.startsWith(requestingRedirectUrl)) {
+//       const finalDocId = documentId || extractDocIdFromUrl(url);
+//       if (finalDocId && !isDocumentCompleted) {
+//         await handleDocumentCompleted(finalDocId);
+//       }
+//     }
+//   };
+
+//   if (!uri) {
+//     return (
+//       <View style={styles.container}>
+//         <ActivityIndicator size="large" color="#00BFFF" />
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View style={styles.container}>
+//       {loading && (
+//         <View style={styles.loadingContainer}>
+//           <ActivityIndicator size="large" color="#00BFFF" />
+//         </View>
+//       )}
+//       <WebView
+//         source={{ uri }}
+//         onLoadEnd={() => setLoading(false)}
+//         onNavigationStateChange={handleNavigationChange}
+//         javaScriptEnabled
+//         domStorageEnabled
+//         originWhitelist={["*"]}
+//         startInLoadingState
+//         style={{ flex: 1 }}
+//       />
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: "#fff" },
+//   loadingContainer: {
+//     position: "absolute",
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     backgroundColor: "rgba(255, 255, 255, 0.8)",
+//     zIndex: 999,
+//   },
+// });
+
+// export default SignWellEmbed;
+
+
+
+// import React, { useEffect } from "react";
+// import { Alert, BackHandler, Linking } from "react-native";
+// import Services from "../Services/services";
+
+// const SignWellEmbed = ({ route, navigation }: any) => {
+//   const { 
+//     embeddedSigningUrl, 
+//     documentId, 
+//     requestingRedirectUrl, 
+//     handleClear 
+//   } = route.params || {};
+
+//   // Build and open signing URL in system browser
+//   useEffect(() => {
+//     if (embeddedSigningUrl) {
+//       const urlWithParams = `${embeddedSigningUrl}?start=edit_recipients&type=request_signature`;
+//       console.log("🌐 Opening SignWell URL in browser:", urlWithParams);
+//       Linking.openURL(urlWithParams).catch(err => {
+//         console.error("❌ Failed to open URL:", err);
+//         Alert.alert("Error", "Unable to open signing link.");
+//       });
+//     }
+//   }, [embeddedSigningUrl]);
+
+//   // Handle Android back button
+//   useEffect(() => {
+//     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+//       handleCloseDocument();
+//       return true;
+//     });
+
+//     return () => backHandler.remove();
+//   }, []);
+
+//   const safeGoBack = () => {
+//     if (navigation.canGoBack()) {
+//       navigation.goBack();
+//     }
+//   };
+
+//   // 🔴 Handle Close
+//   const handleCloseDocument = () => {
+//     console.log("❌ Document closed by user");
+//     handleClear && handleClear();
+//     Alert.alert("Closed", "You closed the signing process.");
+//     safeGoBack();
+//   };
+
+//   // 🟢 Handle Completed (optional — triggered after redirect/callback)
+//   const handleDocumentCompleted = async (finalDocId: string) => {
+//     try {
+//       console.log("✅ Document completed, finalDocId:", finalDocId);
+
+//       const response = await Services.checkStatusSignWellDocument(finalDocId);
+//       console.log("✅ checkStatusSignWellDocument:", response);
+
+//       if (response?.status) {
+//         await Services.sendeSignDocsSaga(response.data);
+
+//         Alert.alert("Completed", "The document has been signed successfully.");
+//         setTimeout(() => safeGoBack(), 3000);
+//       }
+//     } catch (err) {
+//       console.error("❌ Error during completion:", err);
+//       handleError("Something went wrong while completing the document.");
+//     }
+//   };
+
+//   // ⚠️ Handle Error
+//   const handleError = (msg: string) => {
+//     console.log("⚠️ SignWell error:", msg);
+//     Alert.alert("Error", msg);
+//     handleClear && handleClear();
+//     safeGoBack();
+//   };
+
+//   return null; // nothing to render, since we open the browser directly
+// };
+
+// export default SignWellEmbed;

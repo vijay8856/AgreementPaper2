@@ -14,6 +14,8 @@ import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import OrganizationProfileModal from '../components/Modals/OrganizationProfileModal';
 const { width: screenWidth } = Dimensions.get('window');
 type DashboardDetails = {
   arr: { increment: number; total_arr: number };
@@ -26,7 +28,7 @@ const AgencyDashboard = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
+ const [showProfileModal, setShowProfileModal] = useState(false);
   const [dashboardDetails, setDashboardDetails] = useState<DashboardDetails | null>(null);
 
 
@@ -57,7 +59,18 @@ const AgencyDashboard = () => {
       legendFontSize: 12,
     },
   ];
-
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      const isActive = await AsyncStorage.getItem('isActive');
+      console.log("isActive",isActive);
+      
+      if (isActive !== 'true') {
+        setShowProfileModal(true);
+      }
+    };
+    
+    checkProfileStatus();
+  }, []);
   const fetchAgencyDashboard = async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
@@ -330,6 +343,11 @@ const AgencyDashboard = () => {
             </View>
           </View>
         </View> */}
+        <OrganizationProfileModal
+        visible={showProfileModal}
+        onComplete={() => setShowProfileModal(false)}
+        onClose={() => setShowProfileModal(false)}
+      />
       </ScrollView>
     </SafeAreaView>
   );

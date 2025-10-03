@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
   ActivityIndicator,
   PermissionsAndroid,
   FlatList,
+  Animated,
+  Dimensions,
 
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -24,6 +26,7 @@ import Toast from 'react-native-toast-message';
 import DocumentPicker from 'react-native-document-picker';
 import RNFetchBlob from 'react-native-blob-util';
 import FormattedTextComp from '../components/FormatedAIResponse';
+const screenWidth = Dimensions.get('window').width;
 const AIResFullReviewScreen = () => {
   const [contractType, setContractType] = useState('');
   const [businessLine, setBusinessLine] = useState('');
@@ -41,7 +44,10 @@ const AIResFullReviewScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [tempSearchText, setTempSearchText] = useState('');
   const [filteredCountries, setFilteredCountries] = useState<PickerItem[]>([]);
-
+const [progress, setProgress] = useState(0);
+  const [active, setActive] = useState<string | null>(null);
+  const widthAnim = useRef(new Animated.Value(120)).current; // start with button width ~120
+  const opacityMap = useRef<{ [key: string]: Animated.Value }>({}).current;
   type PickerItem = {
     label: string;
     value: string;
@@ -178,7 +184,6 @@ const AIResFullReviewScreen = () => {
       { value: "FRAUD_DETECTION", label: " Fraud Detection" },
     ];
 
-    // Add conditional Analyze button based on contract type
     if (contractType === 'SECTION-32') {
       return [...baseClauses, { value: "SECTION_32_REVIEW", label: "Analyze" }];
     } else {
@@ -284,7 +289,7 @@ const AIResFullReviewScreen = () => {
   };
 
 
-// End Risk Level
+  // End Risk Level
 
 
 
@@ -314,7 +319,7 @@ const AIResFullReviewScreen = () => {
   };
   useEffect(() => {
     fetchCountries();
-  
+
   }, []);
   const onRefresh = useCallback(() => {
     fetchCountries(true);
@@ -341,7 +346,19 @@ const AIResFullReviewScreen = () => {
     }
 
     setLoadingButton(clauseType);
+    setProgress(0);
 
+
+       Animated.timing(widthAnim, {
+      toValue: screenWidth - 40,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+
+    // Fake progress animation
+    const interval = setInterval(() => {
+      setProgress((p) => (p >= 97 ? p : p + 3));
+    }, 300);
     try {
       const formData = new FormData();
 
@@ -358,6 +375,7 @@ const AIResFullReviewScreen = () => {
       console.log("response23", response);
 
       if (response.success) {
+        setProgress(100);
         setAnalysisResult(response.data);
         Toast.show({
           type: 'success',
@@ -383,7 +401,14 @@ const AIResFullReviewScreen = () => {
       });
     } finally {
       setLoadingButton(null);
+      clearInterval(interval);
+      setTimeout(() => {
+        setLoadingButton(null);
+        setProgress(0);
+        widthAnim.setValue(0); // reset for next time
+      }, 800);
     }
+  
   };
 
   const getFilteredItems = (items: PickerItem[], search: string) => {
@@ -427,7 +452,12 @@ const AIResFullReviewScreen = () => {
           />
 
 
-          <View style={styles.addButtonQues} > <Text style={styles.sectionTitle}>Selected Questions</Text> <TouchableOpacity><Text style={styles.tabItem1}>Add Questions</Text></TouchableOpacity> </View>
+          <View style={styles.addButtonQues}>
+            <Text style={styles.sectionTitle}>Selected Questions</Text>
+            <TouchableOpacity>
+              <Text style={styles.tabItem1}>Add Questions</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             style={styles.uploadButton}
             onPress={handleFileUpload}
@@ -463,48 +493,43 @@ const AIResFullReviewScreen = () => {
 
           {analysisResult && (
             <View style={styles.card}>
-
-
- 
-
-
               <Text style={styles.sectionTitle}>Analysis Result:</Text>
               <FormattedTextComp text={analysisResult} />
 
 
 
 
-               <View style={styles.riskContainer}>
-            {['LOW', 'MEDIUM', 'HIGH', ].map((level) => {
-              const riskScore = extractRiskScore(analysisResult);
-              const currentLevel = getRiskLevel(riskScore);
-              const isActive = level === currentLevel;
-              
-              return (
-                <View key={level} style={styles.riskLevelWrapper}>
-                  <View 
-                    style={[
-                      styles.riskLevel,
-                      { 
-                        backgroundColor: isActive 
-                          ? getRiskColor(level) 
-                          : '#E0E0E0' 
-                      }
-                    ]}
-                  >
-                    <Text 
-                      style={[
-                        styles.riskLevelText,
-                        { color: isActive ? 'white' : '#9E9E9E' }
-                      ]}
-                    >
-                      {level}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
+              <View style={styles.riskContainer}>
+                {['LOW', 'MEDIUM', 'HIGH',].map((level) => {
+                  const riskScore = extractRiskScore(analysisResult);
+                  const currentLevel = getRiskLevel(riskScore);
+                  const isActive = level === currentLevel;
+
+                  return (
+                    <View key={level} style={styles.riskLevelWrapper}>
+                      <View
+                        style={[
+                          styles.riskLevel,
+                          {
+                            backgroundColor: isActive
+                              ? getRiskColor(level)
+                              : '#E0E0E0'
+                          }
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.riskLevelText,
+                            { color: isActive ? 'white' : '#9E9E9E' }
+                          ]}
+                        >
+                          {level}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           )}
 
@@ -513,24 +538,40 @@ const AIResFullReviewScreen = () => {
 
 
       <View style={styles.tabContainer}>
-        {Clauses.map((claus) => (
-          <TouchableOpacity
-            key={claus.value}
+      {Clauses.map((c) => {
+        const isActive = loadingButton === c.value;
+        // Hide others while one is active
+        if (loadingButton && !isActive) return null;
+
+        const ButtonContent = isActive ? (
+          <View style={styles.progressWrapper}>
+            <View style={[styles.progressBar, { width: `${progress}%` }]} />
+            <Text style={styles.progressText}>{progress}%</Text>
+          </View>
+        ) : (
+          <Text style={styles.tabText}>{c.label}</Text>
+        );
+
+        return (
+          <Animated.View
+            key={c.value}
             style={[
-              styles.tabItem,
-              loadingButton === claus.value && styles.loadingTab,
+              styles.animatedButtonContainer,
+              isActive && { width: widthAnim },
             ]}
-            onPress={() => submitContract(claus.value)}
-            disabled={loadingButton !== null}
           >
-            {loadingButton === claus.value ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.tabText}>{claus.label}</Text>
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
+            <TouchableOpacity
+              style={[styles.tabItem, isActive && styles.loadingTab]}
+              disabled={!!loadingButton}
+              onPress={() => submitContract(c.value)}
+              activeOpacity={0.8}
+            >
+              {ButtonContent}
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      })}
+    </View>
 
 
       <Modal
@@ -599,16 +640,28 @@ type QuestionItemProps = {
   onPress: () => void;
 };
 
+// const QuestionItem: React.FC<QuestionItemProps> = ({ label, value, onPress }) => (
+//   <TouchableOpacity style={styles.questionItem} onPress={onPress}>
+//     <Text style={styles.questionText}>{label}</Text>
+//     <View style={styles.questionValue}>
+//       <Text style={styles.valueText}>{value || 'Select...'}</Text>
+//       <Icon name="arrow-drop-down" size={24} color="#666" />
+//     </View>
+//   </TouchableOpacity>
+// );
 const QuestionItem: React.FC<QuestionItemProps> = ({ label, value, onPress }) => (
   <TouchableOpacity style={styles.questionItem} onPress={onPress}>
-    <Text style={styles.questionText}>{label}</Text>
+    <Text style={styles.questionText}>
+      {label.split('').map((char, index) => (
+        <Text key={index}>{char}</Text>
+      ))}
+    </Text>
     <View style={styles.questionValue}>
       <Text style={styles.valueText}>{value || 'Select...'}</Text>
       <Icon name="arrow-drop-down" size={24} color="#666" />
     </View>
   </TouchableOpacity>
 );
-
 const styles = StyleSheet.create({
 
   pickerModal: {
@@ -651,11 +704,57 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-
-  loadingTab: {
-    backgroundColor: '#0E3386',
-    opacity: 0.7,
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 20,
+    paddingHorizontal: 10,
   },
+  animatedButtonContainer: {
+    overflow: 'hidden', // keep child inside while expanding
+    // minWidth: 200,
+
+    borderRadius: 25,
+  },
+  tabItem: {
+    borderWidth: 1,
+    borderColor: '#000078',
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    minWidth: 100,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    marginHorizontal:5
+  },
+  loadingTab: {
+    backgroundColor: '#000078',
+  },
+  tabText: {
+    color: '#000078',
+    fontWeight: '600',
+  },
+  progressWrapper: {
+    width: '300%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    borderRadius: 25,
+  },
+  progressText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  // loadingTab: {
+  //   backgroundColor: '#0E3386',
+  //   opacity: 0.7,
+  // },
   resultContainer: {
     marginTop: 20,
     padding: 10,
@@ -830,12 +929,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 10,
-    paddingHorizontal: 10,
-  },
+  // tabContainer: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-around',
+  //   marginVertical: 10,
+  //   paddingHorizontal: 10,
+  // },
   tabItem1: {
     fontSize: 10,
     color: '#fff',
@@ -849,24 +948,24 @@ const styles = StyleSheet.create({
     marginTop: 8,
 
   },
-  tabItem: {
-    maxWidth: 150,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#000078',
-    backgroundColor: '#fff',
-    marginHorizontal: 5,
-  },
+  // tabItem: {
+  //   maxWidth: 150,
+  //   paddingVertical: 10,
+  //   paddingHorizontal: 15,
+  //   borderRadius: 20,
+  //   borderWidth: 1,
+  //   borderColor: '#000078',
+  //   backgroundColor: '#fff',
+  //   marginHorizontal: 5,
+  // },
   activeTab: {
     backgroundColor: '#0E3386',
   },
-  tabText: {
-    fontSize: 14,
-    color: '#000078',
-    fontWeight: '600',
-  },
+  // tabText: {
+  //   fontSize: 14,
+  //   color: '#000078',
+  //   fontWeight: '600',
+  // },
   activeTabText: {
     color: '#fff',
   },
@@ -891,7 +990,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F4FF',
     borderRadius: 8,
   },
-   riskContainer: {
+  riskContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

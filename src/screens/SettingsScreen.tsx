@@ -16,8 +16,8 @@ const SettingsScreen = () => {
   const [activeTab, setActiveTab] = useState<'permission' | 'email' | 'addQuestion'>('permission');
   const [isPermissionMode, setIsPermissionMode] = useState<'privacy' | 'password'>('privacy');
   const [emailPrivacySettings, setEmailPrivacySettings] = useState({
-    sendMBA: true,
-    send80W: true,
+    sendMSA: true,
+    sendSOW: true,
     sendInvoice: true,
     sendAgencyProfile: true,
     sendResourceProfile: true,
@@ -235,101 +235,7 @@ const updatePrivacySettings = async () => {
   );
 };
 
-// Permission Section Component
-// const PermissionSection = ({
-//   isPasswordMode,
-//   toggleMode,
-//   privacySettings,
-//   togglePrivacy,
-//   password,
-//   setPassword
-// }: any) => (
-//   <View style={styles.sectionCard}>
-//     <View style={styles.modeToggleContainer}>
-//       <TouchableOpacity
-//         style={[styles.modeButton, !isPasswordMode && styles.activeModeButton]}
-//         onPress={toggleMode}
-//       >
-//         <Text style={[styles.modeButtonText, !isPasswordMode && styles.activeModeButtonText]}>
-//           Data Privacy
-//         </Text>
-//       </TouchableOpacity>
-//       <TouchableOpacity
-//         style={[styles.modeButton, isPasswordMode && styles.activeModeButton]}
-//         onPress={toggleMode}
-//       >
-//         <Text style={[styles.modeButtonText, isPasswordMode && styles.activeModeButtonText]}>
-//           Change Password
-//         </Text>
-//       </TouchableOpacity>
-//     </View>
 
-//     {!isPasswordMode ? (
-//       <>
-//         <Text style={styles.sectionTitle}>Permissions/Data Privacy</Text>
-//         <View style={styles.tableHeader}>
-//           <Text style={styles.tableHeaderText}>Permission/Data Privacy</Text>
-//           <Text style={styles.tableHeaderText}>Yes/No</Text>
-//         </View>
-
-//         <PermissionRow
-//           label="Show my Contact number"
-//           value={privacySettings.showContact}
-//           onToggle={() => togglePrivacy('showContact')}
-//         />
-//         <PermissionRow
-//           label="Show my Email address"
-//           value={privacySettings.showEmail}
-//           onToggle={() => togglePrivacy('showEmail')}
-//         />
-//         <PermissionRow
-//           label="Show my Address"
-//           value={privacySettings.showAddress}
-//           onToggle={() => togglePrivacy('showAddress')}
-//         />
-//         <PermissionRow
-//           label="Show my Experience"
-//           value={privacySettings.showExperience}
-//           onToggle={() => togglePrivacy('showExperience')}
-//         />
-//         <PermissionRow
-//           label="Show my LinkedIn URL"
-//           value={privacySettings.showLinkedIn}
-//           onToggle={() => togglePrivacy('showLinkedIn')}
-//         />
-//         <PermissionRow
-//           label="Share my CV/Resume"
-//           value={privacySettings.shareCV}
-//           onToggle={() => togglePrivacy('shareCV')}
-//         />
-//         <PermissionRow
-//           label="Share my Rate"
-//           value={privacySettings.shareRate}
-//           onToggle={() => togglePrivacy('shareRate')}
-//         />
-//       </>
-//     ) : (
-//       <>
-//         <Text style={styles.sectionTitle}>Change Password</Text>
-//         <PasswordField
-//           label="Old Password *"
-//           value={password.old}
-//           onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, old: text }))}
-//         />
-//         <PasswordField
-//           label="New Password *"
-//           value={password.new}
-//           onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, new: text }))}
-//         />
-//         <PasswordField
-//           label="Confirm New Password *"
-//           value={password.confirm}
-//           onChangeText={(text: string) => setPassword((prev: any) => ({ ...prev, confirm: text }))}
-//         />
-//       </>
-//     )}
-//   </View>
-// );
 const PermissionSection = ({
   privacySettings,
   togglePrivacy,
@@ -357,17 +263,17 @@ const PermissionSection = ({
       value={privacySettings.showAddress}
       onToggle={() => togglePrivacy('showAddress')}
     />
-    <PermissionRow
+    {/* <PermissionRow
       label="Show my Experience"
       value={privacySettings.showExperience}
       onToggle={() => togglePrivacy('showExperience')}
-    />
+    /> */}
     <PermissionRow
       label="Show my LinkedIn URL"
       value={privacySettings.showLinkedIn}
       onToggle={() => togglePrivacy('showLinkedIn')}
     />
-    <PermissionRow
+    {/* <PermissionRow
       label="Share my CV/Resume"
       value={privacySettings.shareCV}
       onToggle={() => togglePrivacy('shareCV')}
@@ -376,7 +282,7 @@ const PermissionSection = ({
       label="Share my Rate"
       value={privacySettings.shareRate}
       onToggle={() => togglePrivacy('shareRate')}
-    />
+    /> */}
   </View>
 );
 
@@ -386,14 +292,14 @@ const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }: any) 
     <Text style={styles.sectionTitle}>Email Privacy Settings</Text>
 
     <EmailSettingRow
-      label="Send Organisation MBA details email"
+      label="Send Organisation MSA details email"
       value={settings.sendMBA}
-      onToggle={() => toggleSetting('sendMBA')}
+      onToggle={() => toggleSetting('sendMSA')}
     />
     <EmailSettingRow
-      label="Send Organisation 80W details email"
+      label="Send Organisation SOW details email"
       value={settings.send80W}
-      onToggle={() => toggleSetting('send80W')}
+      onToggle={() => toggleSetting('sendSOW')}
     />
 
     <EmailSettingRow
@@ -420,6 +326,13 @@ const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }: any) 
       onChangeText={setEmailContent}
       placeholder="Enter email content here"
     />
+
+     <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={toggleSetting}
+        >
+          <Text style={styles.primaryButtonText}>Continue</Text>
+        </TouchableOpacity>
   </View>
 );
 
@@ -559,6 +472,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F7FC',
+  },
+    primaryButton: {
+    backgroundColor: '#0E3386',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 15
+  },
+
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   header: {
     padding: 24,

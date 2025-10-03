@@ -12,6 +12,7 @@ import ESignatureScreen from './ESignatureScreen';
 import InviteLawyerScreen from './InviteLawyerScreen';
 import SubscriptionScreen from './SubscriptionScreen';
 import HelpScreen from './HelpScreen';
+import LinearGradient from 'react-native-linear-gradient';
 
 const Stack = createStackNavigator();
 
@@ -85,19 +86,35 @@ const DashboardWrapper = () => {
     headerStyle: { backgroundColor: '#0E3386' },
     headerTintColor: '#fff',
     headerTitleStyle: { fontWeight: 'bold' },
+       headerBackground: () => (
+      <LinearGradient
+        colors={['#0E3386', '#0E3386']}
+        style={{ flex: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+    ),
   }}
 />
-     <Stack.Screen
+   <Stack.Screen
   name="InviteResource"
   component={InviteResourceScreen}
   options={{
-    title: 'Invite Resource',
+    title: 'Invite Individual Buyer',
     headerShown: true,
-    headerStyle: { backgroundColor: '#0E3386' },
     headerTintColor: '#fff',
     headerTitleStyle: { fontWeight: 'bold' },
+    headerBackground: () => (
+      <LinearGradient
+        colors={['#0E3386', '#0E3386']}
+        style={{ flex: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+    ),
   }}
 />
+
  <Stack.Screen
   name="HelpScreen"
   component={HelpScreen}
@@ -118,6 +135,14 @@ const DashboardWrapper = () => {
     headerStyle: { backgroundColor: '#0E3386' },
     headerTintColor: '#fff',
     headerTitleStyle: { fontWeight: 'bold' },
+       headerBackground: () => (
+      <LinearGradient
+        colors={['#0E3386', '#0E3386']}
+        style={{ flex: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+    ),
   }}
 />
 <Stack.Screen

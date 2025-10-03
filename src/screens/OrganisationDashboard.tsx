@@ -88,6 +88,8 @@ const OrganisationDashboard = () => {
   useEffect(() => {
     const checkProfileStatus = async () => {
       const isActive = await AsyncStorage.getItem('isActive');
+      console.log("isActive",isActive);
+      
       if (isActive !== 'true') {
         setShowProfileModal(true);
       }
@@ -249,6 +251,10 @@ console.log("fetchOrganisationDashboard res",response);
         {/* Status Cards */}
         {/* Master Service Agreement */}
 <View style={styles.statusCardsContainer}>
+  
+  <TouchableOpacity 
+    onPress={() => navigation.navigate('MasterAgreement')}
+  >
   <StatusCard
     title="Master Service Agreement"
     sections={[
@@ -269,10 +275,14 @@ console.log("fetchOrganisationDashboard res",response);
       },
     ]}
   />
+  </TouchableOpacity>
 </View>
 
 {/* Statement of Work */}
 <View style={styles.statusCardsContainer}>
+  <TouchableOpacity 
+    onPress={() => navigation.navigate('StatementOfWork')}
+  >
   <StatusCard
     title="Statement of Work"
     sections={[
@@ -293,10 +303,14 @@ console.log("fetchOrganisationDashboard res",response);
       },
     ]}
   />
+  </TouchableOpacity>
 </View>
 
 {/* Time Sheet */}
 <View style={styles.statusCardsContainer}>
+    <TouchableOpacity 
+    onPress={() => navigation.navigate('TimeSheet')}
+  >
   <StatusCard
     title="Time Sheet"
     sections={[
@@ -317,10 +331,14 @@ console.log("fetchOrganisationDashboard res",response);
       },
     ]}
   />
+  </TouchableOpacity>
 </View>
 
 {/* Pending Approval */}
 <View style={styles.statusCardsContainer}>
+    <TouchableOpacity 
+    onPress={() => navigation.navigate('ApprovalScreen')}
+  >
   <StatusCard
     title="Pending Approval"
     sections={[
@@ -336,10 +354,11 @@ console.log("fetchOrganisationDashboard res",response);
       },
     ]}
   />
+  </TouchableOpacity>
 </View>
 
 {/* Job Posting */}
-<View style={styles.statusCardsContainer}>
+{/* <View style={styles.statusCardsContainer}>
   <StatusCard
     title="Job Posting"
     sections={[
@@ -360,7 +379,7 @@ console.log("fetchOrganisationDashboard res",response);
       },
     ]}
   />
-</View>
+</View> */}
         {/* Total Spend Chart */}
         <View style={styles.chartContainer}>
           <View style={styles.chartHeader}>

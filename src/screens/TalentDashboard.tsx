@@ -14,12 +14,10 @@ import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
-
+import OrganizationProfileModal from '../components/Modals/OrganizationProfileModal';
 
 const { width } = Dimensions.get('window');
 const { height } = Dimensions.get("window");
-
 
 const TalentDashboard = () => {
     const navigation = useNavigation();
@@ -29,13 +27,12 @@ const TalentDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [lawyers, setAllLawyer] = useState([]);
     const [jobProfiles, setJobProfiles] = useState([]);
+    const [showProfileModal, setShowProfileModal] = useState(false);
 
     const fetchUserData = async () => {
         try {
             const fName = await AsyncStorage.getItem('first_Name');
             const lName = await AsyncStorage.getItem('last_Name');
-       
-
             if (fName) setFirstName(fName);
             if (lName) setLastName(lName);
         } catch (e) {
@@ -43,11 +40,21 @@ const TalentDashboard = () => {
         }
     }
 
-
     useEffect(() => {
         fetchUserData();
     }, []);
-
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      const isActive = await AsyncStorage.getItem('isActive');
+      console.log("isActive",isActive);
+      
+      if (isActive !== 'true') {
+        setShowProfileModal(true);
+      }
+    };
+    
+    checkProfileStatus();
+  }, []);
     useEffect(() => {
         const fetchAllLawyer = async () => {
             setLoading(true);
@@ -327,6 +334,11 @@ const TalentDashboard = () => {
             ))}
           </View>
         </View> */}
+         <OrganizationProfileModal
+        visible={showProfileModal}
+        onComplete={() => setShowProfileModal(false)}
+        onClose={() => setShowProfileModal(false)}
+      />
             </ScrollView>
         </SafeAreaView>
     );

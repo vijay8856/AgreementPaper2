@@ -57,14 +57,15 @@ export type RootStackParamList = {
   AICoreAdminScreen: undefined,
   OrganisationDashboard: undefined,
   AgencyDashboard: undefined,
- MSADetailScreen: { data: any };
-  CreateMSA:undefined,
-  ApproverModal:undefined,
-  SOWDetailScreen:undefined,
-  CreateSOW:undefined,
-  CreateServiceSow:undefined,
-  SOWServiceDetailScreen:undefined,
-  SignWellEmbed:undefined,
+  MSADetailScreen: { data: any };
+  CreateMSA: undefined,
+  ApproverModal: undefined,
+  SOWDetailScreen: undefined,
+  CreateSOW: undefined,
+  CreateServiceSow: undefined,
+  SOWServiceDetailScreen: undefined,
+  SignWellEmbed: undefined,
+  ESignature: undefined,
 };
 
 const NavigationManager = () => {
@@ -95,34 +96,43 @@ const NavigationManager = () => {
         <RootStack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <RootStack.Screen name="SignUp" component={SignUpScreen} options={{ title: 'Sign Up' }} />
         <RootStack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ title: 'Verify Email' }} />
-        <RootStack.Screen name="MyProfile" component={MyProfile} options={{ title: 'My Profile' }} />
+        <RootStack.Screen
+          name="MyProfile"
+          component={MyProfile}
+          options={{
+            headerTitle: "My Profile",
+            headerShown: true,
+          }}
+        />
+
         {/* <RootStack.Screen name="ESignatureScreen" component={ESignatureScreen} /> */}
         <RootStack.Screen name="SignWebViewScreen" component={SignWebViewScreen} />
         <RootStack.Screen name="LinkedInLoginScreen" component={LinkedInLoginScreen} />
         <RootStack.Screen name="SubscriptionHistoryScreen" component={SubscriptionHistoryScreen} options={{ title: 'Subscription History ' }} />
         <RootStack.Screen name="HelpScreen" component={HelpScreen} options={{ title: 'Help Screen ' }} />
         <RootStack.Screen name="SignWellEmbed" component={SignWellEmbed} options={{ title: 'SignWellEmbed  ' }} />
+        <RootStack.Screen name="ESignature" component={ESignatureScreen} options={{ title: 'ESignature  ' }} />
 
         <RootStack.Screen name="AIDraft" component={AICoreAdminScreen} options={{ title: 'AI Draft ' }} />
         <RootStack.Screen name="ContractPreviewScreen" component={ContractPreviewScreen} options={{ title: 'Contract Preview ' }} />
         <RootStack.Screen name="LawyerOrgProfile" component={LawyerOrgProfile} options={{ title: 'Lawyer Profile' }} />
         <RootStack.Screen name="InviteOrganization" component={InviteOrganizationScreen} options={{ title: 'Invite Organization' }} />
- <RootStack.Screen name="MSADetailScreen" component={MSADetailScreen} options={{ title: 'MSA Details Screen' }} />
+        <RootStack.Screen name="MSADetailScreen" component={MSADetailScreen} options={{ title: 'MSA Details Screen' }} />
 
- <RootStack.Screen name="CreateMSA" component={CreateMSA} options={{ title: 'Create MSA ' }} />
- <RootStack.Screen name="CreateSOW" component={CreateSOW} options={{ title: 'Create SOW ' }} />
- <RootStack.Screen name="CreateServiceSow" component={CreateServiceSow} options={{ title: 'Create Service Sow ' }} />
-
-
-  <RootStack.Screen name="ApproverModal" component={ApproverModal} options={{ title: 'Approver Modal ' }} />
-
- <RootStack.Screen name="SOWDetailScreen" component={SOWDetailScreen} options={{ title: 'SOW Detail Screen' }} />
- <RootStack.Screen name="SOWServiceDetailScreen" component={SOWServiceDetailScreen} options={{ title: 'SOW Service Detail Screen' }} />
+        <RootStack.Screen name="CreateMSA" component={CreateMSA} options={{ title: 'Create MSA ' }} />
+        <RootStack.Screen name="CreateSOW" component={CreateSOW} options={{ title: 'Create SOW ' }} />
+        <RootStack.Screen name="CreateServiceSow" component={CreateServiceSow} options={{ title: 'Create Service Sow ' }} />
 
 
+        <RootStack.Screen name="ApproverModal" component={ApproverModal} options={{ title: 'Approver Modal ' }} />
 
-        <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}   
-         options={{
+        <RootStack.Screen name="SOWDetailScreen" component={SOWDetailScreen} options={{ title: 'SOW Detail Screen' }} />
+        <RootStack.Screen name="SOWServiceDetailScreen" component={SOWServiceDetailScreen} options={{ title: 'SOW Service Detail Screen' }} />
+
+
+
+        <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}
+          options={{
             headerShown: false,
             // title: 'Organisation Dashboard',
           }}
@@ -137,8 +147,8 @@ const NavigationManager = () => {
         //      </TouchableOpacity>
         //    ),
         //  })} 
-         
-         />
+
+        />
 
 
 

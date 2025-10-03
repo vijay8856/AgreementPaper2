@@ -91,139 +91,61 @@ const CreateDocument: React.FC<CreateDocumentProps> = (props) => {
     setError(null);
 
     const documentData = {
-      // test_mode: true,
-      // draft: false,
-      // with_signature_page: true,
-      // reminders: true,
-      // apply_signing_order: false,
-      // embedded_signing: true,
-      // embedded_signing_notifications: true,
-      // text_tags: true,
-      // allow_decline: true,
-      // allow_reassign: true,
-      // name: fileName,
-      // subject: 'Please sign this document',
-      // message: 'Please review and sign this document.',
-      // custom_requester_name: 'Agreementpaper.com',
-      // recipients: [
-      //   {
-      //     role: "Signer",
-      //     send_email: true,
-      //     send_email_delay: 0,
-      //     id: id ,
-      //     name: recipientName,
-      //     email: recipientEmail,
-      //     passcode: passcode,
-      //     subject: 'Please sign this document',
-      //     message: 'Please review and sign this document.',
-      //   },
-      // ],
-      // files: [
-      //   {
-      //     name: fileName,
-      //     file_base64: fileBase64,
-      //   },
-      // ],
+      
 
 
-
-
-
-
-
-      allow_decline
-        :
-        true,
-      allow_reassign
-        :
-        true,
-      apply_signing_order
-        :
-        false,
-      custom_requester_name
-        :
-        "Agreementpaper.com",
-      draft
-        :
-        true,
-        embedded_edit_url:true,
-      // embedded_signing
-      //   :
-      //   true,
-      embedded_signing_notifications
-        :
-        true,
+test_mode: false,
+      draft: true,
+      with_signature_page: true,
+      reminders: true,
+      apply_signing_order: false,
+      embedded_signing: true,
+      embedded_signing_notifications: true,
+      text_tags: true,
+      allow_decline: true,
+      allow_reassign: true,
+      name: fileName,
+      subject: "Please sign this document",
+      message: "Please review and sign this document.",
+      custom_requester_name: "Agreementpaper.com",
       files: [
         {
           name: fileName,
           file_base64: fileBase64,
         },
       ],
-      message
-        :
-        "Please review and sign this document.",
-      name
-        :
-        "SampleContract-Shuttle (1).pdf",
-      // recipients: [
-      //   {
-      //     email: recipientEmail,
-      //     id: id,
-      //     message: 'Please review and sign this document.',
-      //     name: recipientName,
-      //     passcode: passcode,
-      //     send_email: true,
-      //     send_email_delay: 0,
-      //     subject: 'Please sign this document',
-      //   },
-      // ],
-      reminders
-        :
-        true,
-      subject
-        :
-        "Please sign this document",
-      test_mode
-        :
-        true,
-      text_tags
-        :
-        true,
-      with_signature_page
-        :
-        true,
+    
+      recipients: [
+        {
+          email: recipientEmail,
+          id: id,
+          message: 'Please review and sign this document.',
+          name: recipientName,
+          passcode: passcode,
+          send_email: true,
+          send_email_delay: 0,
+          subject: 'Please sign this document',
+        },
+      ],
+      
     };
 
     try {
       const response = await Services.createSignWellDocument(documentData);
-      console.log("response11",response);
+      console.log("response,response",response);
       
       if (response.recipients[0].embedded_signing_url) {
         setRequestingRedirectUrl(response.recipients[0].embedded_signing_url);
+        // setRequestingRedirectUrl(response.embedded_edit_url);
+
         setUrl(response.embedded_edit_url);
-        // const payload = {
-        //     signwell_doc_id: response.id,
-        //     name: response.name,
-        //     custom_requester_name: response.custom_requester_name,
-        //     embedded_edit_url: response.embedded_edit_url,
-        //     recipient_email: response.recipients[0].email,
-        //     recipient_embedded_signing_url: response.recipients[0].embedded_signing_url,
-        //     recipient_id: response.recipients[0].id,
-        //     recipient_name: response.recipients[0].name,
-        //     recipient_passcode: response.recipients[0].passcode,
-        //     recipient_status: response.recipients[0].status,
-        //     requester_email_address: response.requester_email_address,
-        //     status: response.status,
-        //     subject: response.subject,
-        //     filename:fileName,
-        // }
-        //     const response = await Services.sendeSignDocsSaga(payload);
-        //     console.log("response12",response);
-            
+        // setUrl(response.recipients[0].embedded_signing_url );
+
       }
       setLoading(false);
       setDocumentResponse(response);
-      setSignwellRes(true);
+      // setSignwellRes(true);
+      setSignwellRes(response);
       setIsDocumentOpen(false);
     } catch (error) {
       handleClear();

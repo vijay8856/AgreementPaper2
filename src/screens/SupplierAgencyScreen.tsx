@@ -969,6 +969,7 @@ console.log("supplierList",supplierList);
         limit: limit, 
         offset: currentOffset 
       });
+console.log("responseresponse",response);
 
       if (response.success) {
         const formattedSuppliers = response.data.map((supplier: any, index: number) => ({
@@ -980,6 +981,9 @@ console.log("supplierList",supplierList);
           state_name: supplier.state_name,
           district: supplier.district,
           is_active: supplier.is_active,
+          connection_request:supplier.connection_request,
+
+
           user_detail: {
             first_name: supplier.user_detail?.first_name || '',
             last_name: supplier.user_detail?.last_name || '',
@@ -1168,14 +1172,18 @@ console.log("supplierList",supplierList);
       {/* Card Footer */}
       <View style={styles.cardFooter}>
         <TouchableOpacity
-          style={[styles.connectButton, item.is_connection && styles.connectedButton]}
+          style={[styles.connectButton, item.connection_request && styles.connectedButton]}
           onPress={() => handleConnect(item)}
+          disabled={!!item?.connection_request}
         >
           <Text style={styles.connectButtonText}>
-            {item.is_connection ? 'Connected' : 'Connect'}
+            {item?.connection_request
+      ? item.connection_request // Show PENDING / COMPLETED / etc.
+      : 'Connect'}
+            {/* {item.is_connection ? 'Connected' : 'Connect'} */}
           </Text>
         </TouchableOpacity>
-
+     
         <TouchableOpacity
           style={styles.viewProfileButton}
           onPress={() => handleViewProfile(item)}

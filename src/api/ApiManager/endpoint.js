@@ -77,6 +77,8 @@ CREATESERVICESOW:"sow/v2/service-statement-of-work/",
 AGENCYDASHBOARD:'agency/dashboard-stats/',
 AGENCYPROFILE:'agency/agency-profile/',
 //Lawyer Dashboard endpoint's
+INDIVIDUALUSERSLIST:'accounts/v2/individual-users/',
+INDIVIDUALUSERSDETAILS:'accounts/v2/individual-users/',
 TOPRESOURCE:"resources/resources-profile",
 GETORGANISATIONPROFILE:"/organisation/profile",
 

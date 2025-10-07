@@ -1000,7 +1000,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       title: 'Home',
       headerRight: () => (
         <View style={{ flexDirection: 'row', marginRight: 10 }}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => navigation.navigate('SubscriptionPlan')}
             style={{
               marginRight: 12,
@@ -1010,8 +1010,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               borderRadius: 6,
             }}
           >
-            <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text>
-          </TouchableOpacity>
+             <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text> 
+          </TouchableOpacity> */}
 
           <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
             <Icon name="account-circle" size={28} color="#fff" />

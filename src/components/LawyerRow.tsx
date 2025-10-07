@@ -842,7 +842,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [isFavorite, setIsFavorite] = useState<boolean>(lawyerData?.is_favorite || false);
 
-  console.log("lawyerData", lawyerData);
+  console.log("selectedSupplier", selectedSupplier);
 
   const handleViewProfile = async (id: number) => {
     try {
@@ -876,12 +876,13 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
     else setRefreshing(true);
 
     const payload = {
-      to_user: selectedSupplier,
+      to_user: selectedSupplier?.user_id,
       message: message?.trim() || '',
     };
 
     try {
       const response = await Services.sendConnectionSupplier(payload);
+console.log("uuuu",response);
 
       if (response.success === true) {
         setConnectModalVisible(false);
@@ -1003,15 +1004,22 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
         {/* Card Footer - Action Buttons */}
         <View style={styles.cardFooter}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.connectButton]}
-            onPress={handleConnect}
-            disabled={lawyerData?.is_connection} // disable if already connected
-          >
-            <Icon name="handshake" size={14} color="#FFF" />
-            <Text style={styles.connectButtonText}>
-              {lawyerData?.is_connection ? 'Connected' : 'Connect'}
-            </Text>
-          </TouchableOpacity>
+  style={[
+    styles.actionButton,
+    styles.connectButton,
+    lawyerData?.connection_request && styles.disabledButton, // Optional grey-out if request exists
+  ]}
+  onPress={handleConnect}
+  disabled={!!lawyerData?.connection_request} // disable if connection_request is NOT null
+>
+  <Icon name="handshake" size={14} color="#FFF" />
+  <Text style={styles.connectButtonText}>
+    {lawyerData?.connection_request
+      ? lawyerData.connection_request // Show PENDING / COMPLETED / etc.
+      : 'Connect'} {/* Show "Connect" if connection_request is null */}
+  </Text>
+</TouchableOpacity>
+
 
 
           <TouchableOpacity

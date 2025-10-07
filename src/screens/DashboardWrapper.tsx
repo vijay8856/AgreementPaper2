@@ -145,7 +145,7 @@ const DashboardWrapper = () => {
     ),
   }}
 />
-<Stack.Screen
+{/* <Stack.Screen
   name="SubscriptionPlan"
   component={SubscriptionScreen}
   options={{
@@ -155,7 +155,7 @@ const DashboardWrapper = () => {
     headerTintColor: '#fff',
     headerTitleStyle: { fontWeight: 'bold' },
   }}
-/>
+/> */}
   <Stack.Screen
   name="ESignature"
   component={ESignatureScreen}

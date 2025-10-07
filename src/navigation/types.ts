@@ -146,3 +146,21 @@ export interface GifGalleryItem {
   src: any;
   value: string;
 }
+
+export type LawyerDrawerParamList = {
+  LawyerDashboard: undefined;
+  AIResFullReview: undefined;
+  AIReview: undefined;
+  AIDraft: undefined;
+  LawyerNetwork: undefined;
+  InviteLawyer: undefined;
+  SupplierAgency: undefined;
+  InviteAgency: undefined;
+  InviteResource: undefined;
+  Settings: undefined;
+  ESignature: undefined;
+  HelpScreen: undefined;
+  MyProfile: undefined;
+  AllResourcesScreen: undefined;
+  // Add all other drawer screens here
+};

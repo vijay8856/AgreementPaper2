@@ -1,14 +1,21 @@
-{
-  "extends": "@react-native/typescript-config/tsconfig.json",
- "compilerOptions": {
-    "jsx": "react-jsx",
-    "types": ["react", "react-dom"],
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  },
-  "include": [
-    "declarations.d.ts",
-    "src/**/*"
-  ]
+// {
+//   "extends": "@react-native/typescript-config/tsconfig.json",
+//  "compilerOptions": {
+//     "jsx": "react-jsx",
+//     "types": ["react", "react-dom"],
+//     "moduleResolution": "node",
+//     "esModuleInterop": true,
+//     "allowSyntheticDefaultImports": true
+//   },
+//   "include": [
+//     "declarations.d.ts",
+//     "src/**/*"
+//   ]
+// }
+"compilerOptions": {
+  "jsx": "react-jsx",
+  "types": ["react", "react-dom"],
+  "moduleResolution": "nodenext",
+  "esModuleInterop": true,
+  "allowSyntheticDefaultImports": true
 }

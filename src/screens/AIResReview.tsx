@@ -26,7 +26,6 @@ import { WebView } from 'react-native-webview';
 import RNFS from 'react-native-fs';
 import Services from '../Services/services';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
-import Pdf from 'react-native-pdf';
 import Share from 'react-native-share';
 const AIReviewScreen = () => {
   // State declarations

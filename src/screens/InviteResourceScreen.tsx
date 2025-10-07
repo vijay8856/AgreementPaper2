@@ -90,6 +90,7 @@ useEffect(() => {
       setLoading(true);
       const res = await Services.inviteUsers(payload);
       console.log("pay",payload);
+      console.log("res",res);
       
       setLoading(false);
       if (res.success) {

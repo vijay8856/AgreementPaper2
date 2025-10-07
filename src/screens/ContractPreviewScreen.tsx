@@ -13,7 +13,7 @@ import {
   Linking,
   Modal,
 } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/NavigationManager';
 import Toast from 'react-native-toast-message';
 import Services from '../Services/services';
@@ -24,6 +24,7 @@ type Props = {
 };
 
 const ContractPreviewScreen = ({ route }: Props) => {
+  const navigation = useNavigation();
   const { htmlContent } = route.params;
   const [blocks, setBlocks] = useState<Block[]>(htmlContent);
   const [templateName, setTemplateName] = useState('');
@@ -53,7 +54,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
         case 'h4': reconstructedHtml += `<h4>${block.content}</h4>\n`; break;
         case 'h5': reconstructedHtml += `<h5>${block.content}</h5>\n`; break;
         case 'h6': reconstructedHtml += `<h6>${block.content}</h6>\n`; break;
-        case 'p':  reconstructedHtml += `<p>${block.content}</p>\n`;  break;
+        case 'p': reconstructedHtml += `<p>${block.content}</p>\n`; break;
         case 'li': reconstructedHtml += `<li>${block.content}</li>\n`; break;
         case 'signature': reconstructedHtml += `<p class="signature">${block.content}</p>\n`; break;
       }
@@ -97,7 +98,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
 
   const fetchPdfUrl = async (templateId: number) => {
     try {
-      const response = await Services.getTemplatePDF(templateId); 
+      const response = await Services.getTemplatePDF(templateId);
       const url = response?.template_pdf;
 
       if (url) {
@@ -119,9 +120,9 @@ const ContractPreviewScreen = ({ route }: Props) => {
 
   const fetchDocxUrl = async (templateId: number) => {
     try {
-      const response = await Services.getTemplateDocx(templateId); 
-      const url = response?.docx_file_url; 
-console.log("response12",response);
+      const response = await Services.getTemplateDocx(templateId);
+      const url = response?.docx_file_url;
+      console.log("response12", response);
 
       if (url) {
         setDocxUrl(url);
@@ -209,8 +210,8 @@ console.log("response12",response);
             <Text style={styles.modalTitle}>Template Saved!</Text>
             <Text style={styles.modalSubtitle}>Your documents are ready to download.</Text>
 
-            <TouchableOpacity 
-              onPress={handleDownloadPdf} 
+            <TouchableOpacity
+              onPress={handleDownloadPdf}
               style={[styles.downloadButton, !pdfUrl && styles.disabledButton]}
               disabled={!pdfUrl}
             >
@@ -218,9 +219,9 @@ console.log("response12",response);
                 {pdfUrl ? 'Download PDF' : 'Preparing PDF...'}
               </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              onPress={handleDownloadDocx} 
+
+            <TouchableOpacity
+              onPress={handleDownloadDocx}
               style={[styles.downloadButton1, !docxUrl && styles.disabledButton]}
               disabled={!docxUrl}
             >
@@ -229,12 +230,16 @@ console.log("response12",response);
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              onPress={() => setIsModalVisible(false)}
+            <TouchableOpacity
+              onPress={() => {
+                setIsModalVisible(false);
+                navigation.goBack();
+              }}
               style={styles.closeButton}
             >
               <Text style={styles.closeModal}>Close</Text>
             </TouchableOpacity>
+
           </View>
         </View>
       </Modal>
@@ -333,7 +338,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#555',
   },
-   modalBackdrop: {
+  modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
@@ -358,15 +363,15 @@ const styles = StyleSheet.create({
   downloadButton: {
     backgroundColor: '#10b981',
     padding: 15,
-    paddingVertical:14,
+    paddingVertical: 14,
     borderRadius: 8,
     marginBottom: 10,
   },
-  downloadButton1:{
+  downloadButton1: {
     backgroundColor: '#10b981',
     padding: 11,
     borderRadius: 8,
-    paddingVertical:13,
+    paddingVertical: 13,
 
     marginBottom: 10,
   },
@@ -378,10 +383,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 10,
   },
-   disabledButton: {
+  disabledButton: {
     opacity: 0.6,
   },
-   closeButton: {
+  closeButton: {
     marginTop: 15,
   },
 });

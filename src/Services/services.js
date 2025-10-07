@@ -559,6 +559,70 @@ console.log("response",response);
       };
     }
   },
+    getIndividualUserProfile: async data => {
+      console.log("daadt",data);
+      
+    try {
+      const headers = await AUTH_HEADERS();
+      let queryParams = `?limit=${data?.limit }&offset=${data?.offset || 0}`;
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.INDIVIDUALUSERSLIST+queryParams,
+        headers,
+      );
+
+      return {
+        success: true,
+        data: response.data.results,
+        status: response.status,
+      };
+
+
+    } catch (error) {
+
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch User Profile Details List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
+
+    getIndividualUserProfileDetail: async data => {
+      console.log("daadt",data);
+      
+    try {
+      const headers = await AUTH_HEADERS();
+      
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.INDIVIDUALUSERSDETAILS+data?.User,
+        headers,
+      );
+      console.log("response2",response);
+
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+
+
+    } catch (error) {
+
+      console.log('error config', error.config);
+      console.log('error request', error.request);
+      console.log('error response', error.response);
+      console.log('error message', error.message);
+      return {
+        success: false,
+        error: error.response?.data || 'Failed to fetch User Profile Details List',
+        status: error.response?.status || 500,
+      };
+    }
+  },
   // updateUserProfileDetails: async (payload) => {
   //   try {
   //     const headers = await AUTH_MULTYPART_HEADERS();
@@ -3191,5 +3255,6 @@ console.log("datatat",data);
       };
     }
   },
+
 };
 export default Services;

@@ -83,8 +83,8 @@ android {
         applicationId "com.agreementpaperapp2"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 16
-        versionName "1.8"
+        versionCode 19
+        versionName "1.0.2"
          manifestPlaceholders = [appAuthRedirectScheme: "agreementpaper"]
     }
     signingConfigs {
@@ -124,6 +124,11 @@ android {
     //         proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
     //     }
     // }
+      packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
@@ -135,4 +140,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+     // Google Play Billing
+    implementation 'com.android.billingclient:billing:8.0.0'
+
 }

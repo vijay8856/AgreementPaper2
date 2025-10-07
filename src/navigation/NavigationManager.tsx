@@ -36,6 +36,16 @@ import CreateSOW from '../screens/CreateSOW';
 import CreateServiceSow from '../screens/OrganizationModules/CreateServiceSow';
 import SOWServiceDetailScreen from '../screens/OrganizationModules/SOWServiceDetailScreen';
 import SignWellEmbed from '../screens/SignWellEmbed';
+import AllIndividualScreen from '../screens/AllIndividualScreen';
+import LawyerDashboard from '../screens/LawyerDashboard';
+import AIResFullReviewScreen from '../screens/AIResFullReviewScreen';
+import AIReviewScreen from '../screens/AIResReview';
+import LawyerDirectoryScreen from '../screens/LawyerNetworkScreen';
+import InviteLawyerScreen from '../screens/InviteLawyerScreen';
+import InviteAgencyScreen from '../screens/InviteAgencyScreen';
+import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import InviteResourceScreen from '../screens/InviteResourceScreen';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -66,6 +76,7 @@ export type RootStackParamList = {
   SOWServiceDetailScreen: undefined,
   SignWellEmbed: undefined,
   ESignature: undefined,
+  AllResourcesScreen: undefined,
 };
 
 const NavigationManager = () => {
@@ -125,12 +136,101 @@ const NavigationManager = () => {
 
 
         <RootStack.Screen name="ApproverModal" component={ApproverModal} options={{ title: 'Approver Modal ' }} />
+        <RootStack.Screen name="AllResourcesScreen" component={AllIndividualScreen} options={{ title: 'AllResourcesScreen ' }} />
+
 
         <RootStack.Screen name="SOWDetailScreen" component={SOWDetailScreen} options={{ title: 'SOW Detail Screen' }} />
         <RootStack.Screen name="SOWServiceDetailScreen" component={SOWServiceDetailScreen} options={{ title: 'SOW Service Detail Screen' }} />
 
-
-
+        <RootStack.Screen
+          name="AIResFullReview"
+          component={AIResFullReviewScreen}
+          options={{
+            title: 'AI-RES Full Review',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="AIReview"
+          component={AIReviewScreen}
+          options={{
+            title: 'AI-Review',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="LawyerNetwork"
+          component={LawyerDirectoryScreen}
+          options={{
+            title: 'Lawyer Network ',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="InviteLawyer"
+          component={InviteLawyerScreen}
+          options={{
+            title: 'Invite Lawyer ',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="InviteAgency"
+          component={InviteAgencyScreen}
+          options={{
+            title: 'Invite Agency ',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="SupplierAgency"
+          component={SupplierAgencyScreen}
+          options={{
+            title: 'Supplier Agency ',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            title: 'Settings',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="InviteResource"
+          component={InviteResourceScreen}
+          options={{
+            title: 'Invite Individual',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+     
         <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}
           options={{
             headerShown: false,
@@ -180,9 +280,9 @@ const NavigationManager = () => {
         />
         <RootStack.Screen
           name="LawyerDashboard"
-          component={LawyerDrawerNavigator}
+          component={LawyerDashboard}
           options={{
-            headerShown: false,
+            headerShown: true,
             // title: 'Organisation Dashboard',
           }}
         />

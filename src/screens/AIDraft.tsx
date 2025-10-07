@@ -792,7 +792,7 @@
 //     marginTop: 5,
 //   },
 // });
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -816,7 +816,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/NavigationManager';
 import { FlatList } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useFocusEffect } from "@react-navigation/native";
 type AICoreAdminScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AICoreAdminScreen'>;
 type Block = {
   type: 'h1' | 'h2' | 'h3' | 'h5' | 'li' | 'p' | 'strong' | 'td ';
@@ -839,9 +839,13 @@ const AICoreAdminScreen = () => {
   const [fetchingMSA, setFetchingMSA] = useState(false);
   const [allData, setAllData] = useState('');
 
-
 console.log("allData",allData);
-
+  useFocusEffect(
+    useCallback(() => {
+      console.log("AICoreAdminScreen re-focused → Refreshing templates...");
+      fetchTemplates();
+    }, [])
+  );
  useEffect(() => {
   const fetchAllData = async () => {
     try {
@@ -888,6 +892,8 @@ console.log("dataObj",dataObj);
 
   const fetchMSAList = async () => {
     try {
+      setLoading(true);
+
       setFetchingMSA(true);
       const response = await Services.getAllMSAList({
         limit: 10,
@@ -911,7 +917,9 @@ console.log("dataObj",dataObj);
       console.error('MSA Fetch Error:', err);
       Alert.alert('Error', err.message || 'Failed to fetch MSA list');
     } finally {
+
       setFetchingMSA(false);
+      setLoading(false);
     }
   };
 
@@ -1129,18 +1137,31 @@ console.log("dataObj",dataObj);
       
       console.log('Sending payload:', payload); // Debug log
 
-      if (includeFields === 'yes' && selectedFields.length > 0) {
-        // Use V2 API for MSA
-        response = await Services.getAiResponseV2(payload);
-         console.log('API Response1:', response); 
-      } else {
-        // Use original AI Draft API
-        response = await Services.Ai_Draft(payload);
-      console.log('API Response2:', response); 
+      // if (includeFields === 'yes' && selectedFields.length > 0) {
+      //   // Use V2 API for MSA
+      //   response = await Services.getAiResponseV2(payload);
+      //    console.log('API Response1:', response); 
+      // } else {
+      //   // Use original AI Draft API
+      //   response = await Services.Ai_Draft(payload);
+      // console.log('API Response2:', response); 
 
-      }
+      // }
 
-
+if (allData === 'INDIVIDUAL_USER' || allData === 'LAWYER_USER') {
+  // Directly call Ai_Draft for these two user types
+  response = await Services.Ai_Draft(payload);
+  console.log('API Response (Direct Ai_Draft for userType):', response);
+} else {
+  // For other users, apply condition
+  if (includeFields === 'yes' && selectedFields.length > 0) {
+    response = await Services.getAiResponseV2(payload);
+    console.log('API Response (getAiResponseV2):', response);
+  } else {
+    response = await Services.Ai_Draft(payload);
+    console.log('API Response (Ai_Draft fallback):', response);
+  }
+}
       // Handle different response structures safely
       let message = '';
       
@@ -1299,7 +1320,7 @@ console.log("dataObj",dataObj);
       </TouchableOpacity>
 
     {/* MSA Fields Section */} 
-{allData !== 'INDIVIDUAL_USER' && (
+{allData !== 'INDIVIDUAL_USER' && allData !== 'LAWYER_USER' && (
   <View style={styles.msaContainer}>
     <View style={styles.msaHeader}>
       <Text style={styles.msaLabel}>Do you want to include fields From contract?</Text>

@@ -333,83 +333,169 @@ const [progress, setProgress] = useState(0);
       </View>
     );
   }
+const submitContract = async (clauseType: string) => {
+  if (!contractType || !businessLine || !country || !selectedFile) {
+    Toast.show({
+      type: 'error',
+      text1: 'Missing Information',
+      text2: 'Please fill all fields and upload a file',
+      position: 'top',
+    });
+    return;
+  }
 
-  const submitContract = async (clauseType: string) => {
-    if (!contractType || !businessLine || !country || !selectedFile) {
+  setLoadingButton(clauseType);
+  setProgress(0);
+
+  Animated.timing(widthAnim, {
+    toValue: screenWidth - 40,
+    duration: 400,
+    useNativeDriver: false,
+  }).start();
+
+  // Simulate loading progress (up to 90%)
+  const interval = setInterval(() => {
+    setProgress((prev) => {
+      if (prev >= 90) return prev; // pause at 90%
+      return prev + 5;
+    });
+  }, 400);
+
+  try {
+    const formData = new FormData();
+    formData.append('prompt_type', clauseType);
+    formData.append('file', {
+      uri: selectedFile.uri,
+      name: selectedFile.name,
+      type: selectedFile.type || 'application/pdf',
+    });
+
+    console.log('formData', formData);
+
+    const response = await Services.analysisContractByAi(formData);
+    console.log('response23', response);
+
+    clearInterval(interval);
+
+    // Smoothly animate the last 10% to 100%
+    setProgress(100);
+
+    // Small delay for user to *see* 100%
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    if (response.success) {
+      setAnalysisResult(response.data);
       Toast.show({
-        type: 'error',
-        text1: 'Missing Information',
-        text2: 'Please fill all fields and upload a file',
+        type: 'success',
+        text1: 'Analysis Complete',
+        text2: `Clause: ${clauseType} analyzed successfully`,
         position: 'top',
       });
-      return;
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Analysis Failed',
+        text2: response.error || 'Something went wrong',
+        position: 'top',
+      });
     }
-
-    setLoadingButton(clauseType);
-    setProgress(0);
-
-
-       Animated.timing(widthAnim, {
-      toValue: screenWidth - 40,
-      duration: 400,
-      useNativeDriver: false,
-    }).start();
-
-    // Fake progress animation
-    const interval = setInterval(() => {
-      setProgress((p) => (p >= 97 ? p : p + 3));
-    }, 300);
-    try {
-      const formData = new FormData();
-
-      formData.append('prompt_type', clauseType);
-
-      formData.append('file', {
-        uri: selectedFile.uri,
-        name: selectedFile.name,
-        type: selectedFile.type || 'application/pdf',
-      });
-      console.log("formData", formData);
-
-      const response = await Services.analysisContractByAi(formData);
-      console.log("response23", response);
-
-      if (response.success) {
-        setProgress(100);
-        setAnalysisResult(response.data);
-        Toast.show({
-          type: 'success',
-          text1: 'Analysis Complete',
-          text2: `Clause: ${clauseType} analyzed successfully`,
-          position: 'top',
-        });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Analysis Failed',
-          text2: response.error || 'Something went wrong',
-          position: 'top',
-        });
-      }
-    } catch (error) {
-      console.error('Analysis error:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'An unexpected error occurred',
-        position: 'top',
-      });
-    } finally {
+  } catch (error) {
+    console.error('Analysis error:', error);
+    clearInterval(interval);
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: 'An unexpected error occurred',
+      position: 'top',
+    });
+  } finally {
+    setTimeout(() => {
       setLoadingButton(null);
-      clearInterval(interval);
-      setTimeout(() => {
-        setLoadingButton(null);
-        setProgress(0);
-        widthAnim.setValue(0); // reset for next time
-      }, 800);
-    }
+      setProgress(0);
+      widthAnim.setValue(0);
+    }, 1000);
+  }
+};
+        
+
+
+
+  // const submitContract = async (clauseType: string) => {
+  //   if (!contractType || !businessLine || !country || !selectedFile) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Missing Information',
+  //       text2: 'Please fill all fields and upload a file',
+  //       position: 'top',
+  //     });
+  //     return;
+  //   }
+
+  //   setLoadingButton(clauseType);
+  //   setProgress(0);
+
+
+  //      Animated.timing(widthAnim, {
+  //     toValue: screenWidth - 40,
+  //     duration: 400,
+  //     useNativeDriver: false,
+  //   }).start();
+
+  //   // Fake progress animation
+  //   const interval = setInterval(() => {
+  //     setProgress((p) => (p >= 87 ? p : p + 7));
+  //   },400);
+  //   try {
+  //     const formData = new FormData();
+
+  //     formData.append('prompt_type', clauseType);
+
+  //     formData.append('file', {
+  //       uri: selectedFile.uri,
+  //       name: selectedFile.name,
+  //       type: selectedFile.type || 'application/pdf',
+  //     });
+  //     console.log("formData", formData);
+
+  //     const response = await Services.analysisContractByAi(formData);
+  //     console.log("response23", response);
+
+  //     if (response.success) {
+  //       setProgress(100);
+  //       setAnalysisResult(response.data);
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: 'Analysis Complete',
+  //         text2: `Clause: ${clauseType} analyzed successfully`,
+  //         position: 'top',
+  //       });
+  //     } else {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: 'Analysis Failed',
+  //         text2: response.error || 'Something went wrong',
+  //         position: 'top',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Analysis error:', error);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Error',
+  //       text2: 'An unexpected error occurred',
+  //       position: 'top',
+  //     });
+  //   } finally {
+  //     setLoadingButton(null);
+  //     clearInterval(interval);
+  //     setTimeout(() => {
+  //       setLoadingButton(null);
+  //       setProgress(0);
+  //       widthAnim.setValue(0); // reset for next time
+  //     }, 800);
+  //   }
   
-  };
+  // };
 
   const getFilteredItems = (items: PickerItem[], search: string) => {
     return items.filter(item =>

@@ -17,6 +17,7 @@ import {
 import Services from '../../Services/services';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width } = Dimensions.get('window');
 
 const MasterAgreement = () => {
@@ -33,7 +34,20 @@ const [modalVisible, setModalVisible] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const tabs = [{label:"Contractor MSA" , value:1}, {label:"Service MSA" , value:2},{label:'Approved' , value:3}, {label:'Pending' , value:4}, {label:'Rejected' , value:5}];
-console.log("msaData",msaData);
+const [userType, setUserType] = useState("");
+
+useEffect(() => {
+  const loadUserType = async () => {
+    const type = await AsyncStorage.getItem("userType");
+    setUserType(type);     // "RESOURCE_USER" or "ORG_USER" or any other
+  };
+  loadUserType();
+}, []);
+
+const filteredTabs = userType === "RESOURCE_USER"
+  ? tabs.filter(t => t.value !== 2)     // remove Service SOW
+  : tabs;
+
 
 const formatDate = (date) => {
   const year = date.getFullYear();
@@ -264,20 +278,26 @@ const renderStatusBadge = (status: string) => {
       <StatusBar barStyle="dark-content" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Master Service Agreements</Text>
-       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-  <Text style={styles.addButtonText}>+ Add MSA</Text>
-</TouchableOpacity>
+   <View style={styles.header}>
+  <Text style={styles.headerTitle}>Master Service Agreements</Text>
 
-      </View>
+  {userType !== "RESOURCE_USER" && (
+    <TouchableOpacity
+      style={styles.addButton}
+      onPress={() => setModalVisible(true)}
+    >
+      <Text style={styles.addButtonText}>+ Add MSA</Text>
+    </TouchableOpacity>
+  )}
+</View>
+
 
       {/* Tabs */}
    <ScrollView 
   horizontal
   style={styles.tabsContainer}
 >
-  {tabs.map((tab) => (
+  {filteredTabs.map((tab) => (
     <TouchableOpacity
       key={tab.value}
       style={[

@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Linking, TextInput, StyleSheet } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
+
+
+
 
 const helpData = [
   {
@@ -31,6 +35,7 @@ const helpData = [
 const HelpScreen = () => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [search, setSearch] = useState('');
+  const navigation = useNavigation();
 
   const filteredData = helpData.filter(item =>
     item.question.toLowerCase().includes(search.toLowerCase())
@@ -68,6 +73,13 @@ const HelpScreen = () => {
         <Text style={styles.contactTitle}>Need More Help?</Text>
         <TouchableOpacity onPress={handleSupportEmail} style={styles.supportButton}>
           <Text style={styles.supportButtonText}>📧 Email Support</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate("CrispChat")}
+          style={styles.supportButton}
+        >
+          <Text style={styles.supportButtonText}>💬 Chat With Support</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -113,13 +125,14 @@ const styles = StyleSheet.create({
   },
   contactContainer: {
     marginTop: 20,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   contactTitle: {
     fontSize: 18,
     marginBottom: 10
   },
   supportButton: {
+    marginTop: 10,
     backgroundColor: '#0E3386',
     padding: 12,
     borderRadius: 8,

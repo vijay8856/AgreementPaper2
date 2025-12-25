@@ -3,7 +3,12 @@ import HelpScreen from '../screens/HelpScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TalentDashboard from '../screens/TalentDashboard';
 import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
-
+import TopOrganisation from '../screens/OrganizationModules/TopOrganization'
+import LatestJobsScreen from '../screens/LatestJobsScreen';
+import JobDetailScreen from '../screens/JobDetailScreen';
+import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
+import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
+import ViewTalentProfileScreen from '../screens/ViewTalentProfileScreen';
 
 const Drawer = createDrawerNavigator();
 
@@ -27,11 +32,77 @@ export const TalentDrawerNavigator = () => {
                 name="Talent Dashboard"
                 component={TalentDashboard}
                 options={{
-                    headerShown: false,
+                    headerShown: true,
 
                 }}
             />
-
+            <Drawer.Screen
+                name="Top Organisation"
+                component={TopOrganisation}
+                options={{
+                    title: 'Top Organisation',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
+            <Drawer.Screen
+                name="LatestJobsScreen"
+                component={LatestJobsScreen}
+                options={{
+                    title: 'Latest Jobs ',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
+            <Drawer.Screen
+                    name="MasterAgreement"
+                    component={MasterAgreement}
+                    options={{
+                      title: 'Master Service Agreement (MSA)',
+                      headerShown: true,
+                      headerStyle: { backgroundColor: '#0E3386' },
+                      headerTintColor: '#fff',
+                      headerTitleStyle: { fontWeight: 'bold' },
+                    }}
+                  />
+                  <Drawer.Screen
+                    name="StatementOfWork"
+                    component={StatementOfWork}
+                    options={{
+                      title: 'Statement Of Work (SOW)',
+                      headerShown: true,
+                      headerStyle: { backgroundColor: '#0E3386' },
+                      headerTintColor: '#fff',
+                      headerTitleStyle: { fontWeight: 'bold' },
+                    }}
+                  />
+                  
+            <Drawer.Screen
+                name="JobDetailScreen"
+                component={JobDetailScreen}
+                options={{
+                    title: 'Job Detail',
+                    headerShown: true,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
+            <Drawer.Screen
+                name="ViewTalentProfileScreen"
+                component={ViewTalentProfileScreen}
+                options={{
+                    title: 'View Talent Profile ',
+                    headerShown: false,
+                    headerStyle: { backgroundColor: '#0E3386' },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                }}
+            />
             <Drawer.Screen
                 name="SupplierAgencyScreen"
                 component={SupplierAgencyScreen}

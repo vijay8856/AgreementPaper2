@@ -27,7 +27,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Checkbox from '../components/CommanCheckbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { GOOGLE_WEB_CLIENT_ID } from '@env';
-import Icon from 'react-native-vector-icons/Ionicons'; 
+import Icon from 'react-native-vector-icons/Ionicons';
 import { CommonActions } from '@react-navigation/native';
 import CustomAlert from '../components/CustomAlert';
 import { useIsFocused } from '@react-navigation/native';
@@ -40,30 +40,30 @@ const { width } = Dimensions.get('window');
 
 
 const LoginScreen: React.FC = () => {
-const navigation = useNavigation<LoginScreenNavigationProp>();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
- const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState(1);
   const [otpEmail, setOtpEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-const [alertVisible, setAlertVisible] = React.useState(false);
-const [passwordVisible, setPasswordVisible] = useState(false);
+  const [alertVisible, setAlertVisible] = React.useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-const isFocused = useIsFocused();
-useEffect(() => {
-  GoogleSignin.configure({
-    webClientId:"601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
-    //  GOOGLE_WEB_CLIENT_ID,
-    offlineAccess: true,
-    forceCodeForRefreshToken: true,
-  });
-}, []);
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: "601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
+      //  GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: true,
+      forceCodeForRefreshToken: true,
+    });
+  }, []);
 
 
   const handleSignup = () => {
@@ -71,303 +71,312 @@ useEffect(() => {
     navigation.navigate('SignUp');
   };
 
-const handleLogin = async (loginType: 'google' | 'email') => {
-  try {
-    setLoading(true);
+  const handleLogin = async (loginType: 'google' | 'email') => {
+    try {
+      setLoading(true);
 
-    // -------- Google Login flow ----------
-    if (loginType === 'google') {
-  console.log("    come in try");
-  
-      await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signOut(); 
+      // -------- Google Login flow ----------
+      if (loginType === 'google') {
+        console.log("    come in try");
 
-      const userInfo = await GoogleSignin.signIn();
-
-      const tokens = await GoogleSignin.getTokens();
-
-
-      const accessToken = tokens?.accessToken;
-      const idToken = tokens?.idToken;
-
-      console.log("accessToken", accessToken);
-      console.log("tokens", tokens);
-      console.log("userInfo", userInfo);
-
-      if (!accessToken) {
+        await GoogleSignin.hasPlayServices();
         await GoogleSignin.signOut();
-        setLoading(false);
-        Toast.show({
-          type: 'error',
-          text1: 'Google Login Failed',
-          text2: 'No access token received. Please try again.',
-          position: 'top',
-        });
-        return;
-      }
 
-      // Try login with access token
-      let tokenResult = await Services.sendAccessToken(accessToken);
-      console.log("sendAccessToken result", tokenResult);
+        const userInfo = await GoogleSignin.signIn();
 
-//       if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
-//   setLoading(false); // Stop loader before showing alert
-// Alert.alert(
-//     'Account Not Found',
-//     'No account was found with your Google account. Would you like to sign up instead?',
-//     [
-//       {
-//         text: 'Cancel',
-//         style: 'cancel',
-//       },
-//       {
-//         text: 'Go to Signup',
-//         onPress: () => {
-//           // Navigate to Signup screen instead of calling googleSignup
-//           navigation.navigate('SignUp', { from: 'google' });
-//         },
-//       },
-//     ],
-//     { cancelable: false }
-//   );
-//   return; 
-// }
-if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
-  setLoading(false);
-  setAlertVisible(true);
-  return;
-}
-//   Alert.alert(
-//     'Account Not Found',
-//     'No account was found with your Google account. Would you like to Google sign up instead?',
-//     [
-//       {
-//         text: 'Cancel',
-//         style: 'cancel',
-//       },
-//       {
-//         text: 'Google Sign Up',
-//         onPress: async () => {
-//           try {
-//             setLoading(true); // Show loader again on signup
-//             const tokenResult2 = await Services.googleSignup(accessToken);
-//             console.log("googleSignup result", tokenResult2);
-
-//             if (!tokenResult2.success) {
-//               setLoading(false);
-//               Toast.show({
-//                 type: 'error',
-//                 text1: 'Google Signup Failed',
-//                 text2: tokenResult2.error || 'Could not sign up with Google',
-//                 position: 'top',
-//               });
-//               return;
-//             }
-
-//             // Success: Save user data and navigate
-//             const user = tokenResult2?.data?.user;
-// console.log("useruser",user);
-//   await AsyncStorage.multiSet([
-//         ['first_Name', user?.first_name || ''],
-//         ['last_Name', user?.last_name || ''],
-//         ['email', user?.email || ''],
-//         ['profilePic', user?.profile?.logo || ''],
-//         ['Token', tokenResult.data?.key || ''],
-//         ['hasLoggedIn', 'true'],
-//         ['userType', String(user?.user_type || '')],
-//         ['userId', String(user?.id || '')],
-//                     ['isActive', user?.profile?.is_active?.toString() || 'false'],
-
-//       ]);
-// //             await AsyncStorage.setItem('first_Name', user?.first_name || '');
-// //             await AsyncStorage.setItem('last_Name', user?.last_name || '');
-// //             await AsyncStorage.setItem('email', user?.email || '');
-// //             await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-// //             await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
-// //             await AsyncStorage.setItem('hasLoggedIn', 'true');
-// // await AsyncStorage.setItem('userType', user?.user_type);
-// // await AsyncStorage.setItem('userId', user?.id);
+        const tokens = await GoogleSignin.getTokens();
 
 
-//             Toast.show({
-//               type: 'success',
-//               text1: 'Signup successful!',
-//               position: 'top',
-//             });
+        const accessToken = tokens?.accessToken;
+        const idToken = tokens?.idToken;
 
-//             setTimeout(() => {
-//               setLoading(false);
-//               navigation.dispatch(
-//                 CommonActions.reset({
-//                   index: 0,
-//                   routes: [{ name: 'AuthLoading' }],
-//                 })
-//               );
-//             }, 1000);
-//           } catch (signupErr: any) {
-//             setLoading(false);
-//             Toast.show({
-//               type: 'error',
-//               text1: 'Signup Error',
-//               text2: signupErr.message || 'Something went wrong during signup',
-//               position: 'top',
-//             });
-//           }
-//         }
-//       }
-//     ],
-//     { cancelable: false }
-//   );
+        console.log("accessToken", accessToken);
+        console.log("tokens", tokens);
+        console.log("userInfo", userInfo);
 
-//   return;
-// }
+        if (!accessToken) {
+          await GoogleSignin.signOut();
+          setLoading(false);
+          Toast.show({
+            type: 'error',
+            text1: 'Google Login Failed',
+            text2: 'No access token received. Please try again.',
+            position: 'top',
+          });
+          return;
+        }
 
-      else if (!tokenResult.success) {
-        // Other login failure (not "Account not found")
-        setLoading(false);
-        Toast.show({
-          type: 'error',
-          text1: 'Google Login Failed',
-          text2: tokenResult.error || 'Could not authenticate with Google',
-          position: 'top',
-        });
-        return;
-      }
+        // Try login with access token
+        let tokenResult = await Services.sendAccessToken(accessToken);
+        console.log("sendAccessToken result", tokenResult);
 
-      // Save user data and navigate to Dashboard
-      const user = tokenResult?.data?.user;
-      console.log("useruser",user);
-      
-await AsyncStorage.multiSet([
-                    ['first_Name', user?.first_name || ''],
-                    ['last_Name', user?.last_name || ''],
-                    ['email', user?.email || ''],
-                    ['profilePic', user?.profile?.logo || ''],
-                    ['Token', tokenResult.data?.key || ''],
-                    ['hasLoggedIn', 'true'],
-                    ['userType', String(user?.user_type || '')],
-                    ['userId', String(user?.id || '')],
-                    ['isActive', user?.profile?.is_active?.toString() || 'false'],
-                  ]);
-//       await AsyncStorage.setItem('first_Name', user?.first_name || '');
-//       await AsyncStorage.setItem('last_Name', user?.last_name || '');
-//       await AsyncStorage.setItem('email', user?.email || '');
-//       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-//       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
-//       await AsyncStorage.setItem('hasLoggedIn', 'true');
-// await AsyncStorage.setItem('userType', user?.user_type);
-// await AsyncStorage.setItem('userId', user?.id);
+        //       if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+        //   setLoading(false); // Stop loader before showing alert
+        // Alert.alert(
+        //     'Account Not Found',
+        //     'No account was found with your Google account. Would you like to sign up instead?',
+        //     [
+        //       {
+        //         text: 'Cancel',
+        //         style: 'cancel',
+        //       },
+        //       {
+        //         text: 'Go to Signup',
+        //         onPress: () => {
+        //           // Navigate to Signup screen instead of calling googleSignup
+        //           navigation.navigate('SignUp', { from: 'google' });
+        //         },
+        //       },
+        //     ],
+        //     { cancelable: false }
+        //   );
+        //   return; 
+        // }
+        if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+          setLoading(false);
+          setAlertVisible(true);
+          return;
+        }
+        //   Alert.alert(
+        //     'Account Not Found',
+        //     'No account was found with your Google account. Would you like to Google sign up instead?',
+        //     [
+        //       {
+        //         text: 'Cancel',
+        //         style: 'cancel',
+        //       },
+        //       {
+        //         text: 'Google Sign Up',
+        //         onPress: async () => {
+        //           try {
+        //             setLoading(true); // Show loader again on signup
+        //             const tokenResult2 = await Services.googleSignup(accessToken);
+        //             console.log("googleSignup result", tokenResult2);
 
+        //             if (!tokenResult2.success) {
+        //               setLoading(false);
+        //               Toast.show({
+        //                 type: 'error',
+        //                 text1: 'Google Signup Failed',
+        //                 text2: tokenResult2.error || 'Could not sign up with Google',
+        //                 position: 'top',
+        //               });
+        //               return;
+        //             }
 
-      Toast.show({
-        type: 'success',
-        text1: 'Login successful!',
-        position: 'top',
-      });
+        //             // Success: Save user data and navigate
+        //             const user = tokenResult2?.data?.user;
+        // console.log("useruser",user);
+        //   await AsyncStorage.multiSet([
+        //         ['first_Name', user?.first_name || ''],
+        //         ['last_Name', user?.last_name || ''],
+        //         ['email', user?.email || ''],
+        //         ['profilePic', user?.profile?.logo || ''],
+        //         ['Token', tokenResult.data?.key || ''],
+        //         ['hasLoggedIn', 'true'],
+        //         ['userType', String(user?.user_type || '')],
+        //         ['userId', String(user?.id || '')],
+        //                     ['isActive', user?.profile?.is_active?.toString() || 'false'],
 
-      setTimeout(() => {
-        setLoading(false);
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'AuthLoading' }],
-          })
-        );
-      }, 1000);
-    }
-
-    // -------- Email Login flow ----------
-    else if (loginType === 'email') {
-      if (!email || !password) {
-        Toast.show({
-          type: 'error',
-          text1: 'Missing Input',
-          text2: 'Please enter both email and password.',
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (!agreeTerms) {
-        Toast.show({
-          type: 'error',
-          text1: 'Terms Not Accepted',
-          text2: 'You must agree to the terms and conditions.',
-        });
-        setLoading(false);
-        return;
-      }
-// console.log("email",email);
-// console.log("password",password);
+        //       ]);
+        // //             await AsyncStorage.setItem('first_Name', user?.first_name || '');
+        // //             await AsyncStorage.setItem('last_Name', user?.last_name || '');
+        // //             await AsyncStorage.setItem('email', user?.email || '');
+        // //             await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+        // //             await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
+        // //             await AsyncStorage.setItem('hasLoggedIn', 'true');
+        // // await AsyncStorage.setItem('userType', user?.user_type);
+        // // await AsyncStorage.setItem('userId', user?.id);
 
 
-      const result = await Services.login(email, password);
-console.log("result login",result);
+        //             Toast.show({
+        //               type: 'success',
+        //               text1: 'Signup successful!',
+        //               position: 'top',
+        //             });
 
-      if (result.data.status === 200) {
+        //             setTimeout(() => {
+        //               setLoading(false);
+        //               navigation.dispatch(
+        //                 CommonActions.reset({
+        //                   index: 0,
+        //                   routes: [{ name: 'AuthLoading' }],
+        //                 })
+        //               );
+        //             }, 1000);
+        //           } catch (signupErr: any) {
+        //             setLoading(false);
+        //             Toast.show({
+        //               type: 'error',
+        //               text1: 'Signup Error',
+        //               text2: signupErr.message || 'Something went wrong during signup',
+        //               position: 'top',
+        //             });
+        //           }
+        //         }
+        //       }
+        //     ],
+        //     { cancelable: false }
+        //   );
+
+        //   return;
+        // }
+
+        else if (!tokenResult.success) {
+          // Other login failure (not "Account not found")
+          setLoading(false);
+          Toast.show({
+            type: 'error',
+            text1: 'Google Login Failed',
+            text2: tokenResult.error || 'Could not authenticate with Google',
+            position: 'top',
+          });
+          return;
+        }
+
+        // Save user data and navigate to Dashboard
+        const user = tokenResult?.data?.user;
+        console.log("useruser", user);
+
+        await AsyncStorage.multiSet([
+          ['first_Name', user?.first_name || ''],
+          ['last_Name', user?.last_name || ''],
+          ['email', user?.email || ''],
+          ['profilePic', user?.profile?.logo || ''],
+          ['Token', tokenResult.data?.key || ''],
+          ['hasLoggedIn', 'true'],
+          ['userType', String(user?.user_type || '')],
+          ['userId', String(user?.id || '')],
+          ['isActive', user?.profile?.is_active?.toString() || 'false'],
+           ['company', user.profile?.company_name?.toString() || ''],
+            ['slug', user?.profile?.slug || '']
+        ]);
+        //       await AsyncStorage.setItem('first_Name', user?.first_name || '');
+        //       await AsyncStorage.setItem('last_Name', user?.last_name || '');
+        //       await AsyncStorage.setItem('email', user?.email || '');
+        //       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
+        //       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
+        //       await AsyncStorage.setItem('hasLoggedIn', 'true');
+        // await AsyncStorage.setItem('userType', user?.user_type);
+        // await AsyncStorage.setItem('userId', user?.id);
+
+
         Toast.show({
           type: 'success',
-          text1: result?.data?.message ||'Login successful!',
+          text1: 'Login successful!',
           position: 'top',
         });
 
-        // await AsyncStorage.setItem('Token', result.data?.key || '');
-        // await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
-        // await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
-        // await AsyncStorage.setItem('email', result.data?.data?.email || '');
-        // await AsyncStorage.setItem('hasLoggedIn', 'true');
-        // await AsyncStorage.setItem('userType', result.data?.payload?.user_type);
-        // await AsyncStorage.setItem('isActive', result.data?.payload?.profile?.is_active);
-
-    await AsyncStorage.multiSet([
-      ['Token', result.data.key || ''],
-      ['first_Name', result.data.payload?.first_name || ''],
-      ['last_Name', result.data.payload?.last_name || ''],
-      ['email', result.data.payload?.email || ''],
-      ['hasLoggedIn', 'true'],
-      ['userType', result.data.payload?.user_type || ''],
-      ['isActive', result.data.payload?.profile?.is_active?.toString() || 'false'],
-   ['userId', result.data.payload?.id?.toString() || ''],
-    ]);
-
-   
         setTimeout(() => {
           setLoading(false);
-          navigation.navigate('AuthLoading');
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'AuthLoading' }],
+            })
+          );
         }, 1000);
-      } else {
-        setLoading(false);
-        Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
-          text2: result.data?.message || 'Invalid credentials',
-          position: 'top',
-        });
       }
+
+      // -------- Email Login flow ----------
+      else if (loginType === 'email') {
+        if (!email || !password) {
+          Toast.show({
+            type: 'error',
+            text1: 'Missing Input',
+            text2: 'Please enter both email and password.',
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (!agreeTerms) {
+          Toast.show({
+            type: 'error',
+            text1: 'Terms Not Accepted',
+            text2: 'You must agree to the terms and conditions.',
+          });
+          setLoading(false);
+          return;
+        }
+        // console.log("email",email);
+        // console.log("password",password);
+
+
+        const result = await Services.login(email, password);
+        console.log("result login", result);
+
+        if (result.data.status === 200) {
+          Toast.show({
+            type: 'success',
+            text1: result?.data?.message || 'Login successful!',
+            position: 'top',
+          });
+
+          // await AsyncStorage.setItem('Token', result.data?.key || '');
+          // await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
+          // await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
+          // await AsyncStorage.setItem('email', result.data?.data?.email || '');
+          // await AsyncStorage.setItem('hasLoggedIn', 'true');
+          // await AsyncStorage.setItem('userType', result.data?.payload?.user_type);
+          // await AsyncStorage.setItem('isActive', result.data?.payload?.profile?.is_active);
+
+          await AsyncStorage.multiSet([
+            ['Token', result.data.key || ''],
+            ['first_Name', result.data.payload?.first_name || ''],
+            ['last_Name', result.data.payload?.last_name || ''],
+            ['email', result.data.payload?.email || ''],
+            ['hasLoggedIn', 'true'],
+            ['userType', result.data.payload?.user_type || ''],
+            ['isActive', result.data.payload?.profile?.is_active?.toString() || 'false'],
+            ['userId', result.data.payload?.id?.toString() || ''],
+            ['company', result.data.payload?.profile?.company_name?.toString() || ''],
+            ['slug', result.data.payload?.profile?.slug || ''],
+            ['agencyType', result.data.payload?.agency_type || '']
+
+            
+
+
+          ]);
+
+
+          setTimeout(() => {
+            setLoading(false);
+            navigation.navigate('AuthLoading');
+          }, 1000);
+        } else {
+          setLoading(false);
+          Toast.show({
+            type: 'error',
+            text1: 'Login Failed',
+            text2: result.data?.message || 'Invalid credentials',
+            position: 'top',
+          });
+        }
+      }
+    } catch (err: any) {
+      setLoading(false);
+      const errorMessage = err?.message || 'Something went wrong during login';
+      const errorCode = err?.code || 'No code';
+      const fullError = JSON.stringify(err, null, 2);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: `${errorCode}: ${errorMessage}`,
+      });
+
+      console.log('🛑 Google login failed:');
+      console.log('➡️ Code:', errorCode);
+      console.log('➡️ Message:', errorMessage);
+      console.log('➡️ Full Error:', fullError);
     }
-  } catch (err: any) {
-    setLoading(false);
-    const errorMessage = err?.message || 'Something went wrong during login';
-    const errorCode = err?.code || 'No code';
-    const fullError = JSON.stringify(err, null, 2);
-
-    Toast.show({
-      type: 'error',
-      text1: 'Error',
-      text2: `${errorCode}: ${errorMessage}`,
-    });
-
-    console.log('🛑 Google login failed:');
-    console.log('➡️ Code:', errorCode);
-    console.log('➡️ Message:', errorMessage);
-    console.log('➡️ Full Error:', fullError);
-  }
-};
+  };
 
 
-const handleLinkedinLogin = () => {
-  navigation.navigate('LinkedInLoginScreen');
-};
+  const handleLinkedinLogin = () => {
+    navigation.navigate('LinkedInLoginScreen');
+  };
 
 
 
@@ -375,8 +384,8 @@ const handleLinkedinLogin = () => {
     <View style={styles.socialContainer}>
       <TouchableOpacity
         style={styles.socialButton}
-      onPress={() => isFocused && handleLogin('google')}
-  disabled={loading || !isFocused}
+        onPress={() => isFocused && handleLogin('google')}
+        disabled={loading || !isFocused}
       >
         <Image
           source={require('../assets/images/search.png')}
@@ -386,7 +395,7 @@ const handleLinkedinLogin = () => {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.socialButton}
-      onPress={handleLinkedinLogin}
+        onPress={handleLinkedinLogin}
       >
         <Image
           source={require('../assets/images/linkedin.png')}
@@ -398,33 +407,33 @@ const handleLinkedinLogin = () => {
 
   );
   const handleSendResetCode = async () => {
-  setLoading(true);
-  try {
-    const res = await Services.forgetPassword({ email: otpEmail });
-    if (res.success) {
-      setResetStep(2);
-    } else {
+    setLoading(true);
+    try {
+      const res = await Services.forgetPassword({ email: otpEmail });
+      if (res.success) {
+        setResetStep(2);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to send code',
+          text2: res.error?.email || 'Unknown error',
+        });
+      }
+    } catch (e) {
       Toast.show({
         type: 'error',
-        text1: 'Failed to send code',
-        text2: res.error?.email || 'Unknown error',
+        text1: 'Error',
+        text2: e.message || 'Something went wrong',
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (e) {
-    Toast.show({
-      type: 'error',
-      text1: 'Error',
-      text2: e.message || 'Something went wrong',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   //  const handleSendResetCode = async () => {
   //   setLoading(true)
   //   const res = await Services.forgetPassword({ email: otpEmail });
-    
+
   //   if (res.success) {
   //     setResetStep(2);
   //   setLoading(false)
@@ -438,38 +447,38 @@ const handleLinkedinLogin = () => {
   //   }
   // };
 
-const handleResetPassword = async () => {
-  const formData = new FormData();
-  formData.append('code', otpCode); // or token, as per your API
-  formData.append('password', newPassword);
+  const handleResetPassword = async () => {
+    const formData = new FormData();
+    formData.append('code', otpCode); // or token, as per your API
+    formData.append('password', newPassword);
 
-  try {
-    setLoading(true)
+    try {
+      setLoading(true)
 
-    const res = await Services.forgetPasswordReset(formData); // API call with FormData
-    setLoading(false)
+      const res = await Services.forgetPasswordReset(formData); // API call with FormData
+      setLoading(false)
 
-    if (res.success) {
-      setPasswordModalVisible(false);
-      setResetStep(1);
-      Toast.show({
-        type: 'success',
-        text1: 'Password updated',
-      });
-    } else {
+      if (res.success) {
+        setPasswordModalVisible(false);
+        setResetStep(1);
+        Toast.show({
+          type: 'success',
+          text1: 'Password updated',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: res.data.code || 'Failed to reset password',
+        });
+      }
+    } catch (error) {
       Toast.show({
         type: 'error',
-        text1: res.data.code || 'Failed to reset password',
+        text1: 'An unexpected error occurred',
       });
+      console.log('Reset error:', error);
     }
-  } catch (error) {
-    Toast.show({
-      type: 'error',
-      text1: 'An unexpected error occurred',
-    });
-    console.log('Reset error:', error);
-  }
-};
+  };
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -498,19 +507,20 @@ const handleResetPassword = async () => {
           <TextInput
             style={styles.input}
             placeholder="Enter email address"
-            placeholderTextColor="#888"
+            placeholderTextColor={'black'}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
           />
- <View style={styles.passwordWrapper}>
+          <View style={styles.passwordWrapper}>
             <TextInput
               placeholder="Enter password"
-        value={password}
+              value={password}
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
-              style={[styles.inputLoginPassword, { flex: 1, borderWidth: 0 }]}
+              placeholderTextColor={'black'}
+              style={[styles.inputLoginPassword, { flex: 1, borderWidth: 0, color: "#000" }]}
             />
             <TouchableOpacity
               onPress={() => setPasswordVisible((prev) => !prev)}
@@ -523,7 +533,7 @@ const handleResetPassword = async () => {
               />
             </TouchableOpacity>
           </View>
-      {/* <TextInput
+          {/* <TextInput
             style={styles.input1}
 
         placeholder="Enter password"
@@ -553,7 +563,7 @@ const handleResetPassword = async () => {
 
 
 
-          <TouchableOpacity  onPress={() => setPasswordModalVisible(true)}>
+          <TouchableOpacity onPress={() => setPasswordModalVisible(true)}>
             <Text style={styles.forgotPassword}>Forgot password</Text>
           </TouchableOpacity>
 
@@ -598,7 +608,7 @@ const handleResetPassword = async () => {
           </TouchableOpacity>
         </View>
 
-{/* <Modal visible={passwordModalVisible} animationType="slide" transparent>
+        {/* <Modal visible={passwordModalVisible} animationType="slide" transparent>
   <View style={{ flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.90)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
 
 
@@ -646,7 +656,7 @@ const handleResetPassword = async () => {
         </View>
       </Modal> */}
 
-{/* <Modal visible={passwordModalVisible} animationType="slide" transparent={true}>
+        {/* <Modal visible={passwordModalVisible} animationType="slide" transparent={true}>
   <View style={styles.modalOverlay}>
     <View style={styles.modalContent}>
       {resetStep === 1 ? (
@@ -693,86 +703,86 @@ const handleResetPassword = async () => {
     </View>
   </View>
 </Modal> */}
-<Modal visible={passwordModalVisible} animationType="slide" transparent>
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      {resetStep === 1 ? (
-        <>
-          <TextInput
-            placeholder="Enter your email"
-            value={otpEmail}
-            onChangeText={setOtpEmail}
-            style={styles.input1}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+        <Modal visible={passwordModalVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              {resetStep === 1 ? (
+                <>
+                  <TextInput
+                    placeholder="Enter your email"
+                    value={otpEmail}
+                    onChangeText={setOtpEmail}
+                    style={styles.input1}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
 
-          <TouchableOpacity style={styles.button2} onPress={handleSendResetCode} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Send OTP</Text>
-            )}
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <TextInput
-            placeholder="Enter OTP"
-            value={otpCode}
-            onChangeText={setOtpCode}
-            style={styles.input1}
-            keyboardType="number-pad"
-          />
+                  <TouchableOpacity style={styles.button2} onPress={handleSendResetCode} disabled={loading}>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Send OTP</Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TextInput
+                    placeholder="Enter OTP"
+                    value={otpCode}
+                    onChangeText={setOtpCode}
+                    style={styles.input1}
+                    keyboardType="number-pad"
+                  />
 
-          {/* Password field with eye icon */}
-          <View style={styles.passwordWrapper2}>
-            <TextInput
-              placeholder="New Password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry={!passwordVisible}
-              style={[styles.inputNewPassword, { flex: 1, borderWidth: 0 }]}
-            />
-            <TouchableOpacity
-              onPress={() => setPasswordVisible((prev) => !prev)}
-              style={styles.eyeButton}
-            >
-              <Icon
-                name={passwordVisible ? 'eye' : 'eye-off'}
-                size={22}
-                color="#555"
-              />
-            </TouchableOpacity>
+                  {/* Password field with eye icon */}
+                  <View style={styles.passwordWrapper2}>
+                    <TextInput
+                      placeholder="New Password"
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      secureTextEntry={!passwordVisible}
+                      style={[styles.inputNewPassword, { flex: 1, borderWidth: 0 }]}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setPasswordVisible((prev) => !prev)}
+                      style={styles.eyeButton}
+                    >
+                      <Icon
+                        name={passwordVisible ? 'eye' : 'eye-off'}
+                        size={22}
+                        color="#555"
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
+                    <Text style={styles.buttonText}>Reset Password</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <TouchableOpacity
+                onPress={() => {
+                  setPasswordModalVisible(false);
+                  setResetStep(1);
+                }}
+                style={styles.buttonlink}
+              >
+                <Text style={styles.link2}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        </Modal>
 
-          <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
-            <Text style={styles.buttonText}>Reset Password</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      <TouchableOpacity
-        onPress={() => {
-          setPasswordModalVisible(false);
-          setResetStep(1);
-        }}
-        style={styles.buttonlink}
-      >
-        <Text style={styles.link2}>Cancel</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-
-<CustomAlert
-  visible={alertVisible}
-  onDismiss={() => setAlertVisible(false)}
-  onConfirm={() => {
-    setAlertVisible(false);
-    navigation.navigate("SignUp");
-  }}
-/>
+        <CustomAlert
+          visible={alertVisible}
+          onDismiss={() => setAlertVisible(false)}
+          onConfirm={() => {
+            setAlertVisible(false);
+            navigation.navigate("SignUp");
+          }}
+        />
 
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -784,7 +794,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-    inputContainer: {
+  inputContainer: {
     fontSize: 16,
     color: '#000',
     height: 50,
@@ -793,8 +803,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    justifyContent:'space-between',
-    paddingLeft:8
+    justifyContent: 'space-between',
+    paddingLeft: 8
   },
   // input: {
   //   flex: 1,
@@ -832,28 +842,28 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   passwordWrapper: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 8,
-  marginBottom: 15,
-  paddingHorizontal: 10,
-},
-passwordWrapper2:{
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 8,
-  marginBottom: 15,
-  paddingHorizontal: 10,
-  maxWidth:290,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  passwordWrapper2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    maxWidth: 290,
 
-},
-eyeButton: {
-  paddingHorizontal: 6,
-},
+  },
+  eyeButton: {
+    paddingHorizontal: 6,
+  },
 
   baseTag: {
     fontSize: 12,
@@ -903,7 +913,7 @@ eyeButton: {
     marginBottom: 16,
     color: '#000',
   },
-  
+
   fixedButtonContainer: {
     padding: 24,
     backgroundColor: '#fff',
@@ -935,7 +945,7 @@ eyeButton: {
     alignItems: 'baseline',
     flexDirection: 'row',
     gap: 5,
-    marginBottom:15
+    marginBottom: 15
   },
   termsContainer: {
     marginTop: 20,
@@ -986,56 +996,56 @@ eyeButton: {
     fontSize: 14,
     color: '#000078',
   },
-modalOverlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.4)', // optional dim background
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // optional dim background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-modalContent: {
-  width: '90%',
-  backgroundColor: '#fff', // solid white box
-  borderRadius: 12,
-  padding: 20,
-  alignItems: 'center',
-},
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff', // solid white box
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
 
-input1:{
- borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+  input1: {
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 10, width: '94%', marginVertical: 10,
   },
-  inputNewPassword:{
-     borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    width: '80%', 
+  inputNewPassword: {
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    width: '80%',
   },
-   inputLoginPassword:{
-     borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    width: '80%', 
-  }, 
-  resetbutton:{
-     backgroundColor: '#000078', 
-    padding: 10, 
-    borderRadius: 8, 
-      paddingHorizontal:'29%', 
-    marginTop: 10, 
-    alignItems: 'center' 
-},
-  button2: { 
-    backgroundColor: '#000078', 
-    padding: 10, 
-    borderRadius: 8, 
-      paddingHorizontal:'35%', 
-    marginTop: 10, 
-    alignItems: 'center' 
+  inputLoginPassword: {
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    width: '80%',
   },
-    buttonlink: { 
-    backgroundColor: '#000078', 
+  resetbutton: {
+    backgroundColor: '#000078',
     padding: 10,
-    paddingHorizontal:'40%', 
-    borderRadius: 8, 
-    marginTop: 10, 
-    alignItems: 'center' 
+    borderRadius: 8,
+    paddingHorizontal: '29%',
+    marginTop: 10,
+    alignItems: 'center'
+  },
+  button2: {
+    backgroundColor: '#000078',
+    padding: 10,
+    borderRadius: 8,
+    paddingHorizontal: '35%',
+    marginTop: 10,
+    alignItems: 'center'
+  },
+  buttonlink: {
+    backgroundColor: '#000078',
+    padding: 10,
+    paddingHorizontal: '40%',
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: 'center'
   },
   link2: { color: '#fff', fontWeight: 'bold' },
 

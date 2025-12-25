@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Services from '../../Services/services';
 import { Picker } from "@react-native-picker/picker";
 import { ActivityIndicator } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 // Define types
 type Material = {
     id: string;
@@ -67,8 +68,9 @@ type SowFieldsType = {
 };
 type FormType = 'milestone' | 'material';
 
-const CreateServiceSow: React.FC = (navigation) => {
+const CreateServiceSow: React.FC = () => {
     // Main form state
+      const navigation = useNavigation()
     const [msa, setMsa] = useState<string>('');
     const [title, setTitle] = useState<string>('');
     console.log("title", title);
@@ -492,7 +494,7 @@ const CreateServiceSow: React.FC = (navigation) => {
 
             if (response.success) {
                 Alert.alert('Success', 'SOW created successfully!');
-                // Reset form or navigate away
+               navigation.navigate("StatementOfWork");
             } else {
                 Alert.alert(
                     'Error',

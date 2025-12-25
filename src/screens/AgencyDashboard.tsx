@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,16 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  Image,
 } from 'react-native';
-import { LineChart, PieChart } from 'react-native-chart-kit';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OrganizationProfileModal from '../components/Modals/OrganizationProfileModal';
+import Notifications from '../components/Modals/Notifications';
+import { DeviceEventEmitter } from "react-native";
 const { width: screenWidth } = Dimensions.get('window');
 type DashboardDetails = {
   arr: { increment: number; total_arr: number };
@@ -23,54 +25,110 @@ type DashboardDetails = {
   costs: { increment: number; total_costs: number };
   timesheet: { increment: number; total_amount: number };
 };
+type SecRowDetails = {
+  msa: { approved: number; pending: number; completed: number };
+  sow: { approved: number; pending: number; completed: number };
+  timesheet: { pending: number; approved: number; rejected: number };
+  pending: { msa: number; sow: number; timesheet: number };
+  job: { active: number; applications: number };
+  profile_completion: number;
+};
+
 const AgencyDashboard = () => {
   // Sample data for charts
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
- const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [dashboardDetails, setDashboardDetails] = useState<DashboardDetails | null>(null);
+  const [secRowDetails, setSecRowDetails] = useState<SecRowDetails | null>(null);
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(true);
+  const [userData, setUserData] = useState<any>({});
+  const [companyName, setCompanyName] = useState("");
+  const [graphData, setGraphData] = useState<{ labels: string[]; revenue: number[]; expense: number[] }>({
+    labels: [],
+    revenue: [],
+    expense: [],
+  });
+  const [agencyType, setAgencyType] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadAgencyType = async () => {
+      const type = await AsyncStorage.getItem('agencyType');
+      
+      setAgencyType(type?.trim().toUpperCase() || null);
+    };
+
+    loadAgencyType();
+  }, []);
 
 
-  const totalSpendData = {
-    labels: ['Feb2025', 'Mar2025', 'Apr2025', 'May2025',],
-    datasets: [
-      {
-        data: [200000, 300000, 1200000, 400000,],
-        color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-        strokeWidth: 2,
-      },
-    ],
-  };
-
-  const contractStatusData = [
-    {
-      name: 'Active',
-      population: 17,
-      color: '#10B981',
-      legendFontColor: '#374151',
-      legendFontSize: 12,
-    },
-    {
-      name: 'Pending',
-      population: 83,
-      color: '#F59E0B',
-      legendFontColor: '#374151',
-      legendFontSize: 12,
-    },
-  ];
   useEffect(() => {
     const checkProfileStatus = async () => {
       const isActive = await AsyncStorage.getItem('isActive');
-      console.log("isActive",isActive);
-      
+      console.log("isActive", isActive);
+
       if (isActive !== 'true') {
         setShowProfileModal(true);
       }
     };
-    
+
     checkProfileStatus();
   }, []);
+  useEffect(() => {
+    console.log('agencyType 👉', agencyType);
+  }, [agencyType]);
+  const fetchGraphData = async () => {
+    setLoading(true);
+    const response = await Services.getAgencyDashboardGraphDetails();
+
+    if (response.success) {
+      const data = response.data;
+
+      // ✅ Filter only valid items (skip "total" object)
+      const filteredData = data.filter(
+        (item) =>
+          item.Date &&
+          typeof item.revenue === 'number' &&
+          isFinite(item.revenue) &&
+          typeof item.expense === 'number' &&
+          isFinite(item.expense)
+      );
+
+      const formattedLabels = filteredData.map((item) => {
+        try {
+          const [month, year] = item.Date.split(' ');
+          const shortMonth = month.substring(0, 3);
+          const shortYear = year.slice(-2);
+          return `${shortMonth} ${shortYear}`;
+        } catch (e) {
+          return item.Date;
+        }
+      });
+
+      setGraphData({
+        labels: formattedLabels,
+        revenue: filteredData.map((item) => Number(item.revenue) || 0),
+        expense: filteredData.map((item) => Number(item.expense) || 0),
+      });
+    }
+
+    setLoading(false);
+  };
+
+
+
+  useEffect(() => {
+    fetchGraphData();
+  }, []);
+
+  const safeRevenue = graphData.revenue.map(v =>
+    typeof v === 'number' && isFinite(v) ? v : 0
+  );
+  const safeExpense = graphData.expense.map(v =>
+    typeof v === 'number' && isFinite(v) ? v : 0
+  );
+
   const fetchAgencyDashboard = async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
@@ -91,7 +149,15 @@ const AgencyDashboard = () => {
         position: 'top',
       });
     }
-
+    const secResponse = await Services.getAgencyDashboardSecRow();
+    if (secResponse.success) setSecRowDetails(secResponse.data.payload);
+    else
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to load Dashboard Status',
+        text2: secResponse.error || 'Something went wrong',
+        position: 'top',
+      });
     setLoading(false);
     setRefreshing(false);
   };
@@ -101,9 +167,146 @@ const AgencyDashboard = () => {
 
 
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // First load from AsyncStorage for quick display
+        const storedData = await AsyncStorage.getItem('userData');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          // Convert relative paths to absolute
+          if (parsedData.profile_pic?.startsWith('/')) {
+            parsedData.profile_pic = `https://api.agreementpaper.com/${parsedData.profile_pic}`;
+          }
+          setUserData(parsedData);
+        }
+      } catch (error) {
+        console.log('Initial load error:', error);
+      }
+    };
+
+    loadData();
+  }, []);
 
 
 
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      "COMPANY_UPDATED",
+      (newName) => {
+        setCompanyName(newName); // 🔥 Instantly update dashboard header
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    const loadPremiumStatus = async () => {
+      const storedValue = await AsyncStorage.getItem('hasPremiumAccess');
+      const hasPremiumAccess = JSON.parse(storedValue || 'false');
+      const storedCompany = await AsyncStorage.getItem('company');
+      const angencyType = await AsyncStorage.getItem('agencyType');
+
+      console.log("storedCompany", storedCompany);
+
+      if (storedCompany) {
+        setCompanyName(storedCompany); // 🔥 Update state
+      }
+      navigation.setOptions({
+
+        headerTitle: () => (
+          <View style={{ flexDirection: "column" }}>
+            <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold", }}>
+              Agency
+              {" "}
+              {angencyType ? (
+                <Text style={{ color: "#fff", fontSize: 10, marginLeft: 2 }}>
+                  ({angencyType})
+                </Text>
+              ) : null}
+            </Text>
+
+            {companyName ? (
+              <Text style={{ color: "#fff", fontSize: 10, marginTop: 2 }}>
+                {companyName}
+              </Text>
+            ) : null}
+
+
+          </View>
+        ),
+        headerRight: () => (
+          <>
+            <View><Notifications /></View>
+            <View style={{ flexDirection: 'row', marginRight: 10 }}>
+              {/* Conditional Button */}
+              {hasPremiumAccess ? (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SubscriptionScreen')}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginRight: 12,
+                    backgroundColor: '#ffd700',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Icon name="crown" size={14} color="#000" />
+                  <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold', marginLeft: 5 }}>Premium</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SubscriptionScreen')}
+                  style={{
+                    marginRight: 12,
+                    backgroundColor: '#fbbf24',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
+                {userData?.profile_pic ? (
+                  <Image
+                    source={{
+                      uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+                    }}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      borderWidth: 1,
+                      borderColor: '#fff',
+                    }}
+                    onError={(e) => console.log('Profile pic error:', e.nativeEvent.error)}
+                  />
+                ) : (
+                  <Icon name="account-circle" size={28} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        ),
+        headerStyle: {
+          backgroundColor: '#0E3386',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      });
+    };
+
+    loadPremiumStatus();
+  }, [navigation, userData, companyName]);
   const MetricCard = ({ title, value, change, changeType, icon }: any) => (
     <View style={styles.metricCard}>
       <View style={styles.metricHeader}>
@@ -142,36 +345,94 @@ const AgencyDashboard = () => {
     </View>
   );
 
+
+  const allItems = [
+    { id: 1, icon: 'file-document-outline', label: 'AI-Full Review', screen: 'AIResFullReview', premium: true },
+    { id: 2, icon: 'chip', label: 'AI-Review', screen: 'AIReview', premium: true },
+    { id: 10, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: true },
+    { id: 12, icon: 'application-edit', label: 'MasterAgreement', screen: 'MasterAgreement', premium: false },
+    { id: 13, icon: 'animation', label: 'StatementOfWork', screen: 'StatementOfWork', premium: false },
+    { id: 5, icon: 'scale-balance', label: 'Lawyers', screen: 'LawyerNetwork', premium: false },
+    { id: 8, icon: 'gavel', label: 'Invite Lawyer', screen: 'InviteLawyer', premium: false },
+    { id: 3, icon: 'account-tie', label: 'Organization Profile', screen: 'LawyerOrgProfile', premium: true },
+    { id: 6, icon: 'briefcase-plus', label: 'Invite Organization', screen: 'InviteOrganization', premium: false },
+    { id: 7, icon: 'account-group', label: 'Invite Talent', screen: 'InviteResource', premium: false },
+    { id: 4, icon: 'cog-outline', label: 'Settings', screen: 'Settings', premium: false },
+    { id: 11, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
+    { id: 9, icon: 'help-circle-outline', label: 'Help', screen: 'HelpScreen', premium: false },
+    { id: 14, icon: 'account-box-outline', label: 'Talent Profile', screen: 'TalentProfileList', premium: false },
+    { id: 15, icon: 'clipboard-text-outline', label: 'Job Post', screen: 'JobPostScreen', premium: false },
+    { id: 16, icon: 'clipboard-text-outline', label: 'Individual Profile', screen: 'AllResourcesScreen', premium: false },
+    { id: 17, icon: 'clipboard-text-outline', label: 'Job List ', screen: 'LatestJobsScreen', premium: false },
+
+
+
+
+  ];
+  const RESTRICTED_SCREENS_BY_ROLE: Record<string, string[]> = {
+
+    RECRUITER: [
+      // 'LawyerOrgProfile',
+      // 'InviteOrganization',
+      // 'StatementOfWork',
+      // 'JobPostScreen',
+      // 'InviteResource',
+      // 'TalentProfileList',
+    ],
+
+    REAL_ESTATE_AGENT: [
+      'LawyerOrgProfile',
+      'InviteOrganization',
+      'StatementOfWork',
+      'JobPostScreen',
+      'InviteResource',
+      'TalentProfileList',
+      'LatestJobsScreen'
+    ],
+
+    GOODS_AND_SERVICE_SUPPLIER: [
+      // 'LawyerOrgProfile',
+      // 'InviteOrganization',
+      // 'StatementOfWork',
+      // 'JobPostScreen',
+      'InviteResource',
+      'LatestJobsScreen'
+
+      // 'TalentProfileList',
+    ],
+  };
+
+  const finalMenuItems = useMemo(() => {
+    return allItems.filter(item => {
+      // 🚫 Role-based restrictions
+      if (
+        agencyType &&
+        RESTRICTED_SCREENS_BY_ROLE[agencyType]?.includes(item.screen)
+      ) {
+        return false;
+      }
+
+      // 🚫 Premium restriction
+      if (!hasPremiumAccess && item.premium) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [agencyType, hasPremiumAccess]);
+
+
+
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
 
 
         {/* Top Metrics */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-            style={styles.menuButton}
-          >
-            <Icon name="menu" size={28} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Agency Dashboard</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyProfile')}
-            style={styles.profileButton}
-          >
-            <Icon name="account-circle" size={28} color="#fff" />
-          </TouchableOpacity>
-        </View>
         <View style={styles.topMetrics}>
           <View style={styles.metricsRow}>
-            <MetricCard
-              title="Total ARR"
-              value={dashboardDetails?.arr.total_arr ?? 0}
-              change={dashboardDetails?.arr.increment ?? 0}
-              changeType="increase"
-              icon="👥"
-            />
+
             <MetricCard
               title="Total Sales"
               value={dashboardDetails?.sales.total_sales ?? 0}
@@ -179,8 +440,6 @@ const AgencyDashboard = () => {
               changeType="increase"
               icon="💰"
             />
-          </View>
-          <View style={styles.metricsRow}>
             <MetricCard
               title="Total Costs"
               value={dashboardDetails?.costs.total_costs ?? 0}
@@ -188,6 +447,9 @@ const AgencyDashboard = () => {
               changeType="decrease"
               icon="📋"
             />
+          </View>
+          <View style={styles.metricsRow}>
+
             <MetricCard
               title="Total Timesheet"
               value={dashboardDetails?.timesheet.total_amount ?? 0}
@@ -195,159 +457,98 @@ const AgencyDashboard = () => {
               changeType="increase"
               icon="⭐"
             />
-          </View>
-        </View>
-        {/* Status Cards */}
-        <View style={styles.statusCardsContainer}>
-          <StatusCard
-            title="Master Service Agreement"
-            sections={[
-              { value: '46', label: 'Upcoming', change: 12 },
-              { value: '16', label: 'In Progress', change: 0 },
-              { value: '0', label: 'Completed', change: 0 },
-            ]}
-          />
-        </View>
-        <View style={styles.statusCardsContainer}>
-          <StatusCard
-            title="Statement of Work"
-            sections={[
-              { value: '86', label: 'Upcoming', change: 5 },
-              { value: '21', label: 'In Progress', change: 0 },
-              { value: '0', label: 'Completed', change: 0 },
-            ]}
-          />
-        </View>
-
-        <View style={styles.statusCardsContainer}>
-          <StatusCard
-            title="Time Sheet"
-            sections={[
-              { value: '0', label: 'Upcoming', change: 0 },
-              { value: '0', label: 'In Progress', change: 0 },
-              { value: '0', label: 'Rejected', change: 0 },
-            ]}
-          />
-        </View>
-        <View style={styles.statusCardsContainer}>
-          <StatusCard
-            title="Pending Approval"
-            sections={[
-              { value: '45', label: 'TMSA', change: 86 },
-              { value: '50', label: 'SOW', change: 0 },
-            ]}
-          />
-        </View>
-        <View style={styles.statusCardsContainer}>
-          <StatusCard
-            title="Job Posting"
-            sections={[
-              { value: '0', label: 'Timesheet', change: 0 },
-              { value: '1', label: 'Applications', change: 0 },
-              { value: '0', label: 'Total Jobs', change: 0 },
-            ]}
-          />
-        </View>
-        {/* Total Spend Chart */}
-        <View style={styles.chartContainer}>
-          <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Total Spend</Text>
-            <Text style={styles.totalAmount}>1465045.00</Text>
-            <Text style={styles.changePercent}>+0.00%</Text>
-          </View>
-          <View style={styles.chartLegend}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.legendText}>Active MSA</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-              <Text style={styles.legendText}>Active SOW</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#8B5CF6' }]} />
-              <Text style={styles.legendText}>Timesheet</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendText}>Invoice</Text>
-            </View>
-          </View>
-          <LineChart
-            data={totalSpendData}
-            width={screenWidth - 35}
-            height={250}
-            chartConfig={{
-              backgroundColor: '#ffffff',
-              backgroundGradientFrom: '#ffffff',
-              backgroundGradientTo: '#ffffff',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
-              style: {
-                borderRadius: 16,
-              },
-              propsForDots: {
-                r: '6',
-                strokeWidth: '2',
-                stroke: '#3B82F6',
-              },
-            }}
-            bezier
-            style={styles.chart}
-          />
-        </View>
-
-        {/* Contract Status */}
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Contract Status (MSA and SOWs)</Text>
-          <PieChart
-            data={contractStatusData}
-            width={screenWidth - 40}
-            height={200}
-            chartConfig={{
-              backgroundColor: '#ffffff',
-              backgroundGradientFrom: '#ffffff',
-              backgroundGradientTo: '#ffffff',
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            }}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-          />
-        </View>
-
-        {/* Active Suppliers Map Placeholder */}
-        {/* <View style={styles.mapContainer}>
-          <View style={styles.mapHeader}>
-            <Text style={styles.chartTitle}>Active Suppliers</Text>
-            <Text style={styles.dateFilter}>April 2024</Text>
-          </View>
-          <View style={styles.mapPlaceholder}>
-            <Text style={styles.mapPlaceholderText}>🗺️ World Map</Text>
-            <Text style={styles.mapSubtext}>Active suppliers locations</Text>
+            <MetricCard
+              title="Total ARR"
+              value={dashboardDetails?.arr.total_arr ?? 0}
+              change={dashboardDetails?.arr.increment ?? 0}
+              changeType="increase"
+              icon="👥"
+            />
           </View>
         </View>
 
 
-        <View style={styles.membersContainer}>
-          <Text style={styles.sectionTitle}>Members</Text>
-          <View style={styles.memberItem}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>VT</Text>
-            </View>
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberName}>Vijay10 ten</Text>
-              <Text style={styles.memberEmail}>vijay10@yopmail.com</Text>
-            </View>
+        {/* Grid Items Section */}
+        <View style={styles.gridSection}>
+          <View style={styles.gridContainer}>
+            {finalMenuItems.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.gridItem}
+                onPress={() => navigation.navigate(item.screen)}
+              >
+                <Icon name={item.icon} size={26} color="#0E3386" />
+                <Text style={styles.gridItemText}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        </View> */}
+
+        </View>
+
+        {secRowDetails && (
+          <>
+            <View style={styles.statusCardsContainer}>
+              <StatusCard
+                title="Master Service Agreement"
+                sections={[
+                  { value: secRowDetails.msa.pending, label: 'Upcoming', change: 0 },
+                  { value: secRowDetails.msa.approved, label: 'In Progress', change: 0 },
+                  { value: secRowDetails.msa.completed, label: 'Completed', change: 0 },
+                ]}
+              />
+            </View>
+
+            <View style={styles.statusCardsContainer}>
+              <StatusCard
+                title="Statement of Work"
+                sections={[
+                  { value: secRowDetails.sow.pending, label: 'Upcoming', change: 0 },
+                  { value: secRowDetails.sow.approved, label: 'In Progress', change: 0 },
+                  { value: secRowDetails.sow.completed, label: 'Completed', change: 0 },
+                ]}
+              />
+            </View>
+
+            <View style={styles.statusCardsContainer}>
+              <StatusCard
+                title="Time Sheet"
+                sections={[
+                  { value: secRowDetails.timesheet.pending, label: 'Upcoming', change: 0 },
+                  { value: secRowDetails.timesheet.approved, label: 'In Progress', change: 0 },
+                  { value: secRowDetails.timesheet.rejected, label: 'Rejected', change: 0 },
+                ]}
+              />
+            </View>
+
+            <View style={styles.statusCardsContainer}>
+              <StatusCard
+                title="Pending Approval"
+                sections={[
+                  { value: secRowDetails.pending.msa, label: 'MSA', change: 0 },
+                  { value: secRowDetails.pending.sow, label: 'SOW', change: 0 },
+                  { value: secRowDetails.pending.timesheet, label: 'Timesheet', change: 0 },
+                ]}
+              />
+            </View>
+
+            <View style={styles.statusCardsContainer}>
+              <StatusCard
+                title="Job Posting"
+                sections={[
+                  { value: secRowDetails.job.active, label: 'Active Jobs', change: 0 },
+                  { value: secRowDetails.job.applications, label: 'Applications', change: 0 },
+                  { value: 0, label: 'Total Jobs', change: 0 },
+                ]}
+              />
+            </View>
+
+          </>
+        )}
         <OrganizationProfileModal
-        visible={showProfileModal}
-        onComplete={() => setShowProfileModal(false)}
-        onClose={() => setShowProfileModal(false)}
-      />
+          visible={showProfileModal}
+          onComplete={() => setShowProfileModal(false)}
+          onClose={() => setShowProfileModal(false)}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -357,6 +558,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  gridItemText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#0E3386',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  gridItem: {
+    width: (screenWidth - 48) / 3,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  gridSection: {
+    marginBottom: 24,
   },
   header: {
     flexDirection: 'row',

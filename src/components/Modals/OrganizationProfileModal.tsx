@@ -130,10 +130,11 @@ const OrganizationProfileModal: React.FC<OrganizationProfileModalProps> = ({
   const stateInputRef = useRef<TextInput>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [displayCurrency, setDisplayCurrency] = useState("");
-   const [otpEmail, setOtpEmail] = useState('');
-    const [userEmail, setUserEmail] = useState("");
+  const [otpEmail, setOtpEmail] = useState('');
+  const [userEmail, setUserEmail] = useState("");
   console.log("displayCurrency", displayCurrency);
- const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [userType, setUserType] = useState("");
   const functionalities = [
     'Manage Contracts',
     'Manage Timesheets',
@@ -143,63 +144,81 @@ const OrganizationProfileModal: React.FC<OrganizationProfileModalProps> = ({
     'Invoice management'
   ];
 
+  // ⬇️ ADD THIS — Skip Step 1 & 2 for RESOURCE_USER
+  useEffect(() => {
+    const checkUserType = async () => {
+      const userType = await AsyncStorage.getItem("userType");
 
-//   const getAllStoredItems = async () => {
-//   try {
-//     // 1️⃣ Get every key that exists
-//     const keys = await AsyncStorage.getAllKeys();
+      if (userType === "RESOURCE_USER") {
+        setStep(3);  // ⬅️ Jump directly to Owner Profile step
+      }
+    };
 
-//     // 2️⃣ Fetch all the key–value pairs in one call
-//     const items = await AsyncStorage.multiGet(keys);
+    checkUserType();
+  }, []);
+  useEffect(() => {
+    const loadType = async () => {
+      const type = await AsyncStorage.getItem("userType");
+      setUserType(type || "");
+    };
+    loadType();
+  }, []);
+  //   const getAllStoredItems = async () => {
+  //   try {
+  //     // 1️⃣ Get every key that exists
+  //     const keys = await AsyncStorage.getAllKeys();
 
-//     // 3️⃣ Convert the array to a plain object if you like
-//     const storeObject: Record<string, string | null> = {};
-//     items.forEach(([key, value]) => {
-//       storeObject[key] = value;
-//     });
+  //     // 2️⃣ Fetch all the key–value pairs in one call
+  //     const items = await AsyncStorage.multiGet(keys);
 
-//     console.log('All stored items:', storeObject);
-//     return storeObject;
-//   } catch (error) {
-//     console.error('Error reading AsyncStorage:', error);
-//     return {};
-//   }
-// };
-// useEffect(() => {
-//   (async () => {
-//     const allItems = await getAllStoredItems();
-//     // Do something with allItems
-//   })();
-// }, []);
-useEffect(() => {
-  const loadUserData = async () => {
-    const [
-      [_, firstName],
-      [, lastName],
-      [, email],
-      [, profilePicUri]
-    ] = await AsyncStorage.multiGet([
-      'first_Name',
-      'last_Name',
-      'email',
-      'profilePic'
-    ]);
+  //     // 3️⃣ Convert the array to a plain object if you like
+  //     const storeObject: Record<string, string | null> = {};
+  //     items.forEach(([key, value]) => {
+  //       storeObject[key] = value;
+  //     });
+
+  //     console.log('All stored items:', storeObject);
+  //     return storeObject;
+  //   } catch (error) {
+  //     console.error('Error reading AsyncStorage:', error);
+  //     return {};
+  //   }
+  // };
+  // useEffect(() => {
+  //   (async () => {
+  //     const allItems = await getAllStoredItems();
+  //     // Do something with allItems
+  //   })();
+  // }, []);
+  useEffect(() => {
+    const loadUserData = async () => {
+      const [
+        [_, firstName],
+        [, lastName],
+        [, email],
+        [, profilePicUri]
+      ] = await AsyncStorage.multiGet([
+        'first_Name',
+        'last_Name',
+        'email',
+        'profilePic'
+      ]);
 
 
 
-    setFormData(prev => ({
-      ...prev,
-      firstName: firstName || '',
-      lastName: lastName || '',
-      email: email || '',
-      profilePic: profilePicUri
-        ? { uri: profilePicUri, type: 'image/jpeg', name: 'profile.jpg' }
-        : null,
-    }));
-  };
+      setFormData(prev => ({
+        ...prev,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email: email || '',
+        profilePic: profilePicUri
+          ? { uri: profilePicUri, type: 'image/jpeg', name: 'profile.jpg' }
+          : null,
+      }));
+    };
 
-  loadUserData();
-}, []);
+    loadUserData();
+  }, []);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -279,10 +298,11 @@ useEffect(() => {
     currencyName?: string,
     currencyCode?: string
   ): Promise<void> => {
-    console.log("currencyId",currencyId);
-    console.log("currencyName",currencyName);
-
     
+    console.log("currencyId", currencyId);
+    console.log("currencyName", currencyName);
+
+
     // Save country
     handleInputChange("country", countryName);
     setSearchQuery(countryName);
@@ -339,22 +359,22 @@ useEffect(() => {
     }
   };
 
-const validateStep1 = (): boolean => {
-  const newErrors: Errors = {};
+  const validateStep1 = (): boolean => {
+    const newErrors: Errors = {};
 
-  // Trim to remove accidental leading/trailing spaces
-  const name = formData.company_name.trim();
+    // Trim to remove accidental leading/trailing spaces
+    const name = formData.company_name.trim();
 
-  if (!name) {
-    newErrors.company_name = 'Business name is required';
-  } else if (!/^[A-Za-z0-9 ]+$/.test(name)) {
-    // Regex allows only letters, numbers and spaces
-    newErrors.company_name = 'Business name cannot contain symbols';
-  }
+    if (!name) {
+      newErrors.company_name = 'Business name is required';
+    } else if (!/^[A-Za-z0-9 ]+$/.test(name)) {
+      // Regex allows only letters, numbers and spaces
+      newErrors.company_name = 'Business name cannot contain symbols';
+    }
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
 
   const validateStep2 = (): boolean => {
@@ -407,15 +427,35 @@ const validateStep1 = (): boolean => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleContinue = (): void => {
-    if (step === 1 && validateStep1()) {
-      setStep(2);
-    } else if (step === 2 && validateStep2()) {
-      setStep(3);
-    } else if (step === 3 && validateStep3()) {
-      setStep(4);
+  // const handleContinue = (): void => {
+  //   if (step === 1 && validateStep1()) {
+  //     setStep(2);
+  //   } else if (step === 2 && validateStep2()) {
+  //     setStep(3);
+  //   } else if (step === 3 && validateStep3()) {
+  //     setStep(4);
+  //   }
+  // };
+
+  const handleContinue = () => {
+
+    if (userType === "RESOURCE_USER") {
+      if (step === 3 && validateStep3()) {
+        setStep(2); // After step 3 → step 2
+      }
+      else if (step === 2 && validateStep2()) {
+        setStep(4); // After step 2 → step 4
+      }
+      return;
     }
+
+    // Normal flow ====================
+    if (step === 1 && validateStep1()) setStep(2);
+    else if (step === 2 && validateStep2()) setStep(3);
+    else if (step === 3 && validateStep3()) setStep(4);
   };
+
+
 
   const handleSearchCountry = async (text: string): Promise<void> => {
     setSearchQuery(text);
@@ -476,86 +516,82 @@ const validateStep1 = (): boolean => {
     }
   };
 
-  // const handleSubmit = async (): Promise<void> => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await Services.updateOrganizationProfile(formData);
 
-  //     if (response.success) {
-  //       await AsyncStorage.setItem('isActive', 'true');
-  //       onComplete();
-  //     } else {
-  //       Toast.show({
-  //         type: 'error',  
-  //         text1: 'Profile update failed',
-  //         text2: response.error || 'Please try again',
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error('Profile update error:', error);
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'An error occurred',
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-const handleSubmit = async (): Promise<void> => {
-  setLoading(true);
-  try {
-    // Get user type from AsyncStorage
-    const userType = await AsyncStorage.getItem('userType');
-    
-    let response;
-    
-    // Call the appropriate API based on user type
-    switch(userType) {
-      case 'LAWYER_USER':
-        response = await Services.updateLawyerProfile(formData);
-        break;
-      case 'AGENCY_USER':
-        response = await Services.updateAgencyProfile(formData);
-        break;
-      case 'RESOURCE_USER':
-        response = await Services.updateResourceProfile(formData);
-        break;
-      case 'ORGANISATION_USER':
-        response = await Services.updateOrganizationProfile(formData);
-        break;
- 
-      default:
-        throw new Error('Unknown user type');
-    }
+  const handleSubmit = async (): Promise<void> => {
+    setLoading(true);
+    try {
 
-    if (response.success) {
-      await AsyncStorage.setItem('isActive', 'true');
-      onComplete();
-    } else {
+      const userType = await AsyncStorage.getItem('userType');
+
+      let response;
+
+     
+      switch (userType) {
+      
+        case 'AGENCY_USER':
+          response = await Services.updateAgencyProfile(formData);
+          break;
+        case 'RESOURCE_USER':
+          response = await Services.updateResourceProfile(formData);
+          break;
+        case 'ORGANISATION_USER':
+          response = await Services.updateOrganizationProfile(formData);
+          break;
+
+        default:
+          throw new Error('Unknown user type');
+      }
+
+      if (response.success) {
+        await AsyncStorage.setItem('isActive', 'true');
+        onComplete();
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Profile update failed',
+          text2: response.error || 'Please try again',
+        });
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
       Toast.show({
-        type: 'error',  
-        text1: 'Profile update failed',
-        text2: response.error || 'Please try again',
+        type: 'error',
+        text1: 'An error occurred',
+        text2: error.message || 'Please try again later',
       });
-    }
-  } catch (error) {
-    console.error('Profile update error:', error);
-    Toast.show({
-      type: 'error',
-      text1: 'An error occurred',
-      text2: error.message || 'Please try again later',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-  const handleBack = (): void => {
-    if (step === 1) {
-      onClose();
-    } else {
-      setStep(step - 1);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleBack = () => {
+
+    if (userType === "RESOURCE_USER") {
+      if (step === 3) return;    
+      if (step === 2) {
+        setStep(3);              
+        return;
+      }
+      if (step === 4) {
+        setStep(2);             
+        return;
+      }
+      return;
+    }
+
+    // Default back flow
+    if (step === 1) onClose();
+    else setStep(step - 1);
+  };
+
+
+  // const handleBack = (): void => {
+  //   if (step === 1) {
+  //     onClose();
+  //   } else {
+  //     setStep(step - 1);
+  //   }
+  // };
   const pickLogo = () => pickImage('logo');
   const handleUploadProfilePic = () => pickImage('profilePic');
   const renderStep1 = (): JSX.Element => (
@@ -646,10 +682,16 @@ const handleSubmit = async (): Promise<void> => {
             onChangeText={(text) => handleInputChange('tax_number', text)}
           />
         </View>
-
-        <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleContinue}
+          disabled={userType === "RESOURCE_USER"}
+        >
           <Text style={styles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
+        {/* <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
+          <Text style={styles.primaryButtonText}>Continue</Text> */}
+
 
         <TouchableOpacity style={styles.secondaryButton} onPress={handleLogout}>
           <Text style={styles.secondaryButtonText}>Logout</Text>
@@ -674,25 +716,25 @@ const handleSubmit = async (): Promise<void> => {
         ref={scrollViewRef}
       >
         <View style={styles.inputGroup}>
-      <Text style={styles.label}>Address</Text>
+          <Text style={styles.label}>Address</Text>
 
-      <TextInput
-        style={[styles.input, errors.address && styles.inputError]}
-        placeholder="House No./Street Address"
-        value={formData.address}
-        onChangeText={(text) => handleInputChange('address', text)}
-        multiline
-        numberOfLines={2}
-      />
+          <TextInput
+            style={[styles.input, errors.address && styles.inputError]}
+            placeholder="House No./Street Address"
+            value={formData.address}
+            onChangeText={(text) => handleInputChange('address', text)}
+            multiline
+            numberOfLines={2}
+          />
 
-      {errors.address && (
-        <Text style={styles.errorText}>{errors.address}</Text>
-      )}
+          {errors.address && (
+            <Text style={styles.errorText}>{errors.address}</Text>
+          )}
 
-      {/* ✅ Confirmation line with checkbox */}
-     
-    </View>
-       
+          {/* ✅ Confirmation line with checkbox */}
+
+        </View>
+
 
         <View style={styles.row}>
           <View style={[styles.flex, styles.inputGroupWithDropdown]}>
@@ -704,7 +746,7 @@ const handleSubmit = async (): Promise<void> => {
                 ref={countryInputRef}
                 style={[styles.input, errors.country && styles.inputError]}
                 placeholder="Search country"
-                
+
                 value={formData.country}
                 onChangeText={handleSearchCountry}
                 onFocus={() => {
@@ -712,9 +754,9 @@ const handleSubmit = async (): Promise<void> => {
                     setShowCountryDropdown(true);
                   }
                 }}
-                // onBlur={() => {
-                //   setTimeout(() => setShowCountryDropdown(false), 200);
-                // }}
+              // onBlur={() => {
+              //   setTimeout(() => setShowCountryDropdown(false), 200);
+              // }}
               />
               {countryLoading && (
                 <View style={styles.loadingContainer}>
@@ -722,16 +764,16 @@ const handleSubmit = async (): Promise<void> => {
                   <Text style={styles.loadingText}>Searching...</Text>
                 </View>
               )}
-                  {/* Show "no results" message when no countries found */}
-            {showCountryDropdown && countryResults.length === 0 && !countryLoading && (
-              <View style={[styles.dropdown, styles.countryDropdown]}>
-                <View style={styles.noResultsContainer}>
-                  <Text style={styles.noResultsText}>
-                    No countries found for your search
-                  </Text>
+              {/* Show "no results" message when no countries found */}
+              {showCountryDropdown && countryResults.length === 0 && !countryLoading && (
+                <View style={[styles.dropdown, styles.countryDropdown]}>
+                  <View style={styles.noResultsContainer}>
+                    <Text style={styles.noResultsText}>
+                      No countries found for your search
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
               {showCountryDropdown && countryResults.length > 0 && (
                 <View style={[styles.dropdown, styles.countryDropdown]}>
                   <ScrollView
@@ -878,27 +920,42 @@ const handleSubmit = async (): Promise<void> => {
           />
           {errors.currency && <Text style={styles.errorText}>{errors.currency}</Text>}
         </View>
- <View style={styles.confirmRow}>
-        <Checkbox
-          status={addressConfirmed ? 'checked' : 'unchecked'}
-          onPress={() => setAddressConfirmed(!addressConfirmed)}
-          color="#3b82f6" // optional custom color
-        />
-        <Text
-          style={styles.confirmText}
-          onPress={() => setAddressConfirmed(!addressConfirmed)}
-        >
-          Please confirm this is your correct address
-        </Text>
-      </View>
+        <View style={styles.confirmRow}>
+          <Checkbox
+            status={addressConfirmed ? 'checked' : 'unchecked'}
+            onPress={() => setAddressConfirmed(!addressConfirmed)}
+            color="#3b82f6" // optional custom color
+          />
+          <Text
+            style={styles.confirmText}
+            onPress={() => setAddressConfirmed(!addressConfirmed)}
+          >
+            Please confirm this is your correct address
+          </Text>
+        </View>
 
-      {/* Optional validation message */}
-      {!addressConfirmed && (
-        <Text style={styles.confirmHint}>
-          You must confirm your address before continuing.
-        </Text>
-      )}
-      <TouchableOpacity
+        {/* Optional validation message */}
+        {!addressConfirmed && (
+          <Text style={styles.confirmHint}>
+            You must confirm your address before continuing.
+          </Text>
+        )}
+
+        <TouchableOpacity
+          style={[
+            styles.primaryButton2,
+            userType !== "RESOURCE_USER" && !addressConfirmed
+              ? styles.primaryButtonDisabled
+              : null,
+          ]}
+          onPress={handleContinue}
+          disabled={userType !== "RESOURCE_USER" && !addressConfirmed}
+        >
+          <Text style={styles.primaryButtonText}>Continue</Text>
+        </TouchableOpacity>
+
+
+        {/* <TouchableOpacity
   style={[
     styles.primaryButton2,
     !addressConfirmed && styles.primaryButtonDisabled, // gray out when disabled
@@ -907,7 +964,7 @@ const handleSubmit = async (): Promise<void> => {
   disabled={!addressConfirmed}   // ✅ Disable when not confirmed
 >
   <Text style={styles.primaryButtonText}>Continue</Text>
-</TouchableOpacity>
+</TouchableOpacity> */}
       </ScrollView>
     </View>
   );
@@ -988,16 +1045,130 @@ const handleSubmit = async (): Promise<void> => {
   //         </ScrollView>
   //     </View>
   // );
+  // const renderStep3 = (): JSX.Element => (
+
+
+
+  //   <View style={styles.container}>
+  //     <View style={styles.header}>
+  //       <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+  //         <Icon name="arrow-back" size={22} color="#2563eb" />
+  //       </TouchableOpacity>
+  //       <Text style={styles.title}>Owner Profile</Text>
+  //       <View style={{ width: 22 }} />
+  //     </View>
+
+  //     <ScrollView
+  //       style={styles.formContainer}
+  //       keyboardShouldPersistTaps="handled"
+  //       ref={scrollViewRef}
+  //     >
+  //       {/* Profile Pic Upload */}
+  //       <View style={styles.profilePicContainer}>
+  //         {formData.profilePic ? (
+  //           <Image source={{ uri: formData.profilePic.uri }} style={styles.profilePic} />
+  //         ) : (
+  //           <Image
+  //             source={require('../../assets/images/user.png')}
+  //             style={styles.profilePic}
+  //             resizeMode="cover"
+  //           />
+  //         )}
+  //         <TouchableOpacity
+  //           style={styles.editPicButton}
+  //           onPress={handleUploadProfilePic}
+  //         >
+  //           <Text style={styles.editPicButtonText}>Upload</Text>
+  //         </TouchableOpacity>
+  //       </View>
+
+  //       {/* Inputs with validation */}
+  //       <View style={styles.inputGroup}>
+  //         <Text style={styles.label}>First Name</Text>
+  //         <TextInput
+  //           style={[styles.input, errors.firstName && styles.inputError]}
+  //           placeholder="First Name"
+  //           value={formData.firstName}
+  //           onChangeText={(text) => handleInputChange("firstName", text)}
+  //         />
+  //         {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+  //       </View>
+
+  //       <View style={styles.inputGroup}>
+  //         <Text style={styles.label}>Last Name</Text>
+  //         <TextInput
+  //           style={[styles.input, errors.lastName && styles.inputError]}
+  //           placeholder="Last Name"
+  //           value={formData.lastName}
+  //           onChangeText={(text) => handleInputChange("lastName", text)}
+  //         />
+  //         {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+  //       </View>
+
+  //       <View style={styles.inputGroup}>
+  //         <Text style={styles.label}>Contact Number *</Text>
+  //         <TextInput
+  //           style={[styles.input, errors.contactNumber && styles.inputError]}
+  //           placeholder="Contact Number"
+  //           keyboardType="phone-pad"
+  //           value={formData.contactNumber}
+  //           maxLength={10}
+  //           onChangeText={(text) => handleInputChange("contactNumber", text)}
+  //         />
+  //         {errors.contactNumber && <Text style={styles.errorText}>{errors.contactNumber}</Text>}
+  //       </View>
+
+  //       {/* <View style={styles.inputGroup}>
+  //         <Text style={styles.label}>LinkedIn Profile</Text>
+  //         <TextInput
+  //           style={[styles.input, errors.linkedIn && styles.inputError]}
+  //           placeholder="LinkedIn Profile URL"
+  //           value={formData.linkedIn}
+  //           onChangeText={(text) => handleInputChange("linkedIn", text)}
+  //         />
+  //         {errors.linkedIn && <Text style={styles.errorText}>{errors.linkedIn}</Text>}
+  //       </View> */}
+
+  //       <View style={styles.inputGroup}>
+  //         <Text style={styles.label}>Email ID *</Text>
+  //         <TextInput
+  //           style={[styles.input, errors.email && styles.inputError]}
+  //           placeholder="Email ID"
+  //           keyboardType="email-address"
+  //           value={formData.email}
+  //           onChangeText={(text) => handleInputChange("email", text)}
+  //         />
+  //         {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+  //       </View>
+
+  //       {/* Continue Button */}
+  //       <TouchableOpacity
+  //         style={styles.primaryButton}
+  //         onPress={handleContinue}
+  //       >
+  //         <Text style={styles.primaryButtonText}>Continue</Text>
+  //       </TouchableOpacity>
+  //     </ScrollView>
+  //   </View>
+  // );
+
   const renderStep3 = (): JSX.Element => (
-
-
-    
     <View style={styles.container}>
+
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Icon name="arrow-back" size={22} color="#2563eb" />
-        </TouchableOpacity>
+
+        {/* ⭐ Hide back button if userType = RESOURCE_USER */}
+        {userType !== "RESOURCE_USER" ? (
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <Icon name="arrow-back" size={22} color="#2563eb" />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 22 }} />  // keep layout aligned
+        )}
+
         <Text style={styles.title}>Owner Profile</Text>
+
+        {/* Right spacer section */}
         <View style={{ width: 22 }} />
       </View>
 
@@ -1061,17 +1232,6 @@ const handleSubmit = async (): Promise<void> => {
           {errors.contactNumber && <Text style={styles.errorText}>{errors.contactNumber}</Text>}
         </View>
 
-        {/* <View style={styles.inputGroup}>
-          <Text style={styles.label}>LinkedIn Profile</Text>
-          <TextInput
-            style={[styles.input, errors.linkedIn && styles.inputError]}
-            placeholder="LinkedIn Profile URL"
-            value={formData.linkedIn}
-            onChangeText={(text) => handleInputChange("linkedIn", text)}
-          />
-          {errors.linkedIn && <Text style={styles.errorText}>{errors.linkedIn}</Text>}
-        </View> */}
-
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Email ID *</Text>
           <TextInput
@@ -1091,9 +1251,18 @@ const handleSubmit = async (): Promise<void> => {
         >
           <Text style={styles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
+
       </ScrollView>
     </View>
   );
+
+
+
+
+
+
+
+
 
   const renderStep4 = (): JSX.Element => (
     <View style={styles.stepContainer}>
@@ -1169,7 +1338,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 
-    primaryButton2: {
+  primaryButton2: {
     backgroundColor: '#3b82f6',
     paddingVertical: 12,
     borderRadius: 8,
@@ -1184,7 +1353,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-    inputGroup: { marginBottom: 16 },
+  inputGroup: { marginBottom: 16 },
   label: { fontSize: 16, fontWeight: '600', marginBottom: 6 },
   input: {
     borderWidth: 1,
@@ -1430,12 +1599,12 @@ const styles = StyleSheet.create({
   stateDropdown: {
     zIndex: 10001,
   },
-    noResultsContainer: {
+  noResultsContainer: {
     padding: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   noResultsText: {
     color: '#6b7280',
     fontStyle: 'italic',

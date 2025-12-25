@@ -85,9 +85,10 @@ useEffect(() => {
       last_name: lastName,
       email: email,
       password: password,
-      user_type: userType,
+      user_type: "ORGANISATION_USER",
       is_authorized: isTagged, 
     };
+console.log("pay",payload);
 
     try {
       setLoading(true);

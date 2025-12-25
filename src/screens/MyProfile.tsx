@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
+  SafeAreaView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -21,6 +22,7 @@ import { RootStackParamList } from '../navigation/types';
 import Services from '../Services/services'; // Your service file
 import Icon from 'react-native-vector-icons/Ionicons';
 import ImagePicker from 'react-native-image-crop-picker';
+import AppHeader from '../components/AppHeader';
 type MyProfileNavProp = StackNavigationProp<RootStackParamList, 'MyProfile'>;
 
 const MyProfile = () => {
@@ -36,19 +38,22 @@ const MyProfile = () => {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [age, setAge] = useState('');
 
-
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+
   const [resetStep, setResetStep] = useState(1);
   const [otpEmail, setOtpEmail] = useState('');
-  
+
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-const [deletePassword, setDeletePassword] = useState('');
-const [showDeletePassword, setShowDeletePassword] = useState(false);
-const [userEmail, setUserEmail] = useState("");
-const [searchQuery, setSearchQuery] = useState('');
-const [filteredLanguages, setFilteredLanguages] = useState([]);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredLanguages, setFilteredLanguages] = useState([]);
+  const [userType, setUserType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+
   useEffect(() => {
     fetchUserProfile();
     fetchLanguages();
@@ -56,92 +61,92 @@ const [filteredLanguages, setFilteredLanguages] = useState([]);
 
 
 
-useEffect(() => {
-  if (languages && languages.length > 0) {
-    setFilteredLanguages(languages);
-  }
-}, [languages]);
+  useEffect(() => {
+    if (languages && languages.length > 0) {
+      setFilteredLanguages(languages);
+    }
+  }, [languages]);
 
-useEffect(() => {
-  if (searchQuery.trim() === '') {
-    setFilteredLanguages(languages);
-  } else {
-    const filtered = languages.filter(language =>
-      language.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredLanguages(filtered);
-  }
-}, [searchQuery, languages]);
-useEffect(() => {
-  const fetchUserData = async () => {
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredLanguages(languages);
+    } else {
+      const filtered = languages.filter(language =>
+        language.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredLanguages(filtered);
+    }
+  }, [searchQuery, languages]);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem("userData");
+        console.log("storedUser", storedUser);
+
+        if (storedUser) {
+
+          const parsedUser = JSON.parse(storedUser);
+          console.log("parsedUser", parsedUser);
+
+          setUserEmail(parsedUser?.email || "");
+          setOtpEmail(parsedUser?.email || ""); // auto fill otpEmail also
+        }
+      } catch (error) {
+        console.log("Error fetching userData:", error);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  const handleImagePick = async () => {
     try {
-      const storedUser = await AsyncStorage.getItem("userData");
-      console.log("storedUser",storedUser);
-      
-      if (storedUser) {
+      const image = await ImagePicker.openPicker({
+        width: 100,
+        height: 200,
+        cropping: true,
+        compressImageQuality: 0.8,
+        mediaType: 'photo',
+      });
 
-        const parsedUser = JSON.parse(storedUser);
-      console.log("parsedUser",parsedUser);
+      console.log('Picked Image:', image);
 
-        setUserEmail(parsedUser?.email || "");
-        setOtpEmail(parsedUser?.email || ""); // auto fill otpEmail also
+      if (image && image.path) {
+        setUserData(prev => ({
+          ...prev,
+          profile_pic: image.path,
+          profile_file: {
+            uri: image.path,
+            type: image.mime || 'image/jpeg',
+            name: image.filename || 'profile.jpg',
+          },
+        }));
+      } else {
+        console.log('No image selected');
       }
     } catch (error) {
-      console.log("Error fetching userData:", error);
+      console.log('Full Error Object:', error);
+      console.log('Error Message:', error.message);
+      console.log('Error Code:', error.code);
+
+      if (error.message?.includes('cancelled') || error.code === 'E_PICKER_CANCELLED') {
+        console.log('User cancelled picker');
+      } else if (error.message?.includes('permission')) {
+        console.log('Permission denied');
+        Toast.show({
+          type: 'error',
+          text1: 'Permission denied',
+          text2: 'Please enable photo library access',
+        });
+      } else {
+        console.log('Image Picker Error:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to pick image',
+          text2: 'Please try again',
+        });
+      }
     }
   };
-  fetchUserData();
-}, []);
-
-const handleImagePick = async () => {
-  try {
-    const image = await ImagePicker.openPicker({
-      width: 300,
-      height: 300,
-      cropping: true,
-      compressImageQuality: 0.8,
-      mediaType: 'photo',
-    });
-
-    console.log('Picked Image:', image);
-
-    if (image && image.path) {
-      setUserData(prev => ({
-        ...prev,
-        profile_pic: image.path,
-        profile_file: {
-          uri: image.path,
-          type: image.mime || 'image/jpeg',
-          name: image.filename || 'profile.jpg',
-        },
-      }));
-    } else {
-      console.log('No image selected');
-    }
-  } catch (error) {
-    console.log('Full Error Object:', error);
-    console.log('Error Message:', error.message);
-    console.log('Error Code:', error.code);
-    
-    if (error.message?.includes('cancelled') || error.code === 'E_PICKER_CANCELLED') {
-      console.log('User cancelled picker');
-    } else if (error.message?.includes('permission')) {
-      console.log('Permission denied');
-      Toast.show({
-        type: 'error',
-        text1: 'Permission denied',
-        text2: 'Please enable photo library access',
-      });
-    } else {
-      console.log('Image Picker Error:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to pick image',
-        text2: 'Please try again',
-      });
-    }
-  }
-};
   // const handleImagePick = async () => {
   //   try {
   //     const image = await ImagePicker.openPicker({
@@ -179,79 +184,64 @@ const handleImagePick = async () => {
   //     }
   //   }
   // };
-useEffect(() => {
-  const loadData = async () => {
-    try {
-      // First load from AsyncStorage for quick display
-      const storedData = await AsyncStorage.getItem('userData');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-        // Convert relative paths to absolute
-        if (parsedData.profile_pic?.startsWith('/')) {
-          parsedData.profile_pic = `https://api.agreementpaper.com/${parsedData.profile_pic}`;
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // First load from AsyncStorage for quick display
+        const storedData = await AsyncStorage.getItem('userData');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          // Convert relative paths to absolute
+          if (parsedData.profile_pic?.startsWith('/')) {
+            parsedData.profile_pic = `https://api.agreementpaper.com/${parsedData.profile_pic}`;
+          }
+          setUserData(parsedData);
         }
-        setUserData(parsedData);
+
+        // Then fetch fresh data from API
+        await fetchUserProfile();
+      } catch (error) {
+        console.log('Initial load error:', error);
       }
-      
-      // Then fetch fresh data from API
-      await fetchUserProfile();
-    } catch (error) {
-      console.log('Initial load error:', error);
-    }
-  };
-  
-  loadData();
-}, []);
+    };
+
+    loadData();
+  }, []);
 
   const fetchUserProfile = async () => {
     try {
       const res = await Services.getUserProfileDetails();
       if (res.success) {
         const user = res.data;
-
+        setUserType(user.user_type);
         console.log("userssss", user);
 
-           let profilePic = user.profile_pic || user.avatar || '';
-      if (profilePic && !profilePic.startsWith('http')) {
-        profilePic = `http://api.agreementpaper.com${profilePic}`;
-      }
+        let profilePic = user.profile_pic || user.avatar || '';
+        if (profilePic && !profilePic.startsWith('http')) {
+          profilePic = `http://api.agreementpaper.com${profilePic}`;
+        }
 
 
 
         const updatedUser = {
-        ...user,
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        profile_pic: profilePic,
-        email: user.email || '',
-        contact_number: user.contact_number || '',
-        linkedin_url: user.linkedin_url || '',
-        age: user.age || '',
-        language: user.language || '',
-        userId:user.id || '' ,
-      };
-  await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
-        // setUserData({
-        //   ...user,
-        //   first_name: user.first_name || '',
-        //   last_name: user.last_name || '',
-        //    profile_pic: user.profile_pic || user.avatar || '',
-        //   email: user.email || '',
-        //   contact_number: user.contact_number || '',
-        //   linkedin_url: user.linkedin_url || '',
-        //   age: user.age || '',
-        //   language: user.language || '',
-        // });
-        // setSelectedLanguage(user.language_data[0] || {});
-
-        // setContactNumber(user.contact_number || '');
-        // setLinkedinUrl(user.linkedin_url || '');
-        // setAge(user.age?.toString() || '');
-              setUserData(updatedUser);
-      setSelectedLanguage(user.language_data[0] || {});
-      setContactNumber(user.contact_number || '');
-      setLinkedinUrl(user.linkedin_url || '');
-      setAge(user.age?.toString() || '');
+          ...user,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          profile_pic: profilePic,
+          email: user.email || '',
+          contact_number: user.contact_number || '',
+          linkedin_url: user.linkedin_url || '',
+          age: user.age || '',
+          language: user.language || '',
+          userId: user.id || '',
+          slug: user.profile.slug || '',
+        };
+        await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+        setUserData(updatedUser);
+        setSelectedLanguage(user.language_data[0] || {});
+        setContactNumber(user.contact_number || '');
+        setLinkedinUrl(user.linkedin_url || '');
+        setAge(user.age?.toString() || '');
       }
     } catch (err) {
       console.log('Error loading profile', err);
@@ -274,75 +264,79 @@ useEffect(() => {
 
 
 
-console.log("userData",userData?.profile_pic);
-const handleUpdateProfile = async () => {
-  if (!userData.language) {
-    Toast.show({ type: 'error', text1: 'Please select a language' });
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    
-    
-    formData.append('first_name', userData.first_name || '');
-    formData.append('last_name', userData.last_name || '');
-    formData.append('contact_number', contactNumber || '');
-    formData.append('linkedin_url', linkedinUrl || '');
-    formData.append('age', age || '');
-    formData.append('language', String(Number(selectedLanguage.id)));
-
-    
-    if (userData.profile_pic && userData.profile_pic.startsWith('file://')) {
-      formData.append('profile_pic', {
-        uri: userData.profile_pic,
-        type: 'image/jpeg',
-        name: 'profile.jpg',
-      });
+  console.log("userData", userData?.profile_pic);
+  const handleUpdateProfile = async () => {
+    if (!userData.language) {
+      Toast.show({ type: 'error', text1: 'Please select a language' });
+      return;
     }
 
-    setLoading(true);
-    const response = await Services.updateUserProfileDetails(formData);
+    try {
+      const formData = new FormData();
 
-    if (response?.success) {
-      
- let profilePicUrl = response.data.profile_pic;
-      if (profilePicUrl && !profilePicUrl.startsWith('http')) {
-        profilePicUrl = `http://api.agreementpaper.com${profilePicUrl}`;
+
+      formData.append('first_name', userData.first_name || '');
+      formData.append('last_name', userData.last_name || '');
+      formData.append('contact_number', contactNumber || '');
+      formData.append('linkedin_url', linkedinUrl || '');
+      formData.append('age', age || '');
+      formData.append('language', String(Number(selectedLanguage.id)));
+
+
+      if (userData.profile_pic && userData.profile_pic.startsWith('file://')) {
+        formData.append('profile_pic', {
+          uri: userData.profile_pic,
+          type: 'image/jpeg',
+          name: 'profile.jpg',
+        });
       }
-      const updatedUser = {
-        ...userData,
-        profile_pic: profilePicUrl,
-           profile_file: null
-      };
-      try {
-    await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
-    setUserData(updatedUser);
-       await fetchUserProfile();
-  } catch (error) {
-    console.log('Error saving user data:', error);
-  }
 
-      Toast.show({ type: 'success', text1: 'Profile updated' });
-      setEditMode(false);
-    } else {
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Update failed',
-        text2: response?.error || 'Please try again'
+      setLoading(true);
+      const response = await Services.updateUserProfileDetails(formData);
+      console.log("reseres", response);
+
+      if (response?.success) {
+
+        let profilePicUrl = response.data.profile_pic;
+        if (profilePicUrl && !profilePicUrl.startsWith('http')) {
+          profilePicUrl = `http://api.agreementpaper.com${profilePicUrl}`;
+        }
+        const updatedUser = {
+          ...userData,
+          profile_pic: profilePicUrl,
+          profile_file: null
+        };
+        try {
+          await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+          setUserData(updatedUser);
+          await fetchUserProfile();
+        } catch (error) {
+          console.log('Error saving user data:', error);
+        }
+
+        Toast.show({ type: 'success', text1: 'Profile updated' });
+        setEditMode(false);
+      } else {
+        if (response.error) {
+          setFieldErrors(response.error);   // store API field errors
+        }
+        Toast.show({
+          type: 'error',
+          text1: 'Update failed',
+          text2: response?.error || 'Please try again'
+        });
+      }
+    } catch (error) {
+      console.log('Profile update error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Update error',
+        text2: error.message || 'An unexpected error occurred'
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.log('Profile update error:', error);
-    Toast.show({
-      type: 'error',
-      text1: 'Update error',
-      text2: error.message || 'An unexpected error occurred'
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -387,101 +381,101 @@ const handleUpdateProfile = async () => {
   //     </View>
   //   </Modal>
   // );
-const renderLanguageModal = () => (
-  <Modal visible={languageModal} transparent animationType="fade">
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContent2}>
-        {/* Modal Header */}
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle2}>Select Language</Text>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={() => setLanguageModal(false)}
-          >
-            <Icon name="close" size={24} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Icon name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search languages..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus={true}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity 
-              style={styles.clearButton}
-              onPress={() => setSearchQuery('')}
-            >
-              <Icon name="close" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Languages List */}
-        <FlatList
-          data={filteredLanguages}
-          keyExtractor={(item) => item.id?.toString() || item.name}
-          showsVerticalScrollIndicator={false}
-          style={styles.languagesList}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
+  const renderLanguageModal = () => (
+    <Modal visible={languageModal} transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent2}>
+          {/* Modal Header */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle2}>Select Language</Text>
             <TouchableOpacity
-              onPress={() => {
-                setSelectedLanguage(item);
-                setUserData(prev => ({ ...prev, language: item.id }));
-                setLanguageModal(false);
-                setSearchQuery('');
-              }}
-              style={[
-                styles.languageItem,
-                selectedLanguage?.id === item.id && styles.selectedLanguageItem
-              ]}
+              style={styles.closeButton}
+              onPress={() => setLanguageModal(false)}
             >
-              <Text style={[
-                styles.languageName,
-                selectedLanguage?.id === item.id && styles.selectedLanguageName
-              ]}>
-                {item.name}
-              </Text>
-              {selectedLanguage?.id === item.id && (
-                <Icon name="checkmark" size={20} color="#0E3386" />
-              )}
+              <Icon name="close" size={24} color="#6B7280" />
             </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Icon name="search-off" size={48} color="#D1D5DB" />
-              <Text style={styles.emptyStateText}>No languages found</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Try adjusting your search terms
-              </Text>
-            </View>
-          }
-        />
+          </View>
 
-        {/* Results Count */}
-        <View style={styles.resultsContainer}>
-          <Text style={styles.resultsText}>
-            {filteredLanguages.length} {filteredLanguages.length === 1 ? 'language' : 'languages'} found
-          </Text>
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <Icon name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search languages..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus={true}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => setSearchQuery('')}
+              >
+                <Icon name="close" size={18} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Languages List */}
+          <FlatList
+            data={filteredLanguages}
+            keyExtractor={(item) => item.id?.toString() || item.name}
+            showsVerticalScrollIndicator={false}
+            style={styles.languagesList}
+            contentContainerStyle={styles.listContent}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedLanguage(item);
+                  setUserData(prev => ({ ...prev, language: item.id }));
+                  setLanguageModal(false);
+                  setSearchQuery('');
+                }}
+                style={[
+                  styles.languageItem,
+                  selectedLanguage?.id === item.id && styles.selectedLanguageItem
+                ]}
+              >
+                <Text style={[
+                  styles.languageName,
+                  selectedLanguage?.id === item.id && styles.selectedLanguageName
+                ]}>
+                  {item.name}
+                </Text>
+                {selectedLanguage?.id === item.id && (
+                  <Icon name="checkmark" size={20} color="#0E3386" />
+                )}
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Icon name="search-off" size={48} color="#D1D5DB" />
+                <Text style={styles.emptyStateText}>No languages found</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  Try adjusting your search terms
+                </Text>
+              </View>
+            }
+          />
+
+          {/* Results Count */}
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsText}>
+              {filteredLanguages.length} {filteredLanguages.length === 1 ? 'language' : 'languages'} found
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
-  </Modal>
-);
+    </Modal>
+  );
   const handleSendResetCode = async () => {
-       setLoading(true);
+    setLoading(true);
     const res = await Services.forgetPassword({ email: otpEmail });
     console.log(".......res", res);
 
     if (res.success) {
-       setLoading(false);
+      setLoading(false);
 
       setResetStep(2);
     } else {
@@ -497,13 +491,13 @@ const renderLanguageModal = () => (
     const formData = new FormData();
     formData.append('code', otpCode);
     formData.append('password', newPassword);
-       setLoading(true);
+    setLoading(true);
 
     try {
       const res = await Services.forgetPasswordReset(formData);
 
       if (res.success) {
-       setLoading(false);
+        setLoading(false);
 
         setPasswordModalVisible(false);
         setResetStep(1);
@@ -530,608 +524,432 @@ const renderLanguageModal = () => (
 
   if (loading) return <ActivityIndicator style={{ marginTop: 50 }} size="large" />;
 
-//   return (
-//     <ScrollView style={styles.container}
-//       contentContainerStyle={{ paddingBottom: 50 }}
-//     >
-//       {renderLanguageModal()}
-
-//       <View style={styles.profileSection}>
-// <TouchableOpacity onPress={handleImagePick}>
-//   {userData?.profile_pic ? (
-//     <Image
-//       source={{ 
-//         uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
-//         cache: 'reload'
-//       }}
-//       style={styles.avatar}
-//       onError={(e) => {
-//         console.log('Image loading error:', e.nativeEvent.error);
-//         // Fallback to initials if image fails to load
-//       }}
-//     />
-//   ) : (
-//     <View style={styles.initialsCircle}>
-//       <Text style={styles.initialsText}>
-//         {userData?.first_name?.charAt(0) || ''}
-//       </Text>
-//     </View>
-//   )}
-// <Text style={styles.changeProfile}>Change Profile</Text>
-
-// </TouchableOpacity>
 
 
-//         {editMode ? (
-//           <>
-//             <TextInput
-//               style={styles.input}
-//               value={userData.first_name}
-//               onChangeText={(text) => setUserData({ ...userData, first_name: text })}
-//               placeholder="First Name"
-//             />
-//             <TextInput
-//               style={styles.input}
-//               value={userData.last_name}
-//               onChangeText={(text) => setUserData({ ...userData, last_name: text })}
-//               placeholder="Last Name"
-//             />
-//             <TextInput
-//               style={styles.input}
-//               value={userData.email}
-//               editable={false}
-//               placeholder="Email"
-//             />
+
+  return (
 
 
-//             <TextInput
-//               style={styles.input}
-//               placeholder="Contact Number"
-//               value={contactNumber}
-//               onChangeText={setContactNumber}
-//               keyboardType="phone-pad"
-//               maxLength={10}
-//             />
+    <SafeAreaView style={styles.container}>
+      <AppHeader title="My Profile" />
+      <ScrollView
+        // style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {renderLanguageModal()}
 
-//             <TextInput
-//               style={styles.input}
-//               placeholder="LinkedIn URL"
-//               value={linkedinUrl}
-//               onChangeText={setLinkedinUrl}
-//             />
-
-//             <TextInput
-//               style={styles.input}
-//               placeholder="Age"
-//               value={age}
-//               onChangeText={setAge}
-//               maxLength={3}
-//               keyboardType="numeric"
-//             />
-
-//             <TouchableOpacity onPress={() => setLanguageModal(true)} style={styles.input}>
-//               <Text>{selectedLanguage.name || 'Select Language'}</Text>
-//             </TouchableOpacity>
-//             <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
-//               <Text style={styles.logoutText}>Save</Text>
-//             </TouchableOpacity>
-//           </>
-//         ) : (
-//           <>
-//             <Text style={styles.name}>{`${userData.first_name || ''} ${userData.last_name || ''}`}</Text>
-//             <Text style={styles.email}>{userData.email || ''}</Text>
-//             <Text style={styles.email}>Language: {selectedLanguage.name || 'N/A'}</Text>
-//             <TouchableOpacity style={styles.editIcon} onPress={() => setEditMode(true)}>
-//               <Icon name="create-outline" size={24} color="#000" />
-//             </TouchableOpacity>
-//           </>
-//         )}
-//       </View>
-
-//       <View style={styles.settingsSection}>
-//         <Text style={styles.settingsHeader}>Settings</Text>
-//         <TouchableOpacity
-//           style={styles.settingsItem}
-//           onPress={() => setPasswordModalVisible(true)}
-//         >
-//           <Text style={styles.settingsText}>Change Password</Text>
-//         </TouchableOpacity>
-
-//         <TouchableOpacity
-//           style={styles.settingsItem}
-//           onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
-//         >
-//           <Text style={styles.settingsText}>Privacy Policy</Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity
-//           style={styles.settingsItem}
-//           onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}
-//         >
-//           <Text style={styles.settingsText}>Terms and Conditions</Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity
-//   style={styles.settingsItem}
-//   onPress={() => setDeleteModalVisible(true)}
-// >
-//   <Text style={styles.settingsText}>Delete Account</Text>
-// </TouchableOpacity>
-//       </View>
-
-//       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-//         <Text style={styles.logoutText}>Logout</Text>
-//       </TouchableOpacity>
-
-//       <Modal visible={passwordModalVisible} animationType="slide" transparent>
-//   <View style={styles.fullWhiteBackdrop}>
-//     {resetStep === 1 ? (
-//       <>
-//         <TextInput
-//           placeholder="Email"
-//           value={userEmail}         // show logged-in user email
-//           editable={false}          // make it read-only
-//           style={[styles.input1, { backgroundColor: "#f0f0f0" }]} // grey bg to indicate disabled
-//         />
-//         <TouchableOpacity style={styles.button} onPress={handleSendResetCode}>
-//           <Text style={styles.buttonText}>Send OTP</Text>
-//         </TouchableOpacity>
-//       </>
-//     ) : (
-//       <>
-//         <TextInput
-//           placeholder="Enter OTP"
-//           value={otpCode}
-//           onChangeText={setOtpCode}
-//           style={styles.input1}
-//         />
-//         <TextInput
-//           placeholder="New Password"
-//           value={newPassword}
-//           onChangeText={setNewPassword}
-//           secureTextEntry
-//           style={styles.input1}
-//         />
-//         <TouchableOpacity style={styles.resetbutton2} onPress={handleResetPassword}>
-//           <Text style={styles.buttonText}>Reset Password</Text>
-//         </TouchableOpacity>
-//       </>
-//     )}
-
-//     <TouchableOpacity
-//       onPress={() => {
-//         setPasswordModalVisible(false);
-//         setResetStep(1);
-//       }}
-//       style={styles.buttonlink}
-//     >
-//       <Text style={styles.link}>Cancel</Text>
-//     </TouchableOpacity>
-//   </View>
-// </Modal>
-
-//       <Modal visible={deleteModalVisible} animationType="slide" transparent>
-//   <View style={styles.fullWhiteBackdrop}>
-//     <Text style={styles.modalTitle}>Confirm Account Deletion</Text>
-
-//     <View style={[styles.input1, { flexDirection: 'row', alignItems: 'center' }]}>
-//   <TextInput
-//     style={{ flex: 1 }}
-//     placeholder="Enter your password"
-//     value={deletePassword}
-//     onChangeText={setDeletePassword}
-//     secureTextEntry={!showDeletePassword}
-//     autoCapitalize="none"
-//   />
-//   <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
-//     <Icon
-//       name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
-//       size={22}
-//       color="#555"
-//     />
-//   </TouchableOpacity>
-// </View>
-
-    
-//     {/* <TextInput
-//       placeholder="Enter your password"
-//       value={deletePassword}
-//       onChangeText={setDeletePassword}
-//       secureTextEntry
-//       style={styles.input1}
-//     /> */}
-
-//     <TouchableOpacity
-//       style={styles.resetbutton}
-//       onPress={async () => {
-//         try {
-//      const result = await Services.deleteUserAccount(deletePassword);
-
-// if (result.success) {
-//   Toast.show({ type: 'success', text1: 'Account deleted successfully' });
-//   await AsyncStorage.clear();
-//   setDeleteModalVisible(false);
-
-//   navigation.reset({
-//     index: 0,
-//     routes: [{ name: 'Login' as never }],
-//   });
-// } else {
-//   Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
-// }
-
-//         } catch (error) {
-//           Alert.alert('Error', 'Failed to delete account. Please check your password.');
-//         }
-//       }}
-//     >
-//       <Text style={styles.buttonText}>Delete</Text>
-//     </TouchableOpacity>
-
-//     <TouchableOpacity
-//       onPress={() => setDeleteModalVisible(false)}
-//       style={styles.buttonlink}
-//     >
-//       <Text style={styles.link}>Cancel</Text>
-//     </TouchableOpacity>
-//   </View>
-// </Modal>
-
-//     </ScrollView>
-//   );
-
-return (
-  <ScrollView 
-    style={styles.container}
-    contentContainerStyle={styles.scrollContent}
-    showsVerticalScrollIndicator={false}
-  >
-    {renderLanguageModal()}
-
-    {/* Profile Header Section */}
-    <View style={styles.profileHeader}>
-    </View>
-
-    {/* Profile Section */}
-    <View style={styles.profileCard}>
-      <TouchableOpacity style={styles.avatarContainer} onPress={handleImagePick}>
-        {userData?.profile_pic ? (
-          <Image
-            source={{ 
-              uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
-              cache: 'reload'
-            }}
-            style={styles.avatar}
-            onError={(e) => {
-              console.log('Image loading error:', e.nativeEvent.error);
-            }}
-          />
-        ) : (
-          <View style={styles.initialsCircle}>
-            <Text style={styles.initialsText}>
-              {userData?.first_name?.charAt(0) || ''}
-            </Text>
-          </View>
-        )}
-        <View style={styles.changeProfileButton}>
-          <Icon name="camera" size={16} color="#fff" />
-          <Text style={styles.changeProfileText}>Change Photo</Text>
-        </View>
-      </TouchableOpacity>
-
-      {editMode ? (
-        <View style={styles.editForm}>
-          <View style={styles.inputRow}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>First Name</Text>
-              <TextInput
-                style={styles.input}
-                value={userData.first_name}
-                onChangeText={(text) => setUserData({ ...userData, first_name: text })}
-                placeholder="Enter first name"
+        <View style={styles.profileCard}>
+          {/* Profile Image Section */}
+          <View style={styles.avatarContainer}>
+            {userData?.profile_pic ? (
+              <Image
+                source={{
+                  uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+                  cache: "reload",
+                }}
+                style={styles.avatar}
+                onError={(e) => {
+                  console.log("Image loading error:", e.nativeEvent.error);
+                }}
               />
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Last Name</Text>
-              <TextInput
-                style={styles.input}
-                value={userData.last_name}
-                onChangeText={(text) => setUserData({ ...userData, last_name: text })}
-                placeholder="Enter last name"
-              />
-            </View>
+            ) : (
+              <View style={styles.initialsCircle}>
+                <Text style={styles.initialsText}>
+                  {userData?.first_name?.charAt(0) || ""}
+                </Text>
+              </View>
+            )}
+
+            {/* 👇 Show "Change Photo" only in edit mode */}
+            {editMode && (
+              <TouchableOpacity
+                style={styles.changeProfileButton}
+                onPress={handleImagePick}
+              >
+                <Icon name="camera" size={16} color="#fff" />
+                <Text style={styles.changeProfileText}>Change Photo</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email Address</Text>
-            <TextInput
-              style={[styles.input, styles.disabledInput]}
-              value={userData.email}
-              editable={false}
-              placeholder="Email"
-            />
-          </View>
+          {/* 👇 Edit / View Mode Content */}
+          {editMode ? (
+            <View style={styles.editForm}>
+              <View style={styles.inputRow}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>First Name</Text>
+                  <TextInput
+                    placeholder='First Name'
+                    style={styles.input}
+                    value={userData.first_name}
+                    onChangeText={(text) => {
+                      setUserData({ ...userData, first_name: text });
+                      setFieldErrors((prev) => ({ ...prev, first_name: null }));
+                    }}
+                  />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Contact Number</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter contact number"
-              value={contactNumber}
-              onChangeText={setContactNumber}
-              keyboardType="phone-pad"
-              maxLength={10}
-            />
-          </View>
+                  {fieldErrors.first_name && (
+                    <Text style={styles.errorText}>{fieldErrors.first_name[0]}</Text>
+                  )}
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>LinkedIn URL</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter LinkedIn profile URL"
-              value={linkedinUrl}
-              onChangeText={setLinkedinUrl}
-            />
-          </View>
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Last Name</Text>
+                  {/* <TextInput
+                    style={styles.input}
+                    value={userData.last_name}
+                    onChangeText={(text) =>
+                      setUserData({ ...userData, last_name: text })
+                    }
+                    placeholder="Enter last name"
+                  /> */}
+                  <TextInput
+                    placeholder="Enter last name"
+                    style={styles.input}
+                    value={userData.last_name}
+                    onChangeText={(text) => {
+                      setUserData({ ...userData, last_name: text });
+                      setFieldErrors((prev) => ({ ...prev, last_name: null }));
+                    }}
+                  />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Age</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your age"
-              value={age}
-              onChangeText={setAge}
-              maxLength={3}
-              keyboardType="numeric"
-            />
-          </View>
+                  {fieldErrors.last_name && (
+                    <Text style={styles.errorText}>{fieldErrors.last_name[0]}</Text>
+                  )}
+                </View>
+              </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Preferred Language</Text>
-            <TouchableOpacity 
-              style={styles.languageSelector}
-              onPress={() => setLanguageModal(true)}
-            >
-              <Text style={styles.languageText}>
-                {selectedLanguage.name || 'Select Language'}
-              </Text>
-              <Icon name="chevron-down" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={styles.cancelButton}
-              onPress={() => setEditMode(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.saveButton}
-              onPress={handleUpdateProfile}
-            >
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.profileInfo}>
-          <Text style={styles.userName}>
-            {`${userData.first_name || ''} ${userData.last_name || ''}`}
-          </Text>
-          <Text style={styles.userEmail}>{userData.email || ''}</Text>
-          <View style={styles.languageInfo}>
-            <Icon name="language" size={16} color="#666" />
-            <Text style={styles.languageInfoText}>
-              {selectedLanguage.name || 'No language selected'}
-            </Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={() => setEditMode(true)}
-          >
-            <Icon name="create-outline" size={18} color="#fff" />
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-
-    {/* Settings Section */}
-    <View style={styles.settingsCard}>
-      <Text style={styles.settingsTitle}>Account Settings</Text>
-      
-      <TouchableOpacity
-        style={styles.settingsItem}
-        onPress={() => setPasswordModalVisible(true)}
-      >
-        <View style={styles.settingsItemLeft}>
-          <View style={[styles.settingsIcon, { backgroundColor: '#E3F2FD' }]}>
-            <Icon name="lock-closed-outline" size={20} color="#1976D2" />
-          </View>
-          <Text style={styles.settingsItemText}>Change Password</Text>
-        </View>
-        <Icon name="chevron-forward" size={20} color="#999" />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.settingsItem}
-        onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
-      >
-        <View style={styles.settingsItemLeft}>
-          <View style={[styles.settingsIcon, { backgroundColor: '#E8F5E8' }]}>
-            <Icon name="shield-checkmark-outline" size={20} color="#388E3C" />
-          </View>
-          <Text style={styles.settingsItemText}>Privacy Policy</Text>
-        </View>
-        <Icon name="chevron-forward" size={20} color="#999" />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.settingsItem}
-        onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}
-      >
-        <View style={styles.settingsItemLeft}>
-          <View style={[styles.settingsIcon, { backgroundColor: '#FFF3E0' }]}>
-            <Icon name="document-text-outline" size={20} color="#F57C00" />
-          </View>
-          <Text style={styles.settingsItemText}>Terms and Conditions</Text>
-        </View>
-        <Icon name="chevron-forward" size={20} color="#999" />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.settingsItem}
-        onPress={() => setDeleteModalVisible(true)}
-      >
-        <View style={styles.settingsItemLeft}>
-          <View style={[styles.settingsIcon, { backgroundColor: '#FFEBEE' }]}>
-            <Icon name="trash-outline" size={20} color="#D32F2F" />
-          </View>
-          <Text style={[styles.settingsItemText, { color: '#D32F2F' }]}>Delete Account</Text>
-        </View>
-        <Icon name="chevron-forward" size={20} color="#999" />
-      </TouchableOpacity>
-    </View>
-
-    {/* Logout Button */}
-    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-      <Icon name="log-out-outline" size={20} color="#D32F2F" />
-      <Text style={styles.logoutText}>Logout</Text>
-    </TouchableOpacity>
-
-    {/* Change Password Modal */}
-    <Modal visible={passwordModalVisible} animationType="slide" transparent>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Change Password</Text>
-          <ScrollView>
-          {resetStep === 1 ? (
-            <>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
+                <Text style={styles.inputLabel}>Email Address</Text>
                 <TextInput
-                  value={userEmail}
+                  style={[styles.input, styles.disabledInput]}
+                  value={userData.email}
                   editable={false}
-                  style={styles.disabledInput}
+                  placeholder="Email"
                 />
               </View>
-              <TouchableOpacity style={styles.primaryButton} onPress={handleSendResetCode}>
-                <Text style={styles.primaryButtonText}>Send Verification Code</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
+
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Verification Code</Text>
-                <TextInput
-                  placeholder="Enter the code sent to your email"
-                  value={otpCode}
-                  onChangeText={setOtpCode}
+                <Text style={styles.inputLabel}>Contact Number</Text>
+                {/* <TextInput
                   style={styles.input}
+                  placeholder="Enter contact number"
+                  value={contactNumber}
+                  onChangeText={setContactNumber}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                /> */}
+                <TextInput
+                  placeholder="Enter contact number"
+                  style={styles.input}
+                  value={contactNumber}
+                  onChangeText={(text) => {
+                    setContactNumber(text);
+                    setFieldErrors((prev) => ({ ...prev, contact_number: null }));
+                  }}
                 />
-              </View>
-             <View style={[styles.inputContainer, {height:70 }]} >
 
-                <Text style={styles.inputLabel}>New Password</Text>
+                {fieldErrors.contact_number && (
+                  <Text style={styles.errorText}>{fieldErrors.contact_number[0]}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>LinkedIn URL</Text>
                 <TextInput
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  secureTextEntry
                   style={styles.input}
+                  placeholder="Enter LinkedIn profile URL"
+                  value={linkedinUrl}
+                  onChangeText={setLinkedinUrl}
                 />
               </View>
-              <TouchableOpacity style={styles.primaryButton} onPress={handleResetPassword}>
-                <Text style={styles.primaryButtonText}>Reset Password</Text>
-              </TouchableOpacity>
-            </>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Age</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your age"
+                  value={age}
+                  onChangeText={setAge}
+                  maxLength={3}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Preferred Language</Text>
+                <TouchableOpacity
+                  style={styles.languageSelector}
+                  onPress={() => {
+                    setLanguageModal(true);
+                    setFieldErrors((prev) => ({ ...prev, language: null }));
+                  }}
+                >
+                  <Text style={styles.languageText}>
+                    {selectedLanguage.name || "Select Language"}
+                  </Text>
+                  <Icon name="chevron-down" size={20} color="#666" />
+                </TouchableOpacity>
+
+                {fieldErrors.language && (
+                  <Text style={styles.errorText}>{fieldErrors.language[0]}</Text>
+                )}
+
+              </View>
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setEditMode(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleUpdateProfile}
+                >
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.profileInfo}>
+              <Text style={styles.userName}>
+                {`${userData.first_name || ""} ${userData.last_name || ""}`}
+              </Text>
+              <Text style={styles.userEmail}>{userData.email || ""}</Text>
+
+              <View style={styles.languageInfo}>
+                <Icon name="language" size={16} color="#666" />
+                <Text style={styles.languageInfoText}>
+                  {selectedLanguage.name || "No language selected"}
+                </Text>
+              </View>
+              <View style={{ flex: 1, gap: 10, justifyContent: 'center', alignItems: 'center' }}>
+
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => setEditMode(true)}
+                >
+                  <Icon name="create-outline" size={18} color="#fff" />
+                  <Text style={styles.editButtonText}>Edit Profile</Text>
+                </TouchableOpacity>
+
+                {(userType === "ORGANISATION_USER" || userType === "AGENCY_USER") && (
+
+
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => navigation.navigate("CompanySetupScreen")}
+                  >
+                    <Icon name="create-outline" size={18} color="#fff" />
+                    <Text style={styles.editButtonText}>Edit Company Profile</Text>
+                  </TouchableOpacity>
+                )}
+
+              </View>
+
+
+            </View>
           )}
-          <TouchableOpacity
-            onPress={() => {
-              setPasswordModalVisible(false);
-              setResetStep(1);
-            }}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-</ScrollView>
-
         </View>
-      </View>
-    </Modal>
 
-    {/* Delete Account Modal */}
-    <Modal visible={deleteModalVisible} animationType="slide" transparent>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalContent}>
-          <View style={styles.warningIcon}>
-            <Icon name="warning-outline" size={40} color="#D32F2F" />
+        {/* Settings Section */}
+        <View style={styles.settingsCard}>
+          <Text style={styles.settingsTitle}>Account Settings</Text>
+
+          <TouchableOpacity
+            style={styles.settingsItem}
+            onPress={() => setPasswordModalVisible(true)}
+          >
+            <View style={styles.settingsItemLeft}>
+              <View style={[styles.settingsIcon, { backgroundColor: '#E3F2FD' }]}>
+                <Icon name="lock-closed-outline" size={20} color="#1976D2" />
+              </View>
+              <Text style={styles.settingsItemText}>Change Password</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingsItem}
+            onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
+          >
+            <View style={styles.settingsItemLeft}>
+              <View style={[styles.settingsIcon, { backgroundColor: '#E8F5E8' }]}>
+                <Icon name="shield-checkmark-outline" size={20} color="#388E3C" />
+              </View>
+              <Text style={styles.settingsItemText}>Privacy Policy</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingsItem}
+            onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}
+          >
+            <View style={styles.settingsItemLeft}>
+              <View style={[styles.settingsIcon, { backgroundColor: '#FFF3E0' }]}>
+                <Icon name="document-text-outline" size={20} color="#F57C00" />
+              </View>
+              <Text style={styles.settingsItemText}>Terms and Conditions</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingsItem}
+            onPress={() => setDeleteModalVisible(true)}
+          >
+            <View style={styles.settingsItemLeft}>
+              <View style={[styles.settingsIcon, { backgroundColor: '#FFEBEE' }]}>
+                <Icon name="trash-outline" size={20} color="#D32F2F" />
+              </View>
+              <Text style={[styles.settingsItemText, { color: '#D32F2F' }]}>Delete Account</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Icon name="log-out-outline" size={20} color="#D32F2F" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
+        {/* Change Password Modal */}
+        <Modal visible={passwordModalVisible} animationType="slide" transparent>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Change Password</Text>
+              <ScrollView>
+                {resetStep === 1 ? (
+                  <>
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.inputLabel}>Email</Text>
+                      <TextInput
+                        value={userEmail}
+                        editable={false}
+                        style={styles.disabledInput}
+                      />
+                    </View>
+                    <TouchableOpacity style={styles.primaryButton} onPress={handleSendResetCode}>
+                      <Text style={styles.primaryButtonText}>Send Verification Code</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.inputLabel}>Verification Code</Text>
+                      <TextInput
+                        placeholder="Enter the code sent to your email"
+                        value={otpCode}
+                        onChangeText={setOtpCode}
+                        style={styles.input}
+                      />
+                    </View>
+                    <View style={[styles.inputContainer, { height: 70 }]} >
+
+                      <Text style={styles.inputLabel}>New Password</Text>
+                      <TextInput
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        secureTextEntry
+                        style={styles.input}
+                      />
+                    </View>
+                    <TouchableOpacity style={styles.primaryButton} onPress={handleResetPassword}>
+                      <Text style={styles.primaryButtonText}>Reset Password</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                <TouchableOpacity
+                  onPress={() => {
+                    setPasswordModalVisible(false);
+                    setResetStep(1);
+                  }}
+                  style={styles.secondaryButton}
+                >
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </ScrollView>
+
+            </View>
           </View>
-          <Text style={styles.modalTitle}>Delete Account</Text>
-          <Text style={styles.modalSubtitle}>
-            This action cannot be undone. All your data will be permanently deleted.
-          </Text>
+        </Modal>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Enter your password to confirm</Text>
-            <View style={styles.passwordInput}>
-              <TextInput
-                placeholder="Your password"
-                value={deletePassword}
-                onChangeText={setDeletePassword}
-                secureTextEntry={!showDeletePassword}
-                autoCapitalize="none"
-                style={styles.passwordTextInput}
-              />
-              <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
-                <Icon
-                  name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={22}
-                  color="#555"
-                />
+        {/* Delete Account Modal */}
+        <Modal visible={deleteModalVisible} animationType="slide" transparent>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <View style={styles.warningIcon}>
+                <Icon name="warning-outline" size={40} color="#D32F2F" />
+              </View>
+              <Text style={styles.modalTitle}>Delete Account</Text>
+              <Text style={styles.modalSubtitle}>
+                This action cannot be undone. All your data will be permanently deleted.
+              </Text>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Enter your password to confirm</Text>
+                <View style={styles.passwordInput}>
+                  <TextInput
+                    placeholder="Your password"
+                    value={deletePassword}
+                    onChangeText={setDeletePassword}
+                    secureTextEntry={!showDeletePassword}
+                    autoCapitalize="none"
+                    style={styles.passwordTextInput}
+                  />
+                  <TouchableOpacity onPress={() => setShowDeletePassword(!showDeletePassword)}>
+                    <Icon
+                      name={showDeletePassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={22}
+                      color="#555"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.dangerButton}
+                onPress={async () => {
+                  try {
+                    const result = await Services.deleteUserAccount(deletePassword);
+                    if (result.success) {
+                      Toast.show({ type: 'success', text1: 'Account deleted successfully' });
+                      await AsyncStorage.clear();
+                      setDeleteModalVisible(false);
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Login' as never }],
+                      });
+                    } else {
+                      Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
+                    }
+                  } catch (error) {
+                    Alert.alert('Error', 'Failed to delete account. Please check your password.');
+                  }
+                }}
+              >
+                <Text style={styles.dangerButtonText}>Delete Account Permanently</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setDeleteModalVisible(false)}
+                style={styles.secondaryButton}
+              >
+                <Text style={styles.secondaryButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
-
-          <TouchableOpacity
-            style={styles.dangerButton}
-            onPress={async () => {
-              try {
-                const result = await Services.deleteUserAccount(deletePassword);
-                if (result.success) {
-                  Toast.show({ type: 'success', text1: 'Account deleted successfully' });
-                  await AsyncStorage.clear();
-                  setDeleteModalVisible(false);
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Login' as never }],
-                  });
-                } else {
-                  Alert.alert('Error', result.error?.non_field_errors?.[0] || 'Failed to delete account');
-                }
-              } catch (error) {
-                Alert.alert('Error', 'Failed to delete account. Please check your password.');
-              }
-            }}
-          >
-            <Text style={styles.dangerButtonText}>Delete Account Permanently</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setDeleteModalVisible(false)}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  </ScrollView>
-);
-
+        </Modal>
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
-
 export default MyProfile;
 // const styles = StyleSheet.create({
 //   container: {
@@ -1300,9 +1118,6 @@ export default MyProfile;
 //     color: '#fff',
 //     fontWeight: 'bold'
 //   },
-
-
-
 // });
 const styles = StyleSheet.create({
   container: {
@@ -1639,9 +1454,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
   },
-
-
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -1760,4 +1572,10 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
+  errorText: {
+    color: "red",
+    fontSize: 13,
+    marginTop: 4,
+  },
+
 });

@@ -108,12 +108,12 @@
 //     const checkProfileStatus = async () => {
 //       const isActive = await AsyncStorage.getItem('isActive');
 //       console.log("isActive",isActive);
-      
+
 //       if (isActive !== 'true') {
 //         setShowProfileModal(true);
 //       }
 //     };
-    
+
 //     checkProfileStatus();
 //   }, []);
 // const renderResourceCard = ({ item }: any) => {
@@ -288,8 +288,8 @@
 //       </TouchableOpacity>
 //         </View>
 
-       
-    
+
+
 //       {loading ? (
 //   <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
 // ) : (
@@ -738,6 +738,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OrganizationProfileModal from '../components/Modals/OrganizationProfileModal';
 import { useFocusEffect } from '@react-navigation/native';
+import Notifications from '../components/Modals/Notifications';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -766,6 +767,7 @@ const LawyerDashboard = () => {
   const [lastName, setLastName] = useState('');
   const [favoriteLawyers, setFavoriteLawyers] = useState<Lawyer[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [userData, setUserData] = useState<any>({});
 
   useFocusEffect(
     React.useCallback(() => {
@@ -779,22 +781,127 @@ const LawyerDashboard = () => {
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       fetchFavoriteLawyers();
-      fetchUserData();
 
       return () => subscription.remove();
     }, [])
   );
 
-  const fetchUserData = async () => {
-    try {
-      const fName = await AsyncStorage.getItem('first_Name');
-      const lName = await AsyncStorage.getItem('last_Name');
-      if (fName) setFirstName(fName);
-      if (lName) setLastName(lName);
-    } catch (e) {
-      console.log('Error fetching user data:', e);
-    }
-  };
+  useEffect(() => {
+    fetchTopResource();
+    const loadDashboardData = async () => {
+      try {
+        // ---- Load First & Last Name ----
+        const fName = await AsyncStorage.getItem('first_Name');
+        const lName = await AsyncStorage.getItem('last_Name');
+
+        if (fName) setFirstName(fName);
+        if (lName) setLastName(lName);
+
+        // ---- Load Premium Access ----
+        const storedValue = await AsyncStorage.getItem('hasPremiumAccess');
+        const premium = JSON.parse(storedValue || 'false');
+        setHasPremiumAccess(premium);
+      } catch (e) {
+        console.log('Error fetching user data:', e);
+      }
+ const companyName = await AsyncStorage.getItem('company');
+
+      // ---- Update Header ----
+      navigation.setOptions({
+
+        headerTitle: () => (
+                          <View style={{ flexDirection: "column" }}>
+                            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                             Lawyer Dashboard
+                            </Text>
+                
+                            {companyName ? (
+                              <Text style={{ color: "#fff", fontSize: 12, marginTop: 2 }}>
+                                {companyName}
+                              </Text>
+                            ) : null}
+                          </View>
+                        ),
+        headerRight: () => (
+          <>
+            {/* Notifications Icon */}
+            <View>
+              <Notifications />
+            </View>
+
+            <View style={{ flexDirection: 'row', marginRight: 10 }}>
+              {/* Premium Access / Upgrade Button */}
+              {hasPremiumAccess ? (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SubscriptionScreen')}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginRight: 12,
+                    backgroundColor: '#ffd700',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Icon name="crown" size={14} color="#000" />
+                  <Text
+                    style={{
+                      color: '#000',
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      marginLeft: 5,
+                    }}
+                  >
+                    Premium
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SubscriptionScreen')}
+                  style={{
+                    marginRight: 12,
+                    backgroundColor: '#fbbf24',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>
+                    Upgrade Plan
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* My Profile Icon */}
+              <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
+                {userData?.profile_pic ? (
+                  <Image
+                    source={{ uri: `${userData.profile_pic}?t=${Date.now()}` }}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      borderWidth: 1,
+                      borderColor: '#fff',
+                    }}
+                  />
+                ) : (
+                  <Icon name="account-circle" size={28} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        ),
+
+        headerStyle: { backgroundColor: '#0E3386' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      });
+    };
+
+    loadDashboardData();
+  }, [navigation, hasPremiumAccess]);
 
   const fetchTopResource = async () => {
     try {
@@ -847,56 +954,109 @@ const LawyerDashboard = () => {
     fetchFavoriteLawyers();
     fetchTopResource();
   };
- useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const fName = await AsyncStorage.getItem('first_Name');
-        const lName = await AsyncStorage.getItem('last_Name');
-        console.log("fName", fName);
-        console.log("lName", lName);
 
-        if (fName) setFirstName(fName);
-        if (lName) setLastName(lName);
-      } catch (e) {
-        console.log('Error fetching user data:', e);
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // First load from AsyncStorage for quick display
+        const storedData = await AsyncStorage.getItem('userData');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          // Convert relative paths to absolute
+          if (parsedData.profile_pic?.startsWith('/')) {
+            parsedData.profile_pic = `https://api.agreementpaper.com/${parsedData.profile_pic}`;
+          }
+          setUserData(parsedData);
+        }
+
+        // Then fetch fresh data from API
+        // await fetchUserProfile();
+      } catch (error) {
+        console.log('Initial load error:', error);
       }
     };
 
-    fetchUserData();
-    // Initial fetch - will also be triggered by useFocusEffect
-    fetchFavoriteLawyers();
+    loadData();
+  }, []);
 
-    navigation.setOptions({
-      title: 'Lawyer ',
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', marginRight: 10 }}>
-          {/* <TouchableOpacity
-            onPress={() => navigation.navigate('SubscriptionPlan')}
-            style={{
-              marginRight: 12,
-              backgroundColor: '#fbbf24',
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              borderRadius: 6,
-            }}
-          >
-             <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text> 
-          </TouchableOpacity> */}
 
-          <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
-            <Icon name="account-circle" size={28} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      ),
-      headerStyle: {
-        backgroundColor: '#0E3386',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    });
-  }, [navigation, hasPremiumAccess]);
+  // useEffect(() => {
+  //    fetchTopResource();
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const fName = await AsyncStorage.getItem('first_Name');
+  //       const lName = await AsyncStorage.getItem('last_Name');
+  //       console.log("fName", fName);
+  //       console.log("lName", lName);
+
+  //       if (fName) setFirstName(fName);
+  //       if (lName) setLastName(lName);
+  //     } catch (e) {
+  //       console.log('Error fetching user data:', e);
+  //     }
+  //   };
+
+  //   fetchUserData();
+  //   // Initial fetch - will also be triggered by useFocusEffect
+  //   fetchFavoriteLawyers();
+
+  //   navigation.setOptions({
+  //     title: 'Lawyer ',
+  //     headerRight: () => (
+  //       <>
+  //         <View> <Notifications /> </View>
+  //         <View style={{ flexDirection: 'row', marginRight: 10 }}>
+
+  //           <TouchableOpacity
+  //             onPress={() => navigation.navigate('SubscriptionScreen')}
+  //             style={{
+  //               marginRight: 12,
+  //               backgroundColor: '#fbbf24',
+  //               paddingHorizontal: 10,
+  //               paddingVertical: 6,
+  //               borderRadius: 6,
+  //             }}
+  //           >
+  //             <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text>
+  //           </TouchableOpacity>
+
+  //           <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
+  //             {userData?.profile_pic ? (
+  //               <Image
+  //                 source={{
+  //                   uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+  //                 }}
+  //                 style={{
+  //                   width: 30,
+  //                   height: 30,
+  //                   borderRadius: 15, // make it circular
+  //                   borderWidth: 1,
+  //                   borderColor: '#fff',
+  //                 }}
+  //                 onError={(e) => console.log('Profile pic error:', e.nativeEvent.error)}
+  //               />
+  //             ) : (
+  //               <Icon name="account-circle" size={28} color="#fff" />
+  //             )}
+  //           </TouchableOpacity>
+  //         </View>
+  //       </>
+  //     ),
+  //     headerStyle: {
+  //       backgroundColor: '#0E3386',
+  //     },
+  //     headerTintColor: '#fff',
+  //     headerTitleStyle: {
+  //       fontWeight: 'bold',
+  //     },
+  //   });
+  // }, [navigation, hasPremiumAccess]);
+
+
+
+
   const toggleFavorite = async (lawyerId: number) => {
     try {
       Toast.show({
@@ -914,18 +1074,18 @@ const LawyerDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTopResource();
-    fetchUserData();
-    
-    const checkProfileStatus = async () => {
-      const isActive = await AsyncStorage.getItem('isActive');
-      if (isActive !== 'true') {
-        setShowProfileModal(true);
-      }
-    };
-    checkProfileStatus();
-  }, []);
+  // useEffect(() => {
+  //   fetchTopResource();
+  //   fetchUserData();
+
+  //   const checkProfileStatus = async () => {
+  //     const isActive = await AsyncStorage.getItem('isActive');
+  //     if (isActive !== 'true') {
+  //       setShowProfileModal(true);
+  //     }
+  //   };
+  //   checkProfileStatus();
+  // }, []);
 
   const handleNavigation = (screenName: string) => {
     navigation.navigate(screenName as never);
@@ -949,28 +1109,31 @@ const LawyerDashboard = () => {
 
   const renderResourceCard = ({ item }: { item: Resource }) => {
     return (
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Image
-            source={require('../assets/images/user.png')
-              // item.profilePic
-              //   ? { uri: item.profilePic }
-              //   : require('../assets/images/user.png')
-            }
-            style={styles.avatar}
-          />
-          <View style={styles.headerInfo}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.email}>{item.email}</Text>
-          </View>
-          <View style={styles.detailRow}>
-          <Text style={styles.label}>Contact</Text>
-          <Text style={styles.value}>{item.contactNumber}</Text>
-        </View>
-        </View>
+      <TouchableOpacity onPress={() => handleNavigation('AllResourcesScreen')}>
 
-        
-      </View>
+        <View style={styles.card}>
+          <View style={styles.headerRow}>
+            <Image
+              source={require('../assets/images/user.png')
+                // item.profilePic
+                //   ? { uri: item.profilePic }
+                //   : require('../assets/images/user.png')
+              }
+              style={styles.avatar}
+            />
+            <View style={styles.headerInfo}>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.email}>{item.email}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.label}>Contact</Text>
+              <Text style={styles.value}>{item.contactNumber}</Text>
+            </View>
+          </View>
+
+
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -1018,9 +1181,11 @@ const LawyerDashboard = () => {
     { id: 10, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: true },
     // { id: 5, icon: 'scale-balance', label: 'Lawyers', screen: 'LawyerNetwork', premium: false },
     // { id: 8, icon: 'gavel', label: 'Invite Lawyer', screen: 'InviteLawyer', premium: false },
+    { id: 5, icon: 'account-tie', label: 'Suppliers/Agencies', screen: 'SupplierAgency', premium: true },
+    { id: 8, icon: 'briefcase-plus', label: 'Invite Agency', screen: 'InviteAgency', premium: false },
     { id: 3, icon: 'account-tie', label: 'Organization Profile', screen: 'LawyerOrgProfile', premium: true },
     { id: 6, icon: 'briefcase-plus', label: 'Invite Organization', screen: 'InviteOrganization', premium: false },
-    { id: 7, icon: 'account-group', label: 'Invite Resource', screen: 'InviteResource', premium: false },
+    { id: 7, icon: 'account-group', label: 'Invite Individual Buyer', screen: 'InviteResource', premium: false },
     { id: 4, icon: 'cog-outline', label: 'Settings', screen: 'Settings', premium: false },
     { id: 11, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
     { id: 9, icon: 'help-circle-outline', label: 'Help', screen: 'HelpScreen', premium: false },

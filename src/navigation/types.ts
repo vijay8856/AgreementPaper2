@@ -10,9 +10,9 @@ export type DashboardTabParamList = {
   InviteAgency: undefined;
   InviteResource: undefined;
   AIReview: undefined,
-SubscriptionPlan:undefined
-  SubscriptionHistoryScreen:undefined,
-    AICoreAdminScreen:undefined,
+  SubscriptionScreen: undefined
+  SubscriptionHistoryScreen: undefined,
+  AICoreAdminScreen: undefined,
 
 };
 
@@ -22,19 +22,19 @@ export type RootStackParamList = {
   Dashboard: undefined;
   VerifyEmail: undefined;
   AuthLoading: undefined;
-  MyProfile:undefined;
+  MyProfile: undefined;
   LinkedInLoginScreen: undefined;
-  SubscriptionHistoryScreen:undefined,
+  SubscriptionHistoryScreen: undefined,
   ContractPreviewScreen: { htmlContent: string };
-  AICoreAdminScreen:undefined,
-  ESignatureScreen:undefined,
+  AICoreAdminScreen: undefined,
+  ESignatureScreen: undefined,
   OrganisationDashboard: undefined;
   SupplierDashboard: undefined;
   TalentDashboard: undefined;
   LawyerDashboard: undefined;
-  OrganizationProfileModal:undefined,
- MSADetailScreen: { data: any }; 
-   SignWellEmbed: {
+  OrganizationProfileModal: undefined,
+  MSADetailScreen: { data: any };
+  SignWellEmbed: {
     embeddedSigningUrl: string | null;
     documentId?: string;
     requestingRedirectUrl: string | null;

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "512496119880",
+    "project_id": "agreement-paper",
+    "storage_bucket": "agreement-paper.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:512496119880:android:fa9cb3473ff6fe2b09687d",
+        "android_client_info": {
+          "package_name": "com.agreementpaperapp2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyCdIhDVMiXSbS1kPDhZsF22f34tcgkD0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

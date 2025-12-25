@@ -882,7 +882,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
 
     try {
       const response = await Services.sendConnectionSupplier(payload);
-console.log("uuuu",response);
+      console.log("uuuu", response);
 
       if (response.success === true) {
         setConnectModalVisible(false);
@@ -1004,21 +1004,21 @@ console.log("uuuu",response);
         {/* Card Footer - Action Buttons */}
         <View style={styles.cardFooter}>
           <TouchableOpacity
-  style={[
-    styles.actionButton,
-    styles.connectButton,
-    lawyerData?.connection_request && styles.disabledButton, // Optional grey-out if request exists
-  ]}
-  onPress={handleConnect}
-  disabled={!!lawyerData?.connection_request} // disable if connection_request is NOT null
->
-  <Icon name="handshake" size={14} color="#FFF" />
-  <Text style={styles.connectButtonText}>
-    {lawyerData?.connection_request
-      ? lawyerData.connection_request // Show PENDING / COMPLETED / etc.
-      : 'Connect'} {/* Show "Connect" if connection_request is null */}
-  </Text>
-</TouchableOpacity>
+            style={[
+              styles.actionButton,
+              styles.connectButton,
+              lawyerData?.connection_request && styles.disabledButton, // Optional grey-out if request exists
+            ]}
+            onPress={handleConnect}
+            disabled={!!lawyerData?.connection_request} // disable if connection_request is NOT null
+          >
+            <Icon name="handshake" size={14} color="#FFF" />
+            <Text style={styles.connectButtonText}>
+              {lawyerData?.connection_request
+                ? lawyerData.connection_request // Show PENDING / COMPLETED / etc.
+                : 'Connect'} {/* Show "Connect" if connection_request is null */}
+            </Text>
+          </TouchableOpacity>
 
 
 

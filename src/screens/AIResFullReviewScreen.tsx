@@ -44,8 +44,18 @@ const AIResFullReviewScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [tempSearchText, setTempSearchText] = useState('');
   const [filteredCountries, setFilteredCountries] = useState<PickerItem[]>([]);
-const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [active, setActive] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [userQuery, setUserQuery] = useState("");
+  const [chatRequestId, setChatRequestId] = useState("");
+  const [firstQuerySent, setFirstQuerySent] = useState(false);
+
+
+
+
+
+
   const widthAnim = useRef(new Animated.Value(120)).current; // start with button width ~120
   const opacityMap = useRef<{ [key: string]: Animated.Value }>({}).current;
   type PickerItem = {
@@ -149,6 +159,20 @@ const [progress, setProgress] = useState(0);
       value: "ANNUAL RATED CONTRACT (MRO CONTRACTS)",
     },
   ];
+
+  const generateRequestId = () => {
+    return Math.random().toString(36).substring(2, 12);
+  };
+
+
+  useEffect(() => {
+    return () => {
+      setChatMessages([]);
+      setUserQuery("");
+      setFirstQuerySent(false);
+      setChatRequestId("");
+    };
+  }, []);
 
 
 
@@ -333,90 +357,90 @@ const [progress, setProgress] = useState(0);
       </View>
     );
   }
-const submitContract = async (clauseType: string) => {
-  if (!contractType || !businessLine || !country || !selectedFile) {
-    Toast.show({
-      type: 'error',
-      text1: 'Missing Information',
-      text2: 'Please fill all fields and upload a file',
-      position: 'top',
-    });
-    return;
-  }
+  // const submitContract = async (clauseType: string) => {
+  //   if (!contractType || !businessLine || !country || !selectedFile) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Missing Information',
+  //       text2: 'Please fill all fields and upload a file',
+  //       position: 'top',
+  //     });
+  //     return;
+  //   }
 
-  setLoadingButton(clauseType);
-  setProgress(0);
+  //   setLoadingButton(clauseType);
+  //   setProgress(0);
 
-  Animated.timing(widthAnim, {
-    toValue: screenWidth - 40,
-    duration: 400,
-    useNativeDriver: false,
-  }).start();
+  //   Animated.timing(widthAnim, {
+  //     toValue: screenWidth - 40,
+  //     duration: 400,
+  //     useNativeDriver: false,
+  //   }).start();
 
-  // Simulate loading progress (up to 90%)
-  const interval = setInterval(() => {
-    setProgress((prev) => {
-      if (prev >= 90) return prev; // pause at 90%
-      return prev + 5;
-    });
-  }, 400);
+  //   // Simulate loading progress (up to 90%)
+  //   const interval = setInterval(() => {
+  //     setProgress((prev) => {
+  //       if (prev >= 98) return prev; // pause at 90%
+  //       return prev + 2;
+  //     });
+  //   }, 400);
 
-  try {
-    const formData = new FormData();
-    formData.append('prompt_type', clauseType);
-    formData.append('file', {
-      uri: selectedFile.uri,
-      name: selectedFile.name,
-      type: selectedFile.type || 'application/pdf',
-    });
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append('prompt_type', clauseType);
+  //     formData.append('file', {
+  //       uri: selectedFile.uri,
+  //       name: selectedFile.name,
+  //       type: selectedFile.type || 'application/pdf',
+  //     });
 
-    console.log('formData', formData);
+  //     console.log('formData', formData);
 
-    const response = await Services.analysisContractByAi(formData);
-    console.log('response23', response);
+  //     const response = await Services.analysisContractByAi(formData);
+  //     console.log('response23', response);
 
-    clearInterval(interval);
+  //     clearInterval(interval);
 
-    // Smoothly animate the last 10% to 100%
-    setProgress(100);
+  //     // Smoothly animate the last 10% to 100%
+  //     setProgress(100);
 
-    // Small delay for user to *see* 100%
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  //     // Small delay for user to *see* 100%
+  //     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (response.success) {
-      setAnalysisResult(response.data);
-      Toast.show({
-        type: 'success',
-        text1: 'Analysis Complete',
-        text2: `Clause: ${clauseType} analyzed successfully`,
-        position: 'top',
-      });
-    } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Analysis Failed',
-        text2: response.error || 'Something went wrong',
-        position: 'top',
-      });
-    }
-  } catch (error) {
-    console.error('Analysis error:', error);
-    clearInterval(interval);
-    Toast.show({
-      type: 'error',
-      text1: 'Error',
-      text2: 'An unexpected error occurred',
-      position: 'top',
-    });
-  } finally {
-    setTimeout(() => {
-      setLoadingButton(null);
-      setProgress(0);
-      widthAnim.setValue(0);
-    }, 1000);
-  }
-};
-        
+  //     if (response.success) {
+  //       setAnalysisResult(response.data);
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: 'Analysis Complete',
+  //         text2: `Clause: ${clauseType} analyzed successfully`,
+  //         position: 'top',
+  //       });
+  //     } else {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: 'Analysis Failed',
+  //         text2: response.error || 'Something went wrong',
+  //         position: 'top',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Analysis error:', error);
+  //     clearInterval(interval);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Error',
+  //       text2: 'An unexpected error occurred',
+  //       position: 'top',
+  //     });
+  //   } finally {
+  //     setTimeout(() => {
+  //       setLoadingButton(null);
+  //       setProgress(0);
+  //       widthAnim.setValue(0);
+  //     }, 1000);
+  //   }
+  // };
+
 
 
 
@@ -494,8 +518,164 @@ const submitContract = async (clauseType: string) => {
   //       widthAnim.setValue(0); // reset for next time
   //     }, 800);
   //   }
-  
+
   // };
+
+
+
+
+  const submitContract = async (clauseType: string) => {
+    if (!contractType || !businessLine || !country || !selectedFile) {
+      Toast.show({
+        type: "error",
+        text1: "Missing Information",
+        text2: "Please fill all fields and upload a file",
+        position: "top",
+      });
+      return;
+    }
+
+    setLoadingButton(clauseType);
+    setProgress(0);
+
+    Animated.timing(widthAnim, {
+      toValue: screenWidth - 40,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+
+    // 📌 REALISTIC PROGRESS
+    let current = 0;
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        current = prev;
+
+        if (prev < 40) return prev + 2; // Fast start
+        if (prev < 75) return prev + 1; // Mid-speed
+        if (prev < 95) return prev + 1; // Slow finish
+
+        return prev; // STOP at 95 until API done
+      });
+    }, 300);
+
+    try {
+      const formData = new FormData();
+      formData.append("prompt_type", clauseType);
+      formData.append("file", {
+        uri: selectedFile.uri,
+        name: selectedFile.name,
+        type: selectedFile.type || "application/pdf",
+      });
+
+      // ---- API CALL ----
+      const response = await Services.analysisContractByAi(formData);
+
+      clearInterval(interval);
+
+      // ✔ Smooth finish (95 → 100)
+      const finishInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(finishInterval);
+            return 100;
+          }
+          return prev + 1.5;
+        });
+      }, 40);
+
+      // Give animation time to reach 100
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      // ---- RESULT ----
+      if (response.success) {
+        setAnalysisResult(response.data);
+        Toast.show({
+          type: "success",
+          text1: "Analysis Complete",
+          text2: `Clause: ${clauseType} analyzed successfully`,
+          position: "top",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Analysis Failed",
+          text2: response.error || "Something went wrong",
+          position: "top",
+        });
+      }
+    } catch (error) {
+      console.error("Analysis error:", error);
+      clearInterval(interval);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "An unexpected error occurred",
+        position: "top",
+      });
+    } finally {
+      setTimeout(() => {
+        setLoadingButton(null);
+        setProgress(0);
+        widthAnim.setValue(0);
+      }, 900);
+    }
+  };
+
+  const sendChatQuery = async () => {
+    if (!userQuery.trim()) return;
+
+    // 1️⃣ Add USER message to chat
+    const newMsg = { role: "user", text: userQuery };
+    setChatMessages(prev => [...prev, newMsg]);
+
+    let payload: any = {};
+
+    // 2️⃣ FIRST TIME → send analysisResult + query
+    if (!firstQuerySent) {
+      const id = generateRequestId();
+      setChatRequestId(id);
+
+      payload = {
+        request_id: id,
+        initial_context: analysisResult,     // ONLY FIRST TIME
+        query: userQuery,
+      };
+
+      setFirstQuerySent(true);
+
+    } else {
+      // 3️⃣ NEXT TIME → only query
+      payload = {
+        request_id: chatRequestId,
+        query: userQuery,
+      };
+    }
+
+    setUserQuery("");
+
+    // 4️⃣ hit API
+    const response = await Services.aiContractQueries(payload);
+    console.log('in', response);
+
+    // 5️⃣ Show bot response
+    if (response.success) {
+      const botMsg = {
+        role: "bot",
+        text: response.data.data.response,     // 👈 API response key
+      };
+
+      setChatMessages(prev => [...prev, botMsg]);
+
+    } else {
+      const botMsg = {
+        role: "bot",
+        text: "❌ Error: Something went wrong.",
+      };
+      setChatMessages(prev => [...prev, botMsg]);
+    }
+  };
+
+
 
   const getFilteredItems = (items: PickerItem[], search: string) => {
     return items.filter(item =>
@@ -540,9 +720,9 @@ const submitContract = async (clauseType: string) => {
 
           <View style={styles.addButtonQues}>
             <Text style={styles.sectionTitle}>Selected Questions</Text>
-            <TouchableOpacity>
+            {/* <TouchableOpacity>
               <Text style={styles.tabItem1}>Add Questions</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           <TouchableOpacity
             style={styles.uploadButton}
@@ -620,44 +800,82 @@ const submitContract = async (clauseType: string) => {
           )}
 
         </View>
+
+
+        {analysisResult && (
+          <View style={styles.chatContainer}>
+            <Text style={styles.chatTitle}>Ask Your Queries</Text>
+
+            <FlatList
+              data={chatMessages}
+              keyExtractor={(_, index) => index.toString()}
+              style={{ maxHeight: 250,  }}
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.chatBubble,
+                    item.role === "user" ? styles.userBubble : styles.botBubble,
+                  ]}
+                >
+                  <Text style={styles.chatText}>{item.text}</Text>
+                </View>
+              )}
+            />
+
+
+            {/* Chat Input */}
+            <View style={styles.chatInputRow}>
+              <TextInput
+                value={userQuery}
+                onChangeText={setUserQuery}
+                placeholder="Ask something..."
+                style={styles.chatInput}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={sendChatQuery}>
+                <Icon name="send" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
       </ScrollView>
 
 
       <View style={styles.tabContainer}>
-      {Clauses.map((c) => {
-        const isActive = loadingButton === c.value;
-        // Hide others while one is active
-        if (loadingButton && !isActive) return null;
+        {Clauses.map((c) => {
+          const isActive = loadingButton === c.value;
+          // Hide others while one is active
+          if (loadingButton && !isActive) return null;
 
-        const ButtonContent = isActive ? (
-          <View style={styles.progressWrapper}>
-            <View style={[styles.progressBar, { width: `${progress}%` }]} />
-            <Text style={styles.progressText}>{progress}%</Text>
-          </View>
-        ) : (
-          <Text style={styles.tabText}>{c.label}</Text>
-        );
+          const ButtonContent = isActive ? (
+            <View style={styles.progressWrapper}>
+              <View style={[styles.progressBar, { width: `${progress}%` }]} />
+              <Text style={styles.progressText}>{progress}%</Text>
+            </View>
+          ) : (
+            <Text style={styles.tabText}>{c.label}</Text>
+          );
 
-        return (
-          <Animated.View
-            key={c.value}
-            style={[
-              styles.animatedButtonContainer,
-              isActive && { width: widthAnim },
-            ]}
-          >
-            <TouchableOpacity
-              style={[styles.tabItem, isActive && styles.loadingTab]}
-              disabled={!!loadingButton}
-              onPress={() => submitContract(c.value)}
-              activeOpacity={0.8}
+          return (
+            <Animated.View
+              key={c.value}
+              style={[
+                styles.animatedButtonContainer,
+                isActive && { width: widthAnim },
+              ]}
             >
-              {ButtonContent}
-            </TouchableOpacity>
-          </Animated.View>
-        );
-      })}
-    </View>
+              <TouchableOpacity
+                style={[styles.tabItem, isActive && styles.loadingTab]}
+                disabled={!!loadingButton}
+                onPress={() => submitContract(c.value)}
+                activeOpacity={0.8}
+              >
+                {ButtonContent}
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })}
+      </View>
 
 
       <Modal
@@ -811,7 +1029,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
     backgroundColor: 'white',
-    marginHorizontal:5
+    marginHorizontal: 5
   },
   loadingTab: {
     backgroundColor: '#000078',
@@ -1104,6 +1322,63 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#E0E0E0',
     marginHorizontal: 2,
+  },
+  chatContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginHorizontal: 10,
+  },
+
+  chatTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#000078',
+    marginBottom: 10,
+  },
+
+  chatBubble: {
+    padding: 10,
+    marginVertical: 6,
+    borderRadius: 10,
+    maxWidth: '85%',
+  },
+
+  userBubble: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#0E3386',
+  },
+
+  botBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#0E3386',
+  },
+
+  chatText: {
+    color: '#fff',
+    fontSize: 13,
+  },
+
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  chatInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+
+  sendButton: {
+    backgroundColor: '#000078',
+    padding: 10,
+    borderRadius: 8,
+    marginLeft: 10,
   },
 
 });

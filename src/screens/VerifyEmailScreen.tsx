@@ -49,7 +49,7 @@ const VerifyEmailScreen: React.FC = () => {
 
 
 const SIGNUP_TYPES = [
-  { label: 'Enterprise', value: 'ORGANISATION_USER', screen: 'OrganisationDashboard' },
+  { label: 'Enterprise', value: 'ORGANISATION_USER', screen: 'OrganisationDrawer' },
   { label: 'Supplier & Agency Network', value: 'AGENCY_USER', screen: 'AgencyDashboard' },
   { label: 'Talent', value: 'RESOURCE_USER', screen: 'TalentDashboard' },
   { label: 'Individual Buyer', value: 'INDIVIDUAL_USER', screen: 'Dashboard' },
@@ -98,13 +98,15 @@ const handleVerifyCode = async (): Promise<void> => {
 
     if (result.success) {
       const userType = result.data?.payload?.user_type;
+      const agencyType =result.data?.payload?.agency_type
    if (userType) {
         await AsyncStorage.setItem("userData", JSON.stringify(result.data));
          await AsyncStorage.setItem("userPayload", JSON.stringify(result.data.payload));
           await AsyncStorage.setItem("userId", String(result.data.payload.id));
-
+          await AsyncStorage.setItem( 'company', result.data.payload.profile?.company_name?.toString() || '')
+ await AsyncStorage.setItem('slug', result.data.payload?.profile?.slug || '' ) 
         await AsyncStorage.setItem('userType', userType);
-           
+           await AsyncStorage.setItem('agencyType', agencyType || ''); 
         console.log('User type saved:', userType);
       } 
       // Find matching type

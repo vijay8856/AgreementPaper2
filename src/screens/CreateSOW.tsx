@@ -1315,7 +1315,7 @@ const CreateSOW = ({ navigation }: any) => {
         } else {
             setResourceType("");
         }
-        
+
         // Clear error when MSA is selected
         if (errors.msa) {
             setErrors(prev => ({ ...prev, msa: undefined }));
@@ -1326,7 +1326,7 @@ const CreateSOW = ({ navigation }: any) => {
         setSelectedApprover(approver);
         setSowApprover('manual');
         setModalVisible(false);
-        
+
         // Clear error when approver is selected
         if (errors.selectedApprover) {
             setErrors(prev => ({ ...prev, selectedApprover: undefined }));
@@ -1428,7 +1428,7 @@ const CreateSOW = ({ navigation }: any) => {
 
     const handleBlur = (field: string) => {
         setTouched(prev => ({ ...prev, [field]: true }));
-        
+
         let error = '';
         switch (field) {
             case 'msa':
@@ -1486,7 +1486,7 @@ const CreateSOW = ({ navigation }: any) => {
                 error = validateField('selectedApprover', selectedApprover);
                 break;
         }
-        
+
         if (error) {
             setErrors(prev => ({ ...prev, [field]: error }));
         } else {
@@ -1496,7 +1496,7 @@ const CreateSOW = ({ navigation }: any) => {
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
-        
+
         newErrors.msa = validateField('msa', selectedMsa);
         newErrors.title = validateField('title', title);
         newErrors.sowType = validateField('sowType', sowType);
@@ -1538,7 +1538,7 @@ const CreateSOW = ({ navigation }: any) => {
         const fetchMSA = async () => {
             try {
                 const data = {
-                    limit: 50,
+                    limit: 30,
                     offset: 0,
                 };
 
@@ -1717,10 +1717,10 @@ const CreateSOW = ({ navigation }: any) => {
             formData.append('description', description);
             formData.append('comments', comments);
             formData.append('sow_flow', '1');
-            
+
             // Status and approval
             formData.append('status', 'pending_approval');
-            
+
             // Handle approver based on selection
             if (sowApprover === 'manual' && selectedApprover) {
                 formData.append('approver', selectedApprover.id);
@@ -1768,21 +1768,41 @@ const CreateSOW = ({ navigation }: any) => {
             <ScrollView style={styles.scrollView}>
                 <Text style={styles.header}>Add Statement of Work</Text>
 
-                <Text style={styles.label}>Master Service Agreement *</Text>
-                <View style={[
-                    styles.pickerContainer,
-                    shouldShowError('msa') && styles.errorBorder
-                ]}>
-                    <Picker
-                        selectedValue={selectedMsa?.id || ""}
-                        onValueChange={(value) => handleMsaChange(value)}
-                        onBlur={() => handleBlur('msa')}
-                    >
-                        {msaList.map((item) => (
-                            <Picker.Item key={item.id} label={item.name} value={item.id} />
-                        ))}
-                    </Picker>
-                </View>
+            <Text style={styles.label}>Master Service Agreement *</Text>
+
+<View
+  style={[
+    styles.pickerContainer,
+    shouldShowError("msa") && styles.errorBorder,
+  ]}
+>
+  {msaList.length === 0 ? (
+    // 👇 Show loader if list is empty
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        height: 50,
+      }}
+    >
+      <ActivityIndicator size="small" color="#007bff" />
+    </View>
+  ) : (
+    // 👇 Normal picker when data exists
+    <Picker
+      selectedValue={selectedMsa?.id || ""}
+      onValueChange={(value) => handleMsaChange(value)}
+      onBlur={() => handleBlur("msa")}
+    >
+      <Picker.Item label="Select MSA" value="" />
+      {msaList.map((item) => (
+        <Picker.Item key={item.id} label={item.name} value={item.id} />
+      ))}
+    </Picker>
+  )}
+</View>
+
+
                 {shouldShowError('msa') && <Text style={styles.errorText}>{errors.msa}</Text>}
 
                 <View style={styles.section}>
@@ -2217,10 +2237,10 @@ const CreateSOW = ({ navigation }: any) => {
                                     setSowApprover('auto');
                                     setSelectedApprover(null);
                                     if (errors.sowApprover || errors.selectedApprover) {
-                                        setErrors(prev => ({ 
-                                            ...prev, 
+                                        setErrors(prev => ({
+                                            ...prev,
                                             sowApprover: undefined,
-                                            selectedApprover: undefined 
+                                            selectedApprover: undefined
                                         }));
                                     }
                                 }}

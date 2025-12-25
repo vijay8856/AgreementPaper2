@@ -95,28 +95,39 @@ export default function LawyerOrgProfile() {
     });
 
     console.log("lawyers", lawyers);
+const handleSearch = debounce(async (text) => {
+  setSearchText(text);
+  setPage(1);
 
-    const handleSearch = debounce(async (searchQuery: any) => {
-        setLoading(true);
-        try {
-            const payload = {
-                limit: LIMIT_DATA,
-                offset: (page - 1) * LIMIT_DATA,
-                search: searchQuery,
-            };
+  fetchLawyers({
+    search: text,
+    rating: selectedRating,
+    country: selectedLocation,
+    pageNo: 1,
+  });
+}, 500);
 
-            const response = await Services.getOrganistionProfileList(payload);
+    // const handleSearch = debounce(async (searchQuery: any) => {
+    //     setLoading(true);
+    //     try {
+    //         const payload = {
+    //             limit: LIMIT_DATA,
+    //             offset: (page - 1) * LIMIT_DATA,
+    //             search: searchQuery,
+    //         };
 
-            if (response.success) {
-                setAllLawyer(response.data);
-                setPageCount(Math.ceil(response.count / LIMIT_DATA));
-            }
-        } catch (error) {
-            console.error("Search error:", error);
-        } finally {
-            setLoading(false);
-        }
-    }, 500); // 500ms debounce delay
+    //         const response = await Services.getOrganistionProfileList(payload);
+
+    //         if (response.success) {
+    //             setAllLawyer(response.data);
+    //             setPageCount(Math.ceil(response.count / LIMIT_DATA));
+    //         }
+    //     } catch (error) {
+    //         console.error("Search error:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, 500); // 500ms debounce delay
 
     // Handle text input changes
     const handleSearchChange = (text: any) => {
@@ -125,43 +136,51 @@ export default function LawyerOrgProfile() {
             handleSearch(text);
         }
     };
+useEffect(() => {
+  fetchLawyers({
+    search: "",
+    rating: "",
+    country: "",
+    pageNo: 1,
+  });
+}, []);
 
 
-    useEffect(() => {
-        const fetchAllLawyer = async () => {
-            setLoading(true);
-            try {
-                const payload = {
-                    limit: 100,
-                    offset: 0,
-                    search: searchText
-                };
-                const response = await Services.getOrganistionProfileList(payload);
-                console.log("response43", response);
+    // useEffect(() => {
+    //     const fetchAllLawyer = async () => {
+    //         setLoading(true);
+    //         try {
+    //             const payload = {
+    //                 limit: 100,
+    //                 offset: 0,
+    //                 search: searchText
+    //             };
+    //             const response = await Services.getOrganistionProfileList(payload);
+    //             console.log("response43", response);
 
-                if (response.success) {
-                    setAllLawyer(response.data);
-                    setPageCount(Math.ceil(response.data.length / LIMIT_DATA));
-                } else {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Error',
-                        text2: response.error || 'Failed to fetch lawyers',
-                    });
-                }
-            } catch (err) {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error',
-                    text2: 'Something went wrong',
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+    //             if (response.success) {
+    //                 setAllLawyer(response.data);
+    //                 setPageCount(Math.ceil(response.data.length / LIMIT_DATA));
+    //             } else {
+    //                 Toast.show({
+    //                     type: 'error',
+    //                     text1: 'Error',
+    //                     text2: response.error || 'Failed to fetch lawyers',
+    //                 });
+    //             }
+    //         } catch (err) {
+    //             Toast.show({
+    //                 type: 'error',
+    //                 text1: 'Error',
+    //                 text2: 'Something went wrong',
+    //             });
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
 
-        fetchAllLawyer();
-    }, []);
+    //     fetchAllLawyer();
+    // }, []);
 
     const handleSendConnection = () => {
         sendConnection()
@@ -222,6 +241,38 @@ export default function LawyerOrgProfile() {
         setRefreshing(false);
     };
 
+const fetchLawyers = async ({
+  search = "",
+  rating = "",
+  country = "",
+  pageNo = 1,
+} = {}) => {
+  setLoading(true);
+  try {
+    const payload = {
+      limit: LIMIT_DATA,
+      offset: (pageNo - 1) * LIMIT_DATA,
+      search,
+    };
+
+    // 🔥 add only if selected
+    if (rating) payload.rating = rating;     // e.g. 5
+    if (country) payload.country = country;   // e.g. 9
+
+    console.log("API PAYLOAD:", payload);
+
+    const response = await Services.getOrganistionProfileList(payload);
+
+    if (response.success) {
+      setAllLawyer(response.data);
+      setPageCount(Math.ceil(response.count / LIMIT_DATA));
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
     const handleConnect = (item: Organization) => {
         setSelectedSupplier(item);
@@ -236,7 +287,14 @@ export default function LawyerOrgProfile() {
         setSelectedLocation("");
         setSearchText("");
     };
+const sortedLawyers = [...lawyers].sort((a, b) => {
+  const order = { null: 0, PENDING: 1, COMPLETED: 2 };
+  
+  const aStatus = a.connection_request === null ? 'null' : a.connection_request;
+  const bStatus = b.connection_request === null ? 'null' : b.connection_request;
 
+  return order[aStatus] - order[bStatus];
+});
     const renderItem = ({ item, index }: any) => (
         <View style={styles.lawyerCard}>
             <View style={styles.cardHeader}>
@@ -334,12 +392,19 @@ export default function LawyerOrgProfile() {
                 />
 
                 <View style={styles.pickerContainer}>
-                    <Picker
-                        selectedValue={selectedRating}
-                        onValueChange={(itemValue) => setSelectedRating(itemValue)}
-                        style={styles.picker}
-                        dropdownIconColor="#666"
-                    >
+                   <Picker
+  selectedValue={selectedRating}
+  onValueChange={(itemValue) => {
+    setSelectedRating(itemValue);
+    setPage(1);
+    fetchLawyers({
+      rating: itemValue,
+      country: selectedLocation,
+      search: searchText,
+    });
+  }}
+>
+
                         <Picker.Item label="Select Rating" value="" style={styles.pickertext} />
                         {ratingOptions.map((option) => (
                             <Picker.Item key={option.id} label={option.name} value={option.id} />
@@ -348,12 +413,19 @@ export default function LawyerOrgProfile() {
                 </View>
 
                 <View style={styles.pickerContainer}>
-                    <Picker
-                        selectedValue={selectedLocation}
-                        onValueChange={(itemValue) => setSelectedLocation(itemValue)}
-                        style={styles.picker}
-                        dropdownIconColor="#666"
-                    >
+                   <Picker
+  selectedValue={selectedLocation}
+  onValueChange={(itemValue) => {
+    setSelectedLocation(itemValue);
+    setPage(1);
+    fetchLawyers({
+      country: itemValue,
+      rating: selectedRating,
+      search: searchText,
+    });
+  }}
+>
+
                         <Picker.Item label="Select Location" value="" style={styles.pickertext} />
                         {locationOptions.map((option) => (
                             <Picker.Item key={option.id} label={option.name} value={option.id} />
@@ -371,7 +443,7 @@ export default function LawyerOrgProfile() {
                 <ActivityIndicator size="large" color="#000" style={styles.loader} />
             ) : (
                 <FlatList
-                    data={lawyers}
+                    data={sortedLawyers}
                     renderItem={renderItem}
                     keyExtractor={(item, index) => index.toString()}
                     contentContainerStyle={styles.listContent}
@@ -671,7 +743,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#0E3386',
     },
     disabledButton: {
-        backgroundColor: '#0E3386',
+        backgroundColor: '#D6DCF0',
     },
     buttonText: {
         color: '#fff',
@@ -854,14 +926,14 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 8,
     },
-    input: {
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        color: '#333',
-    },
+        input: {
+            borderWidth: 1,
+            borderColor: '#E0E0E0',
+            borderRadius: 8,
+            padding: 12,
+            fontSize: 16,
+            color: '#333',
+        },
     messageInput: {
         height: 100,
         textAlignVertical: 'top',

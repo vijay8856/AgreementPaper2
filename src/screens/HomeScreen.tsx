@@ -871,6 +871,7 @@ import { CompositeNavigationProp, useFocusEffect } from '@react-navigation/nativ
 import { RootStackParamList, DashboardTabParamList } from '../navigation/types';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
+import Notifications from '../components/Modals/Notifications';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -896,6 +897,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [favoriteLawyers, setFavoriteLawyers] = useState<Lawyer[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [userData, setUserData] = useState<any>({});
+
   console.log("favoriteLawyers", favoriteLawyers);
 
   useFocusEffect(
@@ -977,31 +980,160 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const fName = await AsyncStorage.getItem('first_Name');
-        const lName = await AsyncStorage.getItem('last_Name');
-        console.log("fName", fName);
-        console.log("lName", lName);
 
-        if (fName) setFirstName(fName);
-        if (lName) setLastName(lName);
-      } catch (e) {
-        console.log('Error fetching user data:', e);
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // First load from AsyncStorage for quick display
+        const storedData = await AsyncStorage.getItem('userData');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          // Convert relative paths to absolute
+          if (parsedData.profile_pic?.startsWith('/')) {
+            parsedData.profile_pic = `https://api.agreementpaper.com/${parsedData.profile_pic}`;
+          }
+          setUserData(parsedData);
+        }
+
+        // Then fetch fresh data from API
+        // await fetchUserProfile();
+      } catch (error) {
+        console.log('Initial load error:', error);
       }
     };
 
-    fetchUserData();
-    // Initial fetch - will also be triggered by useFocusEffect
-    fetchFavoriteLawyers();
+    loadData();
+  }, []);
 
-    navigation.setOptions({
-      title: 'Home',
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', marginRight: 10 }}>
-          {/* <TouchableOpacity
-            onPress={() => navigation.navigate('SubscriptionPlan')}
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const fName = await AsyncStorage.getItem('first_Name');
+  //       const lName = await AsyncStorage.getItem('last_Name');
+  //       console.log("fName", fName);
+  //       console.log("lName", lName);
+
+  //       if (fName) setFirstName(fName);
+  //       if (lName) setLastName(lName);
+  //     } catch (e) {
+  //       console.log('Error fetching user data:', e);
+  //     }
+  //   };
+
+  //   fetchUserData();
+  //   // Initial fetch - will also be triggered by useFocusEffect
+  //   fetchFavoriteLawyers();
+
+  //   navigation.setOptions({
+  //     title: 'Home',
+  //     headerRight: () => (
+  //       <>
+
+  //         <View><Notifications /></View>
+  //         <View style={{ flexDirection: 'row', marginRight: 10 }}>
+  //           <TouchableOpacity
+  //             onPress={() => navigation.navigate('SubscriptionScreen')}
+  //             style={{
+  //               marginRight: 12,
+  //               backgroundColor: '#fbbf24',
+  //               paddingHorizontal: 10,
+  //               paddingVertical: 6,
+  //               borderRadius: 6,
+  //             }}
+  //           >
+  //             <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text>
+  //           </TouchableOpacity>
+
+  //           <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
+  //             {userData?.profile_pic ? (
+  //               <Image
+  //                 source={{
+  //                   uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+  //                 }}
+  //                 style={{
+  //                   width: 30,
+  //                   height: 30,
+  //                   borderRadius: 15, // make it circular
+  //                   borderWidth: 1,
+  //                   borderColor: '#fff',
+  //                 }}
+  //                 onError={(e) => console.log('Profile pic error:', e.nativeEvent.error)}
+  //               />
+  //             ) : (
+  //               <Icon name="account-circle" size={28} color="#fff" />
+  //             )}
+  //           </TouchableOpacity>
+  //         </View>
+  //       </>
+
+  //     ),
+  //     headerStyle: {
+  //       backgroundColor: '#0E3386',
+  //     },
+  //     headerTintColor: '#fff',
+  //     headerTitleStyle: {
+  //       fontWeight: 'bold',
+  //     },
+  //   });
+  // }, [navigation, hasPremiumAccess]);
+
+
+ useEffect(() => {
+  const fetchUserData = async () => {
+    try {
+      const fName = await AsyncStorage.getItem('first_Name');
+      const lName = await AsyncStorage.getItem('last_Name');
+      const storedValue = await AsyncStorage.getItem('hasPremiumAccess');
+
+      if (fName) setFirstName(fName);
+      if (lName) setLastName(lName);
+
+      // ⭐ Load premium access
+      const hasPremium = JSON.parse(storedValue || 'false');
+      setHasPremiumAccess(hasPremium);
+
+    } catch (e) {
+      console.log('Error fetching user data:', e);
+    }
+  };
+
+  fetchUserData();
+  fetchFavoriteLawyers();
+
+  navigation.setOptions({
+    title: 'Home',
+    headerRight: () => (
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+
+        {/* Notifications */}
+        <View style={{ marginRight: 10 }}>
+          <Notifications />
+        </View>
+
+        {/* PREMIUM / UPGRADE BUTTON */}
+        {hasPremiumAccess ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SubscriptionScreen')}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginRight: 12,
+              backgroundColor: '#ffd700',
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 6,
+            }}
+          >
+            <Icon name="crown" size={14} color="#000" />
+            <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold', marginLeft: 5 }}>
+              Premium
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SubscriptionScreen')}
             style={{
               marginRight: 12,
               backgroundColor: '#fbbf24',
@@ -1010,23 +1142,46 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               borderRadius: 6,
             }}
           >
-             <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>Upgrade Plan</Text> 
-          </TouchableOpacity> */}
-
-          <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
-            <Icon name="account-circle" size={28} color="#fff" />
+            <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>
+              Upgrade Plan
+            </Text>
           </TouchableOpacity>
-        </View>
-      ),
-      headerStyle: {
-        backgroundColor: '#0E3386',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    });
-  }, [navigation, hasPremiumAccess]);
+        )}
+
+        {/* PROFILE ICON */}
+        <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
+          {userData?.profile_pic ? (
+            <Image
+              source={{ uri: `${userData.profile_pic}?t=${Date.now()}` }}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                borderWidth: 1,
+                borderColor: '#fff',
+              }}
+            />
+          ) : (
+            <Icon name="account-circle" size={28} color="#fff" />
+          )}
+        </TouchableOpacity>
+
+      </View>
+    ),
+
+    headerStyle: {
+      backgroundColor: '#0E3386',
+    },
+    headerTintColor: '#fff',
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    },
+  });
+
+}, [navigation, hasPremiumAccess]);   // ⭐ rerenders header when premium changes
+
+
+
 
   const allItems = [
     { id: 1, icon: 'file-document-outline', label: 'AI-Full Review', screen: 'AIResFullReview', premium: true },

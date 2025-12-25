@@ -38,9 +38,18 @@ const SIGNUP_TYPES = [
   { label: 'Lawyer Network', value: 'LAWYER_USER' },
   { label: 'Enterprise', value: 'ORGANISATION_USER' },
 ];
+const AGENCY_ROLES = [
+  { label: 'Recruiter', value: 'RECRUITER' },
+  { label: 'Real Estate Agent', value: 'REAL_ESTATE_AGENT' },
+  { label: 'Goods & Services Supplier', value: 'GOODS_AND_SERVICE_SUPPLIER' },
+];
+
+const AGENCY_ROLE_KEY = 'AGENCY_ROLE';
 
 const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [agencyRole, setAgencyRole] = useState<string>('');
+  const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
 
   const [signupType, setSignupType] = useState<string>(''); // Initially empty, so user must choose
   const [firstName, setFirstName] = useState('');
@@ -55,9 +64,12 @@ const SignUpScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
-  console.log("signupType", signupType);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedTypeInfo, setSelectedTypeInfo] = useState<{ label: string, value: string } | null>(null);
+  const [selectedAgencyRole, setSelectedAgencyRole] = useState<string | null>(null);
+
+  console.log("selectedAgencyRole", selectedAgencyRole);
+
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: GOOGLE_CLIENT_ID,
@@ -65,6 +77,17 @@ const SignUpScreen: React.FC = () => {
       forceCodeForRefreshToken: true,
     });
   }, []);
+  const handleAgencyRoleSelect = (value: string) => {
+    if (selectedAgencyRole === value) {
+      // 👉 already selected → close dropdown
+      setShowAgencyDropdown(false);
+      return;
+    }
+
+    // 👉 first time selection → set value, keep dropdown open
+    setSelectedAgencyRole(value);
+  };
+
 
   const validateField = (fieldName: string, value: string) => {
     let fieldErrors: string[] = [];
@@ -145,6 +168,10 @@ const SignUpScreen: React.FC = () => {
       password: password1,
       confirmPassword: password2,
     });
+    if (!selectedAgencyRole) {
+      setError('Please select your agency role.');
+      return;
+    }
 
     if (!validation.isValid) {
       // Convert array of errors to object format
@@ -167,12 +194,14 @@ const SignUpScreen: React.FC = () => {
       password: password1,
       password2: password2,
       user_type: signupType,
+      agency_role: signupType === 'AGENCY_USER' ? agencyRole : undefined,
+      agency_type: selectedAgencyRole
     };
 
     try {
       const result = await Services.signUp(payload);
-      console.log("re",result);
-      
+      console.log("re", result);
+
       if (result.success) {
         (navigation as any).navigate('VerifyEmail');
       } else {
@@ -439,10 +468,10 @@ const SignUpScreen: React.FC = () => {
               <Image
                 source={
                   !signupType
-                    ? require('../assets/images/SuppliersAgency.png') 
+                    ? require('../assets/images/SuppliersAgency.png')
                     : showConfirmation && selectedTypeInfo
-                      ? getSignupTypeImage(selectedTypeInfo.value) 
-                      : getSignupTypeImage(signupType) 
+                      ? getSignupTypeImage(selectedTypeInfo.value)
+                      : getSignupTypeImage(signupType)
                 }
                 style={styles.SignupIcon}
               />
@@ -523,6 +552,7 @@ const SignUpScreen: React.FC = () => {
                       style={[styles.input1, errors.firstName && styles.errorInput]}
                       placeholder="Enter first name *"
                       value={firstName}
+                      placeholderTextColor={'black'}
                       onChangeText={(text) => handleNameChange(text, setFirstName)}
                       onBlur={() => handleBlur('firstName')}
                     />
@@ -536,6 +566,7 @@ const SignUpScreen: React.FC = () => {
                       style={[styles.input1, errors.lastName && styles.errorInput]}
                       placeholder="Enter last name *"
                       value={lastName}
+                      placeholderTextColor={'black'}
                       onChangeText={(text) => handleNameChange(text, setLastName)}
                       onBlur={() => handleBlur('lastName')}
                     />
@@ -544,12 +575,13 @@ const SignUpScreen: React.FC = () => {
                     )}
                   </View>
                 </View>
-             
+
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={[styles.input, errors.email && styles.errorInput]}
                     placeholder="Enter email address *"
                     value={email}
+                    placeholderTextColor={'black'}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -568,6 +600,7 @@ const SignUpScreen: React.FC = () => {
                       style={[styles.passwordInput]}
                       placeholder="Enter password *"
                       value={password1}
+                      placeholderTextColor={'black'}
                       onChangeText={setPassword1}
                       secureTextEntry={!showPassword1}
                       onBlur={() => handleBlur('password1')}
@@ -584,12 +617,13 @@ const SignUpScreen: React.FC = () => {
                 <View style={styles.inputContainer}>
                   <View style={[
                     styles.passwordContainer,
-                    errors.password2 && touched.password2 && styles.errorInput, 
+                    errors.password2 && touched.password2 && styles.errorInput,
                   ]}>
                     <TextInput
                       style={[styles.passwordInput]}
                       placeholder="Confirm password *"
                       value={password2}
+                      placeholderTextColor={'black'}
                       onChangeText={setPassword2}
                       secureTextEntry={!showPassword2}
                       onBlur={() => handleBlur('password2')}
@@ -609,11 +643,75 @@ const SignUpScreen: React.FC = () => {
                     marginBottom: 15,
                     paddingRight: 10,
                   }}
+                  placeholderTextColor={'black'}
                   placeholder="  Do You Have Referral Code "
                   value={referralCode}
                   onChangeText={setreferralCode}
-           
+
                 />
+                {signupType === 'AGENCY_USER' && (
+                  <View style={{ marginBottom: 15 }}>
+                    <Text style={{ marginBottom: 6, fontWeight: '600' }}>
+                      Select Agency Role *
+                    </Text>
+
+                    <TouchableOpacity
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        borderRadius: 6,
+                        padding: 12,
+                      }}
+                      onPress={() => setShowAgencyDropdown(!showAgencyDropdown)}
+                    >
+                      <Text>
+                        {AGENCY_ROLES.find(r => r.value === selectedAgencyRole)?.label ||
+                          'Choose your role'}
+                      </Text>
+
+                    </TouchableOpacity>
+
+                    {showAgencyDropdown && (
+                      <View
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                          borderRadius: 6,
+                          marginTop: 5,
+                          backgroundColor: '#fff',
+                        }}
+                      >
+                        {AGENCY_ROLES.map(role => {
+                          const isSelected = selectedAgencyRole === role.value;
+
+                          return (
+                            <TouchableOpacity
+                              key={role.value}
+                              onPress={() => handleAgencyRoleSelect(role.value)}
+                              style={{
+                                padding: 12,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#eee',
+                                backgroundColor: isSelected ? '#E6EBFF' : '#fff',
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: isSelected ? '#00007B' : '#000',
+                                  fontWeight: isSelected ? '700' : '400',
+                                }}
+                              >
+                                {role.label}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+
+
+                      </View>
+                    )}
+                  </View>
+                )}
 
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -778,8 +876,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginLeft: 5,
   },
-fieldErrorText1: {
-    maxWidth:160,
+  fieldErrorText1: {
+    maxWidth: 160,
     color: 'red',
     fontSize: 12,
     marginTop: 5,
@@ -796,7 +894,8 @@ fieldErrorText1: {
     borderWidth: 1,
     borderRadius: 6,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    // backgroundColor: '#f9f9f9',
+    // color:'red',
     fontSize: 16,
   },
   input: {
@@ -805,7 +904,7 @@ fieldErrorText1: {
     borderWidth: 1,
     borderRadius: 6,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    // backgroundColor: '#f9f9f9',
     fontSize: 16,
   },
   passwordContainer: {

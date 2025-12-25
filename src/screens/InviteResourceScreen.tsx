@@ -82,7 +82,7 @@ useEffect(() => {
       last_name: lastName,
       email: email,
       password: password,
-      user_type: userType,
+      user_type: "RESOURCE_USER",
       is_authorized: isTagged, // true if tagged, false otherwise
     };
 

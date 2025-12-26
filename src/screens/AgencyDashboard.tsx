@@ -35,7 +35,6 @@ type SecRowDetails = {
 };
 
 const AgencyDashboard = () => {
-  // Sample data for charts
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +54,7 @@ const AgencyDashboard = () => {
   useEffect(() => {
     const loadAgencyType = async () => {
       const type = await AsyncStorage.getItem('agencyType');
-      
+
       setAgencyType(type?.trim().toUpperCase() || null);
     };
 
@@ -75,9 +74,11 @@ const AgencyDashboard = () => {
 
     checkProfileStatus();
   }, []);
+
   useEffect(() => {
     console.log('agencyType 👉', agencyType);
   }, [agencyType]);
+
   const fetchGraphData = async () => {
     setLoading(true);
     const response = await Services.getAgencyDashboardGraphDetails();
@@ -397,7 +398,6 @@ const AgencyDashboard = () => {
       // 'JobPostScreen',
       'InviteResource',
       'LatestJobsScreen'
-
       // 'TalentProfileList',
     ],
   };
@@ -416,19 +416,14 @@ const AgencyDashboard = () => {
       if (!hasPremiumAccess && item.premium) {
         return false;
       }
-
       return true;
     });
   }, [agencyType, hasPremiumAccess]);
 
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-
-
         {/* Top Metrics */}
         <View style={styles.topMetrics}>
           <View style={styles.metricsRow}>

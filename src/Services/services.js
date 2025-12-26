@@ -1778,11 +1778,13 @@ const Services = {
   //   }
   // },
   getOrganistionProfileList: async (data) => {
+    console.log("dataata ",data);
+    
     try {
       const headers = await AUTH_HEADERS();
 
       // Build query parameters
-      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}&country=${data?.country || 0}`;
+      let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${data?.offset || 0}&search=${data?.country || 0}`;
 
       // Add search parameter if provided
       if (data?.search) {

@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import Services from '../Services/services';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import Icon2 from 'react-native-vector-icons/FontAwesome5';
 type TalentProfile = {
@@ -47,28 +46,20 @@ const TalentProfileList = () => {
     const [profiles, setProfiles] = useState<TalentProfile[]>([]);
     const [selectedSkill, setSelectedSkill] = useState<number | null>(null);
     const [availability, setAvailability] = useState<number | null>(null);
-
     const [payMin, setPayMin] = useState("");
     const [payMax, setPayMax] = useState("");
-
     const [expMin, setExpMin] = useState("");
     const [expMax, setExpMax] = useState("");
-
     const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
     const [showSkillModal, setShowSkillModal] = useState(false);
-
     const [skillOptions, setSkillOptions] = useState([]);
     const [showAvailability, setShowAvailability] = useState(false)
     const [showCountryModal, setShowCountryModal] = useState(false);
     const [detailsModalVisible, setDetailsModalVisible] = useState(false);
     const [connectModalVisible, setConnectModalVisible] = useState(false);
-
     const [selectedIndividual, setSelectedIndividual] = useState<any>(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
-
     const [message, setMessage] = useState('');
-
-
     const [locationOptions] = useState([
         { id: 74, name: "India" },
         { id: 9, name: "Australia" },
@@ -88,9 +79,6 @@ const TalentProfileList = () => {
         }
     };
 
-
-
-
     const resetFilters = () => {
         setSelectedSkill(null);
         setAvailability(null);
@@ -102,18 +90,6 @@ const TalentProfileList = () => {
 
         loadProfiles()
     };
-
-
-
-
-
-
-
-
-
-
-
-
 
     useEffect(() => {
         loadProfiles();

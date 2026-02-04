@@ -182,15 +182,13 @@ const Services = {
   },
   viewLawyerNetworkProfile: async id => {
     try {
-      const headers = await AUTH_HEADERS(); // must return { headers: { ... } }
-      // Ensure API_ENDPOINTS is a string like "https://api.agreementpaper.com/"
+      const headers = await AUTH_HEADERS();
       const url = `${API_URL}lawyer-network/lawyers/${id}/`;
 
       const response = await axiosInstance.get(url, headers);
 
       return {
         success: true,
-        // many detail endpoints return the object directly, not in results
         data: response.data,
         status: response.status,
       };
@@ -502,7 +500,7 @@ const Services = {
       return {
         success: false,
         error:
-          error.response?.data?.message || // ✅ REAL backend message
+          error.response?.data?.message ||
           error.message ||
           'Something went wrong',
         status: error.response?.status || 500,
@@ -632,7 +630,7 @@ const Services = {
       const response = await axiosInstance.post(
         API_ENDPOINTS.UPDATEUSERPROFILE,
         payload,
-        {headers}, // Fixed: headers wrapped in config object
+        {headers},
       );
 
       if (response.status === 200) {
@@ -764,7 +762,6 @@ const Services = {
         API_ENDPOINTS.GETLANGUAGES,
         headers,
       );
-      // console.log('getLanguagesList response', response);
 
       return {
         success: true,
@@ -888,7 +885,6 @@ const Services = {
       const headers = await AUTH_MULTYPART_HEADERS2();
       console.log('updatePrivacySettings headers', headers);
 
-      // Corrected API call with proper parameters
       const response = await axiosInstance.patch(
         API_ENDPOINTS.UPDATEPRIVACYSETTINGS,
         data,
@@ -946,7 +942,7 @@ const Services = {
       const response = await axiosInstance.post(
         API_ENDPOINTS.SUBSCRIPTIONINITIATEPAYMENT,
         payload,
-        {headers}, // ✅ Correct format
+        {headers},
       );
 
       console.log('initiatepaymentsub ressss', response);
@@ -1234,8 +1230,6 @@ const Services = {
     }
   },
 
-  //Organisation Api's
-
   getOrganisationDashboard: async () => {
     try {
       const headers = await AUTH_HEADERS();
@@ -1318,12 +1312,10 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Build query parameters
       let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${
         data?.offset || 0
       }`;
 
-      // Add search parameter if provided
       if (data?.search) {
         queryParams += `&search=${encodeURIComponent(data.search)}`;
       }
@@ -1338,7 +1330,7 @@ const Services = {
       return {
         success: true,
         data: response.data.results,
-        count: response.data.count, // Make sure your API returns total count
+        count: response.data.count,
         status: response.status,
       };
     } catch (error) {
@@ -1378,12 +1370,10 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Build query parameters
       let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${
         data?.offset || 0
       }&approver_for=${data?.msa}`;
 
-      // Add search parameter if provided
       if (data?.search) {
         queryParams += `&search=${encodeURIComponent(data.search)}/`;
       }
@@ -1398,7 +1388,7 @@ const Services = {
       return {
         success: true,
         data: response.data.results,
-        count: response.data.count, // Make sure your API returns total count
+        count: response.data.count,
         status: response.status,
       };
     } catch (error) {
@@ -1431,21 +1421,7 @@ const Services = {
       return {success: false, error: error.response?.data};
     }
   },
-  // Agency Api's
-  // agencyDashboardStats: async () => {
-  //   try {
-  //     const headers = await AUTH_HEADERS();
-  //     const response = await axiosInstance.post(
-  //       `${API_ENDPOINTS.}`,
-  //       headers
-  //     );
-  //     console.log("response of createMSA", response);
 
-  //     return { success: true, data: response.data };
-  //   } catch (error) {
-  //     return { success: false, error: error.response?.data };
-  //   }
-  // },
   updateOrganizationProfile: async payload => {
     try {
       console.log('📤 Payload received:', payload);
@@ -1778,34 +1754,6 @@ const Services = {
     }
   },
 
-  //   getOrganistionProfileList: async data => {
-  //   try {
-  //     const headers = await AUTH_HEADERS();
-  //     const response = await axiosInstance.get(
-  //       API_ENDPOINTS.GETORGANISATIONPROFILE +
-  //       `?&limit=${data?.limit}&offset=${data?.offset}`,
-  //       headers,
-  //     );
-  //     console.log("getOrganistionProfileList",response);
-
-  //     return {
-  //       success: true,
-  //       data: response.data.results,
-  //       status: response.status,
-  //     };
-  //   } catch (error) {
-
-  //     console.log('error config', error.config);
-  //     console.log('error request', error.request);
-  //     console.log('error response', error.response);
-  //     console.log('error message', error.message);
-  //     return {
-  //       success: false,
-  //       error: error.response?.data || 'Failed to fetch Lawyer Network List',
-  //       status: error.response?.status || 500,
-  //     };
-  //   }
-  // },
   getOrganistionProfileList: async data => {
     console.log('dataata ', data);
 
@@ -1832,7 +1780,7 @@ const Services = {
       return {
         success: true,
         data: response.data.results,
-        count: response.data.count, // Make sure your API returns total count
+        count: response.data.count,
         status: response.status,
       };
     } catch (error) {
@@ -1855,15 +1803,9 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Build query parameters
       let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${
         data?.offset || 0
       }`;
-
-      // Add search parameter if provided
-      // if (data?.search) {
-      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
-      // }
 
       const response = await axiosInstance.get(
         API_ENDPOINTS.JOBPROFILES + queryParams,
@@ -1899,13 +1841,7 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Build query parameters
       let queryParams = `?limit=${data?.limit}&offset=${data?.offset || 0}`;
-
-      // Add search parameter if provided
-      // if (data?.search) {
-      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
-      // }
 
       const response = await axiosInstance.get(
         API_ENDPOINTS.JOBSLIST + queryParams,
@@ -1939,7 +1875,7 @@ const Services = {
 
   getMSAContractorList: async data => {
     try {
-      const config = await AUTH_HEADERS(); // ✅ already { headers: {} }
+      const config = await AUTH_HEADERS();
 
       const response = await axiosInstance.get(
         `${API_ENDPOINTS.MSACONTRACTORLIST}/?limit=${
@@ -1972,13 +1908,7 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Build query parameters
       let queryParams = `/?limit=${data?.limit}&offset=${data?.offset || 0}`;
-
-      // Add search parameter if provided
-      // if (data?.search) {
-      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
-      // }
 
       const response = await axiosInstance.get(
         API_ENDPOINTS.MSASERVICELIST + queryParams,
@@ -2049,7 +1979,6 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Ensure slug is provided
       if (!data) {
         throw new Error('Slug is required for fetching MSA List');
       }
@@ -2090,7 +2019,6 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Ensure slug is provided
       if (!data) {
         throw new Error('Slug is required for fetching MSA detail');
       }
@@ -2467,7 +2395,6 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // Build query parameters
       let queryParams = `?limit=${data?.limit || LIMIT_DATA}&offset=${
         data?.offset || 0
       }&date_from=${data?.date_from || 0}&date_to=${
@@ -2581,11 +2508,6 @@ const Services = {
         data?.offset || 0
       }`;
 
-      // Add search parameter if provided
-      // if (data?.search) {
-      //   queryParams += `&search=${encodeURIComponent(data.search)}`;
-      // }
-
       const response = await axiosInstance.get(
         API_ENDPOINTS.SOWSERVICELIST + queryParams,
         headers,
@@ -2656,7 +2578,6 @@ const Services = {
     console.log('slug', slug);
 
     try {
-      // For FormData, we need to use multipart headers
       const headers = await AUTH_MULTYPART_HEADERS();
 
       if (!slug) {
@@ -2664,8 +2585,8 @@ const Services = {
       }
 
       const response = await axiosInstance.patch(
-        `${API_ENDPOINTS.UPDATESOW}${slug}/`, // Make sure this endpoint accepts PATCH
-        payload, // Send FormData directly
+        `${API_ENDPOINTS.UPDATESOW}${slug}/`,
+        payload,
         headers,
       );
 
@@ -2880,8 +2801,6 @@ const Services = {
     try {
       const headers = await AUTH_HEADERS();
 
-      // let queryParams = `?limit=${data?.limit }&offset=${data?.offset || 0}`;
-
       const response = await axiosInstance.get(
         `${API_ENDPOINTS.MATERIAL_DETAILS}/${materialUid}/`,
         headers,
@@ -2937,7 +2856,7 @@ const Services = {
     try {
       const payload = {
         name: title,
-        draft: true, // keep in draft mode
+        draft: true,
         embedded_edit_url: true, // return embedded edit URL
         embedded_signing: false, // not signing yet, just edit/add contacts
         files: [
@@ -4054,9 +3973,7 @@ const Services = {
     }
   },
 
-
-  
- getMsaFileds: async () => {
+  getMsaFileds: async () => {
     try {
       const headers = await AUTH_HEADERS();
       const response = await axiosInstance.get(
@@ -4288,7 +4205,7 @@ const Services = {
     }
   },
 
-   addPaymentTerms: async (slug, payload) => {
+  addPaymentTerms: async (slug, payload) => {
     console.log('form', payload);
 
     try {
@@ -4321,7 +4238,7 @@ const Services = {
     }
   },
 
-    getSowType: async () => {
+  getSowType: async () => {
     try {
       const headers = await AUTH_HEADERS();
       const response = await axiosInstance.get(
@@ -4344,7 +4261,7 @@ const Services = {
     }
   },
 
-   addSowType: async (slug, payload) => {
+  addSowType: async (slug, payload) => {
     console.log('form', payload);
 
     try {
@@ -4400,7 +4317,7 @@ const Services = {
     }
   },
 
-   addExpensesCategory: async (slug, payload) => {
+  addExpensesCategory: async (slug, payload) => {
     console.log('form', payload);
 
     try {
@@ -4433,33 +4350,30 @@ const Services = {
     }
   },
 
-getIncomeTaxSlabs: async (params) => {
-  console.log("params ",params);
-  
-  try {
-    const headers = await AUTH_HEADERS();
+  getIncomeTaxSlabs: async params => {
+    console.log('params ', params);
 
-    const response = await axiosInstance.get(
-      API_ENDPOINTS.INCOMETAXSLABS,
-      {
+    try {
+      const headers = await AUTH_HEADERS();
+
+      const response = await axiosInstance.get(API_ENDPOINTS.INCOMETAXSLABS, {
         ...headers,
-        params, // ✅ query params
-      },
-    );
+        params,
+      });
 
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.response?.data || 'Failed',
-      status: error.response?.status || 500,
-    };
-  }
-},
+      return {
+        success: true,
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data || 'Failed',
+        status: error.response?.status || 500,
+      };
+    }
+  },
 
   getMaterialMasterData: async () => {
     try {
@@ -4468,7 +4382,6 @@ getIncomeTaxSlabs: async (params) => {
         `${API_ENDPOINTS.MATERIALMASTERDATA}`,
         headers,
       );
-      console.log('MaterialMasterData', response);
 
       return {
         success: true,
@@ -4484,7 +4397,7 @@ getIncomeTaxSlabs: async (params) => {
     }
   },
 
-   addMaterialMasterData: async (slug, payload) => {
+  addMaterialMasterData: async (slug, payload) => {
     console.log('form', payload);
 
     try {

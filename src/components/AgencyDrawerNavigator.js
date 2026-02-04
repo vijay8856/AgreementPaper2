@@ -1,5 +1,5 @@
 // DrawerNavigator.js
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import {createDrawerNavigator} from '@react-navigation/drawer';
 import AIResFullReviewScreen from '../screens/AIResFullReviewScreen';
 import AIReviewScreen from '../screens/AIResReview';
 import HelpScreen from '../screens/HelpScreen';
@@ -10,9 +10,9 @@ import SettingsScreen from '../screens/SettingsScreen';
 import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
 import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
 import ApprovalScreen from '../screens/OrganizationModules/ApprovalScreen';
-import JobPostScreen from '../screens/JobPostScreen'
-import TalentProfileList from '../screens/TalentProfileList'
-import { Platform } from 'react-native';
+import JobPostScreen from '../screens/JobPostScreen';
+import TalentProfileList from '../screens/TalentProfileList';
+import {Platform} from 'react-native';
 
 // Import other screens you want in the drawer
 
@@ -25,7 +25,6 @@ export const AgencyDrawerNavigator = () => {
         drawerStyle: {
           backgroundColor: '#fff',
           width: 240,
-
         },
         drawerActiveTintColor: '#0E3386',
         drawerInactiveTintColor: '#333',
@@ -33,15 +32,11 @@ export const AgencyDrawerNavigator = () => {
           fontSize: 16,
           fontWeight: '500',
         },
-      }}
-    >
+      }}>
       <Drawer.Screen
         name="Agency Dashboard"
         component={AgencyDashboard}
-        options={{ headerShown: true ,
-
-          
-        }}
+        options={{headerShown: true}}
       />
 
       <Drawer.Screen
@@ -50,9 +45,9 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'AI-RES Full Review',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -61,9 +56,9 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'AI-Review',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -72,9 +67,9 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'AI-Draft',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -83,9 +78,9 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'Master Service Agreement (MSA)',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -94,43 +89,43 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'Statement Of Work (SOW)',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
-         <Drawer.Screen
+      <Drawer.Screen
         name="JobPostScreen"
         component={JobPostScreen}
         options={{
           title: 'Job Post',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
-  <Drawer.Screen
+      <Drawer.Screen
         name="TalentProfileList"
         component={TalentProfileList}
         options={{
           title: 'Talent Profile',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
-      
+
       <Drawer.Screen
         name="ApprovalScreen"
         component={ApprovalScreen}
         options={{
           title: 'Approval',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -139,9 +134,9 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'E-Signature',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -150,9 +145,9 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'Settings',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
       <Drawer.Screen
@@ -161,12 +156,11 @@ export const AgencyDrawerNavigator = () => {
         options={{
           title: 'Help ',
           headerShown: true,
-          headerStyle: { backgroundColor: '#0E3386' },
+          headerStyle: {backgroundColor: '#0E3386'},
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: {fontWeight: 'bold'},
         }}
       />
-
     </Drawer.Navigator>
   );
 };

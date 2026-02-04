@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   Modal,
   FlatList,
   SafeAreaView,
+  Platform, 
+  StatusBar
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +23,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import Services from '../Services/services'; // Your service file
 import Icon from 'react-native-vector-icons/Ionicons';
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from 'react-native-image-crop-picker'
 import AppHeader from '../components/AppHeader';
 type MyProfileNavProp = StackNavigationProp<RootStackParamList, 'MyProfile'>;
 
@@ -54,6 +56,15 @@ const MyProfile = () => {
   const [userType, setUserType] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
+useLayoutEffect(() => {
+  navigation.setOptions({
+    headerTitle: 'My Profile',
+    headerBackTitle: '',   
+       headerBackTitleVisible: false,
+  });
+}, [navigation]);
+
+
   useEffect(() => {
     fetchUserProfile();
     fetchLanguages();
@@ -81,7 +92,11 @@ const MyProfile = () => {
     const fetchUserData = async () => {
       try {
         const storedUser = await AsyncStorage.getItem("userData");
+        const storedUser2 = await AsyncStorage.getItem("company");
+
         console.log("storedUser", storedUser);
+        console.log("storedUser2", storedUser2);
+
 
         if (storedUser) {
 
@@ -147,43 +162,7 @@ const MyProfile = () => {
       }
     }
   };
-  // const handleImagePick = async () => {
-  //   try {
-  //     const image = await ImagePicker.openPicker({
-  //       width: 300,
-  //       height: 300,
-  //       cropping: true,
-  //       compressImageQuality: 0.8,
-  //       mediaType: 'photo',
-  //     });
 
-  //     console.log('Picked Image:', image);
-
-  //     if (image && image.path) {
-  //       setUserData(prev => ({
-  //         ...prev,
-  //         profile_pic: image.path,
-  //         profile_file: {
-  //           uri: image.path,
-  //           type: image.mime || 'image/jpeg',
-  //           name: image.filename || 'profile.jpg',
-  //         },
-  //       }));
-  //     } else {
-  //       console.log('No image selected');
-  //     }
-  //   } catch (error) {
-  //     if (error.message?.includes('cancelled')) {
-  //       console.log('User cancelled picker');
-  //     } else {
-  //       console.log('Image Picker Error:', error);
-  //       Toast.show({
-  //         type: 'error',
-  //         text1: 'Failed to pick image',
-  //       });
-  //     }
-  //   }
-  // };
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -264,7 +243,6 @@ const MyProfile = () => {
 
 
 
-  console.log("userData", userData?.profile_pic);
   const handleUpdateProfile = async () => {
     if (!userData.language) {
       Toast.show({ type: 'error', text1: 'Please select a language' });
@@ -353,34 +331,7 @@ const MyProfile = () => {
     ]);
   };
 
-  // const renderLanguageModal = () => (
-  //   <Modal visible={languageModal} transparent animationType="slide">
-  //     <View style={styles.modalOverlay}>
-  //       <View style={styles.modalContent}>
-  //         <Text style={styles.modalTitle}>Select Language</Text>
-  //         <FlatList
-  //           data={languages}
-  //           keyExtractor={(item, index) => index.toString()}
-  //           renderItem={({ item }: any) => (
-  //             <TouchableOpacity
-  //               onPress={() => {
-  //                 setSelectedLanguage(item);
-  //                 setUserData(prev => ({ ...prev, language: item.id })); // ID for API
-  //                 setLanguageModal(false);
-  //               }}
-  //               style={styles.languageItem}
-  //             >
-  //               <Text>{item.name}</Text>
-  //             </TouchableOpacity>
-  //           )}
-  //         />
-  //         <TouchableOpacity onPress={() => setLanguageModal(false)}>
-  //           <Text style={{ color: 'blue', textAlign: 'center', marginTop: 10 }}>Close</Text>
-  //         </TouchableOpacity>
-  //       </View>
-  //     </View>
-  //   </Modal>
-  // );
+
   const renderLanguageModal = () => (
     <Modal visible={languageModal} transparent animationType="fade">
       <View style={styles.modalOverlay}>
@@ -531,11 +482,13 @@ const MyProfile = () => {
 
 
     <SafeAreaView style={styles.container}>
-      <AppHeader title="My Profile" />
+      <StatusBar barStyle="dark-content" />
+      {/* <AppHeader title="My Profile" /> */}
       <ScrollView
         // style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {renderLanguageModal()}
 
@@ -556,7 +509,7 @@ const MyProfile = () => {
             ) : (
               <View style={styles.initialsCircle}>
                 <Text style={styles.initialsText}>
-                  {userData?.first_name?.charAt(0) || ""}
+             {userData?.first_name?.charAt(0) || "U"}
                 </Text>
               </View>
             )}
@@ -575,6 +528,7 @@ const MyProfile = () => {
 
           {/* 👇 Edit / View Mode Content */}
           {editMode ? (
+            <View  >
             <View style={styles.editForm}>
               <View style={styles.inputRow}>
                 <View style={styles.inputContainer}>
@@ -596,14 +550,7 @@ const MyProfile = () => {
                 </View>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Last Name</Text>
-                  {/* <TextInput
-                    style={styles.input}
-                    value={userData.last_name}
-                    onChangeText={(text) =>
-                      setUserData({ ...userData, last_name: text })
-                    }
-                    placeholder="Enter last name"
-                  /> */}
+                
                   <TextInput
                     placeholder="Enter last name"
                     style={styles.input}
@@ -632,18 +579,12 @@ const MyProfile = () => {
 
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Contact Number</Text>
-                {/* <TextInput
-                  style={styles.input}
-                  placeholder="Enter contact number"
-                  value={contactNumber}
-                  onChangeText={setContactNumber}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                /> */}
+             
                 <TextInput
                   placeholder="Enter contact number"
                   style={styles.input}
                   value={contactNumber}
+                  maxLength={10}
                   onChangeText={(text) => {
                     setContactNumber(text);
                     setFieldErrors((prev) => ({ ...prev, contact_number: null }));
@@ -689,7 +630,7 @@ const MyProfile = () => {
                   <Text style={styles.languageText}>
                     {selectedLanguage.name || "Select Language"}
                   </Text>
-                  <Icon name="chevron-down" size={20} color="#666" />
+                  <Icon name={Platform.OS === 'ios' ? "globe-outline" : "language"} size={16} color="#666" />
                 </TouchableOpacity>
 
                 {fieldErrors.language && (
@@ -713,6 +654,7 @@ const MyProfile = () => {
                 </TouchableOpacity>
               </View>
             </View>
+            </View>
           ) : (
             <View style={styles.profileInfo}>
               <Text style={styles.userName}>
@@ -721,7 +663,7 @@ const MyProfile = () => {
               <Text style={styles.userEmail}>{userData.email || ""}</Text>
 
               <View style={styles.languageInfo}>
-                <Icon name="language" size={16} color="#666" />
+                <Icon name="language-outline" size={16} color="#666" />
                 <Text style={styles.languageInfoText}>
                   {selectedLanguage.name || "No language selected"}
                 </Text>
@@ -814,7 +756,7 @@ const MyProfile = () => {
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Icon name="log-out-outline" size={20} color="#D32F2F" />
+          <Icon name="log-out-outline" size={20} color="#fdf9f9ff" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
@@ -951,180 +893,14 @@ const MyProfile = () => {
   );
 };
 export default MyProfile;
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//     padding: 20
-//   },
-//   profileSection: {
-//     alignItems: 'center',
-//     marginTop: 20
-//   },
-//   changeProfile:{borderWidth:1,borderRadius:5,padding:2, margin:1 ,color:"#fff", backgroundColor:"#0E3386",borderColor:"#0E3386",paddingHorizontal:3},
-//   avatarContainer: {
-//     marginBottom: 20
-//   },
-//   avatar: {
-//     width: 100,
-//     height: 100,
-//     borderRadius: 50,
-//     backgroundColor:"gray"
-//   },
-//   initialsCircle: {
-//     width: 100,
-//     height: 100,
-//     borderRadius: 50,
-//     backgroundColor: '#ccc',
-//     justifyContent: 'center',
-//     alignItems: 'center'
-//   },
-//   initialsText: {
-//     fontSize: 32,
-//     color: '#fff'
-//   },
-//   name: {
-//     fontSize: 22,
-//     fontWeight: 'bold'
-//   },
-//   email: {
-//     fontSize: 16,
-//     color: '#777',
-//     marginVertical: 4
-//   },
-//   editIcon: {
-//     marginTop: 10
-//   },
-//   input: {
-//     borderWidth: 1,
-//     borderColor: '#ccc',
-//     borderRadius: 8,
-//     paddingHorizontal: 10,
-//     paddingVertical: 8,
-//     width: '100%',
-//     marginVertical: 8,
-//   },
-//   input1: {
-//     borderWidth: 1,
-//     borderColor: '#ccc',
-//     borderRadius: 8,
-//     paddingHorizontal: 10,
-//     paddingVertical: 8,
 
-//     width: '94%',
-//     marginVertical: 8,
-//   },
-//   settingsSection: {
-//     marginTop: 30
-//   },
-//   settingsHeader: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     marginBottom: 10
-//   },
-//   settingsItem: {
-//     paddingVertical: 10
-//   },
-//   settingsText: {
-//     fontSize: 16
-//   },
-//   logoutButton: {
-//     backgroundColor: '#000078',
-//     paddingVertical: 12,
-//     marginTop: 30,
-//     borderRadius: 8,
-//     marginBottom: 20,
-//   },
-//   logoutText: {
-//     color: '#fff',
-//     textAlign: 'center',
-//     fontSize: 16
-//   },
-//   saveButton: {
-//     backgroundColor: '#000078',
-//     paddingVertical: 12,
-//     borderRadius: 8,
-//     marginTop: 10,
-//     width: '100%',
-//     alignItems: 'center',
-//   },
-//   modalOverlay: {
-//     flex: 1,
-//     backgroundColor: 'rgba(0, 0, 0, 0.4)',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   modalContent: {
-//     backgroundColor: '#fff',
-//     padding: 20,
-//     borderRadius: 10,
-//     width: '85%',
-//     maxHeight: '80%',
-//   },
-//   modalTitle: {
-//     fontWeight: 'bold',
-//     fontSize: 18,
-//     marginBottom: 10
-//   },
-//   languageItem: {
-//     paddingVertical: 10,
-//     borderBottomWidth: 0.5,
-//     borderBottomColor: '#ccc',
-//   },
-//   fullWhiteBackdrop: {
-//     flex: 1,
-//     backgroundColor: '#ffffff',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     paddingHorizontal: 20,
-//   },
-//   resetbutton: {
-//     backgroundColor: '#000078',
-//     padding: 10,
-//     borderRadius: 8,
-//     paddingHorizontal: '35%',
-//     marginTop: 10,
-//     alignItems: 'center'
-//   },
-//   resetbutton2: {
-//     backgroundColor: '#000078',
-//     padding: 10,
-//     borderRadius: 8,
-//     paddingHorizontal: '26%',
-//     marginTop: 10,
-//     alignItems: 'center'
-//   },
-//   button: {
-//     backgroundColor: '#000078',
-//     padding: 10,
-//     borderRadius: 8,
-//     paddingHorizontal: '32%',
-//     marginTop: 10,
-//     alignItems: 'center'
-//   },
-//   buttonlink: {
-//     backgroundColor: '#000078',
-//     padding: 10,
-//     paddingHorizontal: '35%',
-//     borderRadius: 8,
-//     marginTop: 10,
-//     alignItems: 'center'
-//   },
-//   buttonText: {
-//     color: '#fff',
-//     fontWeight: 'bold'
-//   },
-//   link: {
-//     color: '#fff',
-//     fontWeight: 'bold'
-//   },
-// });
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 10 : 16,
     paddingBottom: 30,
   },
   profileHeader: {
@@ -1140,14 +916,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  editProfileContainer:{
+    
+    shadowColor: '#000',
+     shadowOffset: {
+       width: 1,
+       height: 2,
+     },
+     shadowOpacity: 0.50,
+     shadowRadius: 3,
+     elevation: 1,
+  },
   profileCard: {
     backgroundColor: '#fff',
-    margin: 20,
+    margin: 10,
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.30,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -1193,6 +980,15 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   editForm: {
+    
+ shadowColor: '#000',
+     shadowOffset: {
+       width: 1,
+       height: 2,
+     },
+     shadowOpacity: 0.29,
+     shadowRadius: 3,
+     elevation: 1,
     width: '100%',
   },
   inputRow: {
@@ -1200,6 +996,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   inputContainer: {
+    
     marginBottom: 16,
     flex: 1,
     marginHorizontal: 4,
@@ -1212,7 +1009,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#989ca0ff',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -1355,7 +1152,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#0E3386',
     margin: 20,
     paddingVertical: 16,
     borderRadius: 12,
@@ -1368,7 +1165,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   logoutText: {
-    color: '#D32F2F',
+    color: '#fefbfbff',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,

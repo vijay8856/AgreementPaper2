@@ -12,6 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const InviteLawyerScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -22,61 +23,95 @@ const InviteLawyerScreen = () => {
   const [isTagged, setIsTagged] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [contactNumber, setContactNumber] = useState('');
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const PASSWORD_REGEX =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+
+  const [userType, setUserType] = useState('')
 
 
 
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        if (keys.length > 0) {
+          const result = await AsyncStorage.multiGet(keys);
 
-
-
-  const[userType,setUserType]=useState('')
-
-
-
-useEffect(() => {
-  const fetchAllData = async () => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      if (keys.length > 0) {
-        const result = await AsyncStorage.multiGet(keys);
-
-        const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
-          if (value !== null) {
-            try {
-              acc[key] = JSON.parse(value);
-            } catch {
-              acc[key] = value;
+          const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
+            if (value !== null) {
+              try {
+                acc[key] = JSON.parse(value);
+              } catch {
+                acc[key] = value;
+              }
             }
+            return acc;
+          }, {});
+
+          const typeFromStorage =
+            dataObj.userData?.user_type || // preferred location
+            dataObj.userType;              // or the separate key if it exists
+
+          if (typeFromStorage) {
+            setUserType(typeFromStorage);
           }
-          return acc;
-        }, {});
 
-        // 🔑 user_type lives inside the parsed userData object
-        const typeFromStorage =
-          dataObj.userData?.user_type || // preferred location
-          dataObj.userType;              // or the separate key if it exists
-
-        if (typeFromStorage) {
-          setUserType(typeFromStorage);
+          console.log("User type is:", typeFromStorage);
         }
-
-        console.log("User type is:", typeFromStorage);
+      } catch (error) {
+        console.error("Error fetching all AsyncStorage data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching all AsyncStorage data:", error);
-    }
-  };
+    };
 
-  fetchAllData();
-}, []);
+    fetchAllData();
+  }, []);
 
 
   const handleSubmit = async () => {
-    // Simple validation (you can expand this)
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Please fill all fields' });
+
+    if (!firstName.trim()) {
+      Toast.show({ type: 'error', text1: 'First name is required' });
       return;
     }
 
+    if (!lastName.trim()) {
+      Toast.show({ type: 'error', text1: 'Last name is required' });
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      Toast.show({ type: 'error', text1: 'Please enter a valid email address' });
+      return;
+    }
+
+
+
+    if (!PASSWORD_REGEX.test(password)) {
+      Toast.show({
+        type: 'error',
+        text1:
+          'Password must be 8+ chars, include uppercase, lowercase, number & symbol',
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Toast.show({ type: 'error', text1: 'Passwords do not match' });
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      Toast.show({ type: 'error', text1: 'Please enter a valid email address' });
+      return;
+    }
     if (password !== confirmPassword) {
       Toast.show({ type: 'error', text1: 'Passwords do not match' });
       return;
@@ -95,6 +130,7 @@ useEffect(() => {
       setLoading(true);
       const res = await Services.inviteUsers(payload);
 
+      console.log("ressss", res);
 
       setLoading(false);
       if (res.success) {
@@ -119,13 +155,13 @@ useEffect(() => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header */}
-        <LinearGradient
+        {/* <LinearGradient
           colors={['#0E3386', '#0E3386']}
           style={styles.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
-        </LinearGradient>
+        </LinearGradient> */}
 
         {/* Form */}
         <View style={styles.card}>
@@ -151,21 +187,26 @@ useEffect(() => {
             keyboardType="email-address"
           />
 
-          <FormField
+          <PasswordField
             label="Password *"
             value={password}
             onChangeText={setPassword}
             placeholder="Create password"
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            onToggle={() => setShowPassword(!showPassword)}
+            show={showPassword}
           />
 
-          <FormField
+          <PasswordField
             label="Confirm Password *"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm password"
-            secureTextEntry
+            secureTextEntry={!showConfirmPassword}
+            onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+            show={showConfirmPassword}
           />
+
 
           <View style={styles.toggleContainer}>
             <Text style={styles.toggleLabel}>Tag this Lawyer to my team</Text>
@@ -209,12 +250,53 @@ const FormField = ({
     <TextInput
       style={styles.input}
       value={value}
-      onChangeText={onChangeText}
+      onChangeText={(text) =>
+        keyboardType === 'email-address'
+          ? onChangeText(text.toLowerCase())
+          : onChangeText(text)
+      }
       placeholder={placeholder}
-      placeholderTextColor="#999"
+      placeholderTextColor="#040303ff"
       secureTextEntry={secureTextEntry}
       keyboardType={keyboardType}
+      autoCapitalize="none"
+      autoCorrect={false}
+      textContentType={keyboardType === 'email-address' ? 'emailAddress' : 'none'}
     />
+
+  </View>
+);
+const PasswordField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  secureTextEntry,
+  onToggle,
+  show,
+}: any) => (
+  <View style={styles.formField}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+
+    <View style={styles.passwordContainer}>
+      <TextInput
+        style={styles.passwordInput}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={"black"}
+
+        secureTextEntry={secureTextEntry}
+        autoCapitalize="none"
+      />
+ <TouchableOpacity onPress={onToggle} style={styles.eyeButton}>
+        <Icon
+          name={show ? 'eye-off-outline' : 'eye-outline'}
+          size={22}
+          color="#666"
+        />
+      </TouchableOpacity>
+    </View>
   </View>
 );
 
@@ -222,6 +304,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F7FC',
+    margin: 10,
+
   },
   scrollContainer: {
     paddingBottom: 100,
@@ -237,15 +321,20 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    margin: 16,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 16,
+    marginTop: 10,
+    // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 2, height: 4 },
+    shadowOpacity: 0.40,
+    shadowRadius: 8,
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    // Android shadow
+    elevation: 4,
   },
   formField: {
     marginBottom: 20,
@@ -257,8 +346,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    height: 50,
+    padding: 10,
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    borderRadius: 5,
     paddingVertical: 8,
     fontSize: 16,
     color: '#333',
@@ -271,24 +363,26 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 14,
-    color: '#333',
+    color: '#494747ff',
   },
   toggleButton: {
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#a29898ff',
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
   toggleActive: {
-    backgroundColor: '#0E3386',
+    backgroundColor: '#1a5bdcff',
   },
   toggleCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: 'black'
   },
   toggleCircleActive: {
     transform: [{ translateX: 22 }],
@@ -310,6 +404,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    height: 50,
+  },
+
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+
+eyeButton: {
+    paddingLeft: 8,
+  },
+
 });
 
 export default InviteLawyerScreen;

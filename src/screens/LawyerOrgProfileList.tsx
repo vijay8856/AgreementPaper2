@@ -18,12 +18,7 @@ import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
 import Services from "../Services/services";
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
-
-// import { Avatar } from "react-native-paper";
-// import { useDispatch, useSelector } from "react-redux";
-// import { LIMIT_DATA } from "../../../../Axios/axiosData";
-// import Services from "../../../../ServiceProvider/Services";
+import IOSPickerModal from "../components/Modals/IOSPickerModal";
 
 const { width } = Dimensions.get("window");
 const debounce = (func: any, delay: any) => {
@@ -55,6 +50,7 @@ type Organization = {
     is_connection: boolean;
 };
 export default function LawyerOrgProfile() {
+
     const navigation = useNavigation();
     //   const dispatch = useDispatch();
     const LIMIT_DATA = 10
@@ -93,6 +89,9 @@ export default function LawyerOrgProfile() {
         isOpen: false,
         errorMes: "",
     });
+const [ratingModalVisible, setRatingModalVisible] = useState(false);
+const [locationModalVisible, setLocationModalVisible] = useState(false);
+
 
     console.log("lawyers", lawyers);
     const handleSearch = debounce(async (text) => {
@@ -107,30 +106,10 @@ export default function LawyerOrgProfile() {
         });
     }, 500);
 
-    // const handleSearch = debounce(async (searchQuery: any) => {
-    //     setLoading(true);
-    //     try {
-    //         const payload = {
-    //             limit: LIMIT_DATA,
-    //             offset: (page - 1) * LIMIT_DATA,
-    //             search: searchQuery,
-    //         };
-
-    //         const response = await Services.getOrganistionProfileList(payload);
-
-    //         if (response.success) {
-    //             setAllLawyer(response.data);
-    //             setPageCount(Math.ceil(response.count / LIMIT_DATA));
-    //         }
-    //     } catch (error) {
-    //         console.error("Search error:", error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }, 500); // 500ms debounce delay
-
     // Handle text input changes
     const handleSearchChange = (text: any) => {
+        console.log("serached test",text);
+        
         setSearchText(text);
         if (text.length > 2 || text.length === 0) {
             handleSearch(text);
@@ -144,43 +123,6 @@ export default function LawyerOrgProfile() {
             pageNo: 1,
         });
     }, []);
-
-
-    // useEffect(() => {
-    //     const fetchAllLawyer = async () => {
-    //         setLoading(true);
-    //         try {
-    //             const payload = {
-    //                 limit: 100,
-    //                 offset: 0,
-    //                 search: searchText
-    //             };
-    //             const response = await Services.getOrganistionProfileList(payload);
-    //             console.log("response43", response);
-
-    //             if (response.success) {
-    //                 setAllLawyer(response.data);
-    //                 setPageCount(Math.ceil(response.data.length / LIMIT_DATA));
-    //             } else {
-    //                 Toast.show({
-    //                     type: 'error',
-    //                     text1: 'Error',
-    //                     text2: response.error || 'Failed to fetch lawyers',
-    //                 });
-    //             }
-    //         } catch (err) {
-    //             Toast.show({
-    //                 type: 'error',
-    //                 text1: 'Error',
-    //                 text2: 'Something went wrong',
-    //             });
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-
-    //     fetchAllLawyer();
-    // }, []);
 
     const handleSendConnection = () => {
         sendConnection()
@@ -252,7 +194,7 @@ export default function LawyerOrgProfile() {
             const payload = {
                 limit: LIMIT_DATA,
                 offset: (pageNo - 1) * LIMIT_DATA,
-                search:country,
+                search: search,
             };
 
             // 🔥 add only if selected
@@ -286,8 +228,10 @@ export default function LawyerOrgProfile() {
         setSelectedRating("");
         setSelectedLocation("");
         setSearchText("");
+        fetchLawyers()
     };
     const sortedLawyers = [...lawyers].sort((a, b) => {
+
         const order = { null: 0, PENDING: 1, COMPLETED: 2 };
 
         const aStatus = a.connection_request === null ? 'null' : a.connection_request;
@@ -385,13 +329,14 @@ export default function LawyerOrgProfile() {
                 <TextInput
                     style={styles.searchInput}
                     placeholder="Search Organization"
+                    placeholderTextColor={"black"}
                     value={searchText}
                     onChangeText={handleSearchChange}
                     autoCapitalize="none"
                     autoCorrect={false}
                 />
 
-                <View style={styles.pickerContainer}>
+                {/* <View style={styles.pickerContainer}>
                     <Picker
                         selectedValue={selectedRating}
                         onValueChange={(itemValue) => {
@@ -410,9 +355,19 @@ export default function LawyerOrgProfile() {
                             <Picker.Item key={option.id} label={option.name} value={option.id} />
                         ))}
                     </Picker>
-                </View>
+                </View> */}
+<TouchableOpacity
+  style={styles.pickerContainer}
+  onPress={() => setRatingModalVisible(true)}
+>
+  <Text style={styles.pickerText}>
+    {selectedRating
+      ? ratingOptions.find(r => r.id === selectedRating)?.name
+      : "Select Rating"}
+  </Text>
+</TouchableOpacity>
 
-                <View style={styles.pickerContainer}>
+                {/* <View style={styles.pickerContainer}>
                     <Picker
                         selectedValue={selectedLocation}
                         onValueChange={(itemValue) => {
@@ -439,7 +394,15 @@ export default function LawyerOrgProfile() {
                             />
                         ))}
                     </Picker>
-                </View>
+                </View> */}
+<TouchableOpacity
+  style={styles.pickerContainer}
+  onPress={() => setLocationModalVisible(true)}
+>
+  <Text style={styles.pickerText}>
+    {selectedLocation || "Select Location"}
+  </Text>
+</TouchableOpacity>
 
 
                 <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
@@ -565,6 +528,38 @@ export default function LawyerOrgProfile() {
 
 
 
+<IOSPickerModal
+  visible={ratingModalVisible}
+  title="Select Rating"
+  data={ratingOptions}
+  selectedValue={selectedRating}
+  onClose={() => setRatingModalVisible(false)}
+  onSelect={(item:any) => {
+    setSelectedRating(item.id);   // store id
+    setPage(1);
+    fetchLawyers({
+      rating: item.id,
+      country: selectedLocation,
+      search: searchText,
+    });
+  }}
+/>
+<IOSPickerModal
+  visible={locationModalVisible}
+  title="Select Location"
+  data={locationOptions}
+  selectedValue={selectedLocation}
+  onClose={() => setLocationModalVisible(false)}
+  onSelect={(item:any) => {
+    setSelectedLocation(item.name);  // store name
+    setPage(1);
+    fetchLawyers({
+      country: item.name,
+      rating: selectedRating,
+      search: searchText,
+    });
+  }}
+/>
 
             {/* Connect Modal */}
             <Modal
@@ -641,16 +636,17 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         height: 45,
-        borderColor: '#ddd',
+        borderColor: '#332f2fff',
         borderWidth: 1,
         borderRadius: 8,
         paddingHorizontal: 10,
         marginBottom: 10,
         backgroundColor: '#fff',
-        fontSize: 10,
     },
     pickerContainer: {
-        borderColor: '#ddd',
+        padding:10,
+        height: 45,
+        borderColor: '#3d3939ff',
         borderWidth: 1,
         borderRadius: 8,
         marginBottom: 10,
@@ -969,4 +965,11 @@ const styles = StyleSheet.create({
         color: '#333',
         textAlign: 'center',
     },
+
+
+pickerText: {
+  fontSize: 14,
+  color: '#374151',
+},
+
 });

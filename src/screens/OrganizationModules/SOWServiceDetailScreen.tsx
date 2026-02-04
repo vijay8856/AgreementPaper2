@@ -253,105 +253,7 @@ const SOWServiceDetailScreen = ({ route }: any) => {
 
         fetchMasterMaterialList();
     }, []);
-    // Handle save function
-    // const handleSave = async () => {
-    //     try {
-    //         const formData = new FormData();
-    //         const formatDate = (date: string | undefined | null) => {
-    //             if (!date) return '';
-    //             return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-    //         };
-    //         // Add all the fields you want to update
-    //         formData.append('sow_id', serviceData.id || '');
-    //         formData.append('sow_flow', serviceData.sow_flow || '');
 
-    //         formData.append('title', serviceData.title || '');
-    //         formData.append('sow_number', serviceData.sow_number || '');
-    //         formData.append('start_date', formatDate(serviceData.start_date));
-    //         formData.append('end_date', formatDate(serviceData.end_date));
-
-    //         // Add milestones and materials if they can be edited
-    //         if (serviceData.milestones && serviceData.milestones.length > 0) {
-    //             formData.append('milestones', JSON.stringify(serviceData.milestones));
-    //         }
-
-    //         if (serviceData.materials && serviceData.materials.length > 0) {
-    //             formData.append('materials', JSON.stringify(serviceData.materials));
-    //         }
-    // const handleSave = async () => {
-    //     try {
-    //         const formData = new FormData();
-    //         const formatDate = (date: string | undefined | null) => {
-    //             if (!date) return '';
-    //             return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-    //         };
-
-    //         // Add all the fields you want to update
-    //         formData.append('sow_id', serviceData.id || '');
-    //         formData.append('sow_flow', serviceData.sow_flow || '');
-    //         formData.append('title', serviceData.title || '');
-    //         formData.append('sow_number', serviceData.sow_number || '');
-    //         formData.append('start_date', formatDate(serviceData.start_date));
-    //         formData.append('end_date', formatDate(serviceData.end_date));
-
-    //         // Process milestones to preserve original values if not changed
-    //         const updatedMilestones = serviceData.milestones.map((milestone, index) => {
-    //             const originalMilestone = data.milestones[index] || {};
-    //             return {
-    //                 ...milestone,
-    //                 // Preserve tax_group if not changed
-    //                 tax_group: milestone.tax_group || originalMilestone.tax_group || 
-    //                           (originalMilestone.tax_group_detail ? originalMilestone.tax_group_detail.id : null),
-    //                 // Preserve currency if not changed
-    //                 currency: milestone.currency || originalMilestone.currency || 
-    //                          (originalMilestone.currency_detail ? originalMilestone.currency_detail.id : null)
-    //             };
-    //         });
-
-    //         // Process materials to preserve original values if not changed
-    //         const updatedMaterials = serviceData.materials.map((material, index) => {
-    //             const originalMaterial = data.materials[index] || {};
-    //             return {
-    //                 ...material,
-    //                 // Preserve tax_group if not changed
-    //                 tax_group: material.tax_group || originalMaterial.tax_group || 
-    //                           (originalMaterial.tax_group_detail ? originalMaterial.tax_group_detail.id : null),
-    //                 // Preserve currency if not changed
-    //                 currency: material.currency || originalMaterial.currency || 
-    //                          (originalMaterial.currency_detail ? originalMaterial.currency_detail.id : null)
-    //             };
-    //         });
-
-    //         if (updatedMilestones.length > 0) {
-    //             formData.append('milestones', JSON.stringify(updatedMilestones));
-    //         }
-
-    //         if (updatedMaterials.length > 0) {
-    //             formData.append('materials', JSON.stringify(updatedMaterials));
-    //         }
-    //             // You'll need to implement a service to update service details
-    //             const response = await Services.updateServiceDetail(originalSlug, formData);
-    //             if (response.success) {
-    //                 Alert.alert("Success", "Service details updated successfully!");
-    //             } else {
-    //                 let errorMsg = "Failed to update service details";
-
-    //                 if (typeof response.error === "string") {
-    //                     errorMsg = response.error;
-    //                 } else if (response.error?.message) {
-    //                     errorMsg = response.error.message;
-    //                 } else if (response.error?.errors) {
-    //                     errorMsg = JSON.stringify(response.error.errors);
-    //                 }
-
-    //                 Alert.alert("Error", errorMsg);
-    //             }
-
-    //         } catch (error) {
-    //             Alert.alert("Error", "Failed to update service details. Please try again.");
-    //             console.error("Update error:", error);
-    //         }
-    //     };
     const handleSave = async () => {
         try {
             const formData = new FormData();
@@ -434,9 +336,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
             }
         } catch (error) {
             Toast.show({ type: 'error', text1: "Failed to update service details. Please try again." });
-
-            // Alert.alert("Error", "Failed to update service details. Please try again.");
-            // console.error("Update error:", error);
         }
     };
     // Handle cancel function
@@ -473,15 +372,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
         setServiceData(updatedServiceData);
         setIsEditing(true);
     };
-
-
-
-
-
-
-
-
-
 
     // Date change handlers
     const onStartDateChange = (event: any, selectedDate: any) => {
@@ -668,40 +558,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
                             <Text style={styles.detailTitle}>{milestone.title}</Text>
                         )}
 
-                        {/* <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>SOW Type:</Text>
-                            {isEditing ? (
-                                <View style={styles.pickerContainer}>
-                                    <Picker
-                                        selectedValue={milestone?.sow_type_detail?.name || selectedSowTypes[index] || ''}
-                                        onValueChange={(value) => {
-                                            const updatedMilestones = [...milestones];
-                                            updatedMilestones[index].sow_type = value;
-                                            setServiceData({ ...serviceData, milestones: updatedMilestones });
-
-                                            // Also update the selectedSowTypes state for UI consistency
-                                            setSelectedSowTypes(prev => ({
-                                                ...prev,
-                                                [index]: value
-                                            }));
-                                        }}
-                                        style={styles.picker}
-                                        dropdownIconColor="#333"
-                                    >
-                                        <Picker.Item label="Select SOW Type" value="" />
-                                        {fields?.sow_type?.map((item: any) => (
-                                            <Picker.Item
-                                                key={item.id}
-                                                label={item.name}
-                                                value={item.id}
-                                            />
-                                        ))}
-                                    </Picker>
-                                </View>
-                            ) : (
-                                <Text style={styles.detailValue}>{milestone.sow_type}</Text>
-                            )}
-                        </View> */}
                         <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>SOW Type:</Text>
                             {isEditing ? (
@@ -787,33 +643,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
                             </Text>
                         )}
 
-
-
-                        {/* 
-                        <Text style={styles.detailLabel}>Tax Group:</Text>
-                        {isEditing ? (
-                            <View style={styles.pickerContainer}>
-                                <Picker
-                                    style={styles.picker}
-
-                                    selectedValue={milestones.tax_group}
-                                    onValueChange={(value) => {
-                                        const updatedMilestones = [...milestones];
-                                        updatedMilestones[index].tax_group = value;
-                                        setServiceData({ ...serviceData, milestones: updatedMilestones });
-                                    }}
-                                >
-                                    <Picker.Item label="Select Tax Group" value="" />
-                                    {fields?.tax_group?.map((item: any) => (
-                                        <Picker.Item key={item.id} label={item.name} value={item.id} />
-                                    ))}
-                                </Picker>
-                            </View>
-                        ) : (
-                            <Text style={styles.detailValue}>
-                                {milestones.tax_group_detail?.name}
-                            </Text>
-                        )} */}
                         <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>Rate:</Text>
                             {isEditing ? (
@@ -852,24 +681,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
                             )}
                         </View>
 
-                        {/* <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Tax %:</Text>
-                            {isEditing ? (
-                                <TextInput
-                                    style={styles.detailValueInput}
-                                    value={milestone.tax?.toString()}
-                                    onChangeText={(text) => {
-                                        const updatedMilestones = [...milestones];
-                                        updatedMilestones[index].tax = text;
-                                        setServiceData({ ...serviceData, milestones: updatedMilestones });
-                                    }}
-                                    editable={isEditing}
-                                    keyboardType="numeric"
-                                />
-                            ) : (
-                                <Text style={styles.detailValue}>{milestone.tax}%</Text>
-                            )}
-                        </View> */}
                         <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>Tax %:</Text>
                             {isEditing ? (
@@ -1139,61 +950,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
                             </Text>
                         )}
 
-
-
-                        {/* <Text style={styles.detailLabel}>Currency:</Text>
-          {isEditing ? (
-            <View style={styles.pickerContainer}>
-              <Picker
-                style={styles.picker}
-                selectedValue={material.currency || (material.currency_detail ? material.currency_detail.id : '')}
-                onValueChange={(value) => {
-                  const updatedMaterials = [...materials];
-                  updatedMaterials[index].currency = value;
-                  setServiceData({ ...serviceData, materials: updatedMaterials });
-                }}
-              >
-                <Picker.Item label="Select Currency" value="" />
-                {currencies.map((item: any) => (
-                  <Picker.Item
-                    key={item.id}
-                    label={`${item.currency} - ${item.country_name}`}
-                    value={item.id}
-                  />
-                ))}
-              </Picker>
-            </View>
-          ) : (
-            <Text style={styles.detailValue}>
-              {material.currency_detail?.name || 'N/A'}
-            </Text>
-          )}
-
-
-
-                        <Text style={styles.detailLabel}>Tax Group:</Text>
-          {isEditing ? (
-            <View style={styles.pickerContainer}>
-              <Picker
-                style={styles.picker}
-                selectedValue={material.tax_group || (material.tax_group_detail ? material.tax_group_detail.id : '')}
-                onValueChange={(value) => {
-                  const updatedMaterials = [...materials];
-                  updatedMaterials[index].tax_group = value;
-                  setServiceData({ ...serviceData, materials: updatedMaterials });
-                }}
-              >
-                <Picker.Item label="Select Tax Group" value="" />
-                {fields?.tax_group?.map((item: any) => (
-                  <Picker.Item key={item.id} label={item.name} value={item.id} />
-                ))}
-              </Picker>
-            </View>
-          ) : (
-            <Text style={styles.detailValue}>
-              {material.tax_group_detail?.name || 'N/A'}
-            </Text>
-          )} */}
                         {material.order_unit_of_measure && (
                             <View style={styles.detailRow}>
                                 <Text style={styles.detailLabel}>Unit of Measure:</Text>
@@ -1403,7 +1159,6 @@ const SOWServiceDetailScreen = ({ route }: any) => {
                         </View>
                     )}
                 </View>
-                {/* Title and Edit Button */}
 
                 {/* Header Information */}
                 <View style={styles.headerCard}>

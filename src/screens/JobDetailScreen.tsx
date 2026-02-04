@@ -19,7 +19,6 @@ import RenderHtml from "react-native-render-html";
 import Services from "../Services/services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
-// import DocumentPicker from 'react-native-document-picker'; // optional
 
 const { width } = Dimensions.get("window");
 

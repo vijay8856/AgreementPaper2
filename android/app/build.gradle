@@ -203,8 +203,8 @@ android {
         applicationId "com.agreementpaperapp2"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 56
-        versionName "2.2.0"
+        versionCode 73
+        versionName "3.9.0"
         manifestPlaceholders = [appAuthRedirectScheme: "agreementpaper"]
 
         missingDimensionStrategy "store", "play"

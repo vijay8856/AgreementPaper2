@@ -12,6 +12,7 @@ import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
 import ApprovalScreen from '../screens/OrganizationModules/ApprovalScreen';
 import JobPostScreen from '../screens/JobPostScreen'
 import TalentProfileList from '../screens/TalentProfileList'
+import { Platform } from 'react-native';
 
 // Import other screens you want in the drawer
 
@@ -24,6 +25,7 @@ export const AgencyDrawerNavigator = () => {
         drawerStyle: {
           backgroundColor: '#fff',
           width: 240,
+
         },
         drawerActiveTintColor: '#0E3386',
         drawerInactiveTintColor: '#333',
@@ -36,7 +38,10 @@ export const AgencyDrawerNavigator = () => {
       <Drawer.Screen
         name="Agency Dashboard"
         component={AgencyDashboard}
-        options={{ headerShown: true }}
+        options={{ headerShown: true ,
+
+          
+        }}
       />
 
       <Drawer.Screen

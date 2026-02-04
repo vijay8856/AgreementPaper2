@@ -16,14 +16,7 @@ const FilterBar: React.FC = () => {
           fontSize={12}
           placeholderTextColor="#888"
         />
-        {/* {value.length === 0 && (
-        <Text style={styles.placeholder}>Search Organization</Text>
-      )}
-      <TextInput
-        value={value}
-        onChangeText={setValue}
-        style={styles.input}
-      /> */}
+     
       </View>
       <View style={styles.pickerWrapper}>
         <RNPickerSelect

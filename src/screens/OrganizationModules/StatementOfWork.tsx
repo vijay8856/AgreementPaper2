@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -40,26 +43,22 @@ const StatementOfWork = () => {
   useEffect(() => {
     const loadUserType = async () => {
       const type = await AsyncStorage.getItem("userType");
-      setUserType(type);     // "RESOURCE_USER" or "ORG_USER" or any other
+      setUserType(type);
     };
     loadUserType();
   }, []);
 
 
-const filteredTabs = userType === "RESOURCE_USER"
-  ? tabs.filter(t => t.value !== 2)     // remove Service SOW
-  : tabs;
+  const filteredTabs = userType === "RESOURCE_USER"
+    ? tabs.filter(t => t.value !== 2)
+    : tabs;
 
   const formatDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;  // <-- API needs this format
+    return `${year}-${month}-${day}`;
   };
-
-
-
-
 
   const fetchMSAData = async (tab: any) => {
     try {
@@ -165,7 +164,6 @@ const filteredTabs = userType === "RESOURCE_USER"
   const getName = (item: any) => {
     if (item.masterdata_detail.name) {
       return `${item.masterdata_detail.name} `;
-      // ${item.masterdata_detail.email}
     } else if (item.resource_detail?.user_detail) {
       return `${item.resource_detail.user_detail.first_name} ${item.resource_detail.user_detail.last_name}`;
     } else if (item.account_detail?.user_detail) {
@@ -204,7 +202,7 @@ const filteredTabs = userType === "RESOURCE_USER"
       default:
         backgroundColor = '#F5F5F5';
         textColor = '#616161';
-        label = status; // fallback: show the raw status
+        label = status;
     }
 
     return (
@@ -252,13 +250,7 @@ const filteredTabs = userType === "RESOURCE_USER"
       </View>
 
       <View style={styles.detailsRow}>
-        {/* <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>SOWs</Text>
-        <Text style={styles.detailValue}>
-  {item.sow_data && item.sow_data.length > 0 ? item.sow_data.length : 0}
-</Text>
 
-        </View> */}
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>Budget</Text>
           <Text style={styles.detailValue}>
@@ -283,7 +275,7 @@ const filteredTabs = userType === "RESOURCE_USER"
                 return milestoneTotal.toFixed(2);
               }
 
-              return "N/A"; // 👈 fallback if nothing is available
+              return "N/A";
             })()}
           </Text>
         </View>
@@ -294,7 +286,7 @@ const filteredTabs = userType === "RESOURCE_USER"
           style={styles.viewButton}
           onPress={() => handleViewDetails(item.slug)}
 
-          disabled={loading} // Disable button while loading
+          disabled={loading}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -309,14 +301,15 @@ const filteredTabs = userType === "RESOURCE_USER"
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={['#007BFF']}
-          tintColor={'#007BFF'}
-        />
-      }>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#007BFF']}
+            tintColor={'#007BFF'}
+          />
+        }>
         <StatusBar barStyle="dark-content" />
 
         {/* Header */}
@@ -420,30 +413,6 @@ const filteredTabs = userType === "RESOURCE_USER"
           <Text style={styles.resultsText}>{msaData.length} SOWs found</Text>
         </View>
 
-        {/* MSA List */}
-        {/* <View style={styles.listWrapper}>
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#007BFF" />
-                </View>
-            ) : error ? (
-                <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={msaData}
-                    renderItem={renderItem}
-                    keyExtractor={(item: any) => item.id.toString()}
-                    contentContainerStyle={styles.listContainer}
-                    showsVerticalScrollIndicator={true}
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                />
-            )}
-        </View> */}
-
-
         <View style={styles.listWrapper}>
           <ScrollView
 
@@ -460,7 +429,12 @@ const filteredTabs = userType === "RESOURCE_USER"
               <View style={styles.listContainer}>
                 {/* {msaData.map((item) => renderItem({ item }))}
              */}
-                {msaData.map((item) => renderItem({ item, key: item.id }))}
+               {msaData.map((item) => (
+  <React.Fragment key={item.id}>
+    {renderItem({ item })}
+  </React.Fragment>
+))}
+
 
               </View>
             )}
@@ -518,9 +492,6 @@ const filteredTabs = userType === "RESOURCE_USER"
             </View>
           </View>
         </Modal>
-
-
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -648,17 +619,21 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
 
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.40,
+    shadowRadius: 8,
+
+    // Android shadow
+    elevation: 4,
   },
+
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

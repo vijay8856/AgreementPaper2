@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import Toast from 'react-native-toast-message';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { CommonActions } from '@react-navigation/native';
 import { useEffect } from 'react';
-import { GOOGLE_CLIENT_ID } from '@env';
+// import { GOOGLE_CLIENT_ID } from '@env';
 import {
   validateSignupForm,
   validateEmail,
@@ -31,6 +31,7 @@ import {
   validateConfirmPassword,
   validateSignupType
 } from '../utils/validations';
+import { useColorScheme } from 'react-native';
 const SIGNUP_TYPES = [
   { label: 'Individual Buyer', value: 'INDIVIDUAL_USER' },
   { label: 'Supplier & Agency Network', value: 'AGENCY_USER' },
@@ -47,10 +48,12 @@ const AGENCY_ROLES = [
 const AGENCY_ROLE_KEY = 'AGENCY_ROLE';
 
 const SignUpScreen: React.FC = () => {
+
+
+  const GOOGLE_CLIENT_ID = "601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com"
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [agencyRole, setAgencyRole] = useState<string>('');
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
-
   const [signupType, setSignupType] = useState<string>(''); // Initially empty, so user must choose
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -70,13 +73,39 @@ const SignUpScreen: React.FC = () => {
 
   console.log("selectedAgencyRole", selectedAgencyRole);
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+
+  const themeColors = {
+    placeholder: isDark ? '#9CA3AF' : '#6B7280',
+    text: isDark ? '#FFFFFF' : '#111827',
+    inputBg: isDark ? '#1F2937' : '#FFFFFF',
+    border: isDark ? 'white' : 'black',
+    dropdownBg: isDark ? '#111827' : '#FFFFFF',
+    toggleText: isDark ? '#93C5FD' : '#0E3386',
+    togglePressedBg: isDark ? '#1E293B' : '#EEF2FF',
+    selectedBg: isDark ? '#1E3A8A' : '#E6EBFF',
+    selectedText: isDark ? '#BFDBFE' : '#00007B',
+  };
+
+
+
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: GOOGLE_CLIENT_ID,
-      offlineAccess: true,
-      forceCodeForRefreshToken: true,
+      // offlineAccess: true,
+      // forceCodeForRefreshToken: true,
     });
   }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: 'Sign Up ',
+      headerBackTitle: '',
+      headerBackTitleVisible: false,
+    });
+  }, [navigation]);
   const handleAgencyRoleSelect = (value: string) => {
     if (selectedAgencyRole === value) {
       // 👉 already selected → close dropdown
@@ -168,10 +197,11 @@ const SignUpScreen: React.FC = () => {
       password: password1,
       confirmPassword: password2,
     });
-    if (!selectedAgencyRole) {
+    if (signupType === 'AGENCY_USER' && !selectedAgencyRole) {
       setError('Please select your agency role.');
       return;
     }
+
 
     if (!validation.isValid) {
       // Convert array of errors to object format
@@ -195,15 +225,27 @@ const SignUpScreen: React.FC = () => {
       password2: password2,
       user_type: signupType,
       agency_role: signupType === 'AGENCY_USER' ? agencyRole : undefined,
-      agency_type: selectedAgencyRole
+      agency_type: signupType === 'AGENCY_USER' ? selectedAgencyRole : undefined,
     };
+
 
     try {
       const result = await Services.signUp(payload);
       console.log("re", result);
 
       if (result.success) {
-        (navigation as any).navigate('VerifyEmail');
+        await AsyncStorage.setItem(
+          'signUp_data',
+          JSON.stringify({
+            email,
+            user_type: signupType,
+          })
+        );
+        console.log("result.success", result.success);
+
+        navigation.navigate('VerifyEmail');
+
+
       } else {
         setError(result.error?.message || 'Registration failed. Please try again.');
       }
@@ -211,8 +253,6 @@ const SignUpScreen: React.FC = () => {
       setError('Something went wrong. Please try again later.');
     }
   };
-
-
 
   const handleLogin = async (loginType: 'google' | 'email') => {
     try {
@@ -296,21 +336,15 @@ const SignUpScreen: React.FC = () => {
     }
   };
 
-
-
   const handleNameChange = (value: string, setter: (text: string) => void) => {
     // Allow only alphabets and spaces
     const cleaned = value.replace(/[^A-Za-z ]/g, '');
     setter(cleaned);
   };
 
-
-
   const handleLinkedinLogin = () => {
     navigation.navigate('LinkedInLoginScreen');
   };
-
-
 
   const renderSocialButtons = () => (
     <View style={styles.socialContainer}>
@@ -549,10 +583,19 @@ const SignUpScreen: React.FC = () => {
                 <View style={styles.row}>
                   <View >
                     <TextInput
-                      style={[styles.input1, errors.firstName && styles.errorInput]}
+                      style={[
+                        styles.input1,
+                        {
+                          color: themeColors.text,
+                          backgroundColor: themeColors.inputBg,
+                          borderColor: themeColors.border,
+                        },
+                        errors.firstName && styles.errorInput,
+                      ]}
                       placeholder="Enter first name *"
                       value={firstName}
-                      placeholderTextColor={'black'}
+                      placeholderTextColor={themeColors.placeholder}
+
                       onChangeText={(text) => handleNameChange(text, setFirstName)}
                       onBlur={() => handleBlur('firstName')}
                     />
@@ -563,10 +606,19 @@ const SignUpScreen: React.FC = () => {
 
                   <View >
                     <TextInput
-                      style={[styles.input1, errors.lastName && styles.errorInput]}
+                      style={[
+                        styles.input1,
+                        {
+                          color: themeColors.text,
+                          backgroundColor: themeColors.inputBg,
+                          borderColor: themeColors.border,
+                        },
+                        errors.lastName && styles.errorInput,
+                      ]}
                       placeholder="Enter last name *"
                       value={lastName}
-                      placeholderTextColor={'black'}
+                      placeholderTextColor={themeColors.placeholder}
+
                       onChangeText={(text) => handleNameChange(text, setLastName)}
                       onBlur={() => handleBlur('lastName')}
                     />
@@ -578,107 +630,178 @@ const SignUpScreen: React.FC = () => {
 
                 <View style={styles.inputContainer}>
                   <TextInput
-                    style={[styles.input, errors.email && styles.errorInput]}
+                    style={[
+                      styles.input,
+                      {
+                        color: themeColors.text,
+                        backgroundColor: themeColors.inputBg,
+                        borderColor: themeColors.border,
+                      },
+                      errors.email && styles.errorInput,
+                    ]}
                     placeholder="Enter email address *"
                     value={email}
-                    placeholderTextColor={'black'}
+                    placeholderTextColor={themeColors.placeholder}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     onBlur={() => handleBlur('email')}
                   />
+
+
                   {touched.email && errors.email && (
                     <Text style={styles.fieldErrorText}>{errors.email}</Text>
                   )}
                 </View>
+
                 <View style={styles.inputContainer}>
-                  <View style={[
-                    styles.passwordContainer,
-                    errors.password1 && touched.password1 && styles.errorInput, // 👈 apply here
-                  ]}>
+                  <View
+                    style={[
+                      styles.passwordContainer,
+                      {
+                        backgroundColor: themeColors.inputBg,
+                        borderColor: themeColors.border,
+                      },
+                      errors.password1 && touched.password1 && styles.errorInput,
+                    ]}
+                  >
                     <TextInput
-                      style={[styles.passwordInput]}
+                      style={[
+                        styles.passwordInput,
+                        { color: themeColors.text },
+                      ]}
                       placeholder="Enter password *"
                       value={password1}
-                      placeholderTextColor={'black'}
+                      placeholderTextColor={themeColors.placeholder}
                       onChangeText={setPassword1}
                       secureTextEntry={!showPassword1}
                       onBlur={() => handleBlur('password1')}
                     />
-                    <TouchableOpacity onPress={() => setShowPassword1(!showPassword1)}>
-                      <Text style={styles.toggleText}>{showPassword1 ? 'Hide' : 'Show'}</Text>
+
+                    <TouchableOpacity
+                      onPress={() => setShowPassword1(!showPassword1)}
+                      activeOpacity={0.7}
+                      style={styles.toggleBtn}
+                    >
+                      <Text style={[styles.toggleText, { color: themeColors.toggleText }]}>
+                        {showPassword1 ? 'Hide' : 'Show'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
+
                   {touched.password1 && errors.password1 && (
                     <Text style={styles.fieldErrorText}>{errors.password1}</Text>
                   )}
                 </View>
 
+
                 <View style={styles.inputContainer}>
-                  <View style={[
-                    styles.passwordContainer,
-                    errors.password2 && touched.password2 && styles.errorInput,
-                  ]}>
+                  <View
+                    style={[
+                      styles.passwordContainer,
+                      {
+                        backgroundColor: themeColors.inputBg,
+                        borderColor: themeColors.border,
+                      },
+                      errors.password2 && touched.password2 && styles.errorInput,
+                    ]}
+                  >
                     <TextInput
-                      style={[styles.passwordInput]}
+                      style={[
+                        styles.passwordInput,
+                        { color: themeColors.text },
+                      ]}
                       placeholder="Confirm password *"
                       value={password2}
-                      placeholderTextColor={'black'}
+                      placeholderTextColor={themeColors.placeholder}
                       onChangeText={setPassword2}
                       secureTextEntry={!showPassword2}
                       onBlur={() => handleBlur('password2')}
                     />
-                    <TouchableOpacity onPress={() => setShowPassword2(!showPassword2)}>
-                      <Text style={styles.toggleText}>{showPassword2 ? 'Hide' : 'Show'}</Text>
+
+                    <TouchableOpacity
+                      onPress={() => setShowPassword2(!showPassword2)}
+                      activeOpacity={0.7}
+                      style={styles.toggleBtn}
+                    >
+                      <Text style={[styles.toggleText, { color: themeColors.toggleText }]}>
+                        {showPassword2 ? 'Hide' : 'Show'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
+
                   {touched.password2 && errors.password2 && (
                     <Text style={styles.fieldErrorText}>{errors.password2}</Text>
                   )}
                 </View>
+
                 <TextInput
-                  style={{
-                    borderWidth: 1, borderColor: '#ccc',
-                    borderRadius: 5,
-                    marginBottom: 15,
-                    paddingRight: 10,
-                  }}
-                  placeholderTextColor={'black'}
-                  placeholder="  Do You Have Referral Code "
+                  style={[
+                    {
+                      borderWidth: 1,
+                      borderRadius: 5,
+                      marginBottom: 15,
+                      paddingRight: 10,
+                      paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+                      paddingLeft: 10,
+                      borderColor: themeColors.border,
+                      backgroundColor: themeColors.inputBg,
+                      color: themeColors.text,
+                    },
+                  ]}
+                  placeholder="Do You Have Referral Code"
+                  placeholderTextColor={themeColors.placeholder}
                   value={referralCode}
                   onChangeText={setreferralCode}
-
                 />
+
                 {signupType === 'AGENCY_USER' && (
                   <View style={{ marginBottom: 15 }}>
-                    <Text style={{ marginBottom: 6, fontWeight: '600' }}>
+                    <Text
+                      style={{
+                        marginBottom: 6,
+                        fontWeight: '600',
+                        color: themeColors.text,
+                      }}
+                    >
                       Select Agency Role *
                     </Text>
 
+                    {/* Dropdown Trigger */}
                     <TouchableOpacity
                       style={{
                         borderWidth: 1,
-                        borderColor: '#ccc',
+                        borderColor: themeColors.border,
                         borderRadius: 6,
                         padding: 12,
+                        backgroundColor: themeColors.inputBg,
                       }}
+                      activeOpacity={0.7}
                       onPress={() => setShowAgencyDropdown(!showAgencyDropdown)}
                     >
-                      <Text>
+                      <Text
+                        style={{
+                          color: selectedAgencyRole
+                            ? themeColors.text
+                            : themeColors.placeholder,
+                          fontSize: 16,
+                        }}
+                      >
                         {AGENCY_ROLES.find(r => r.value === selectedAgencyRole)?.label ||
                           'Choose your role'}
                       </Text>
-
                     </TouchableOpacity>
 
+                    {/* Dropdown List */}
                     {showAgencyDropdown && (
                       <View
                         style={{
                           borderWidth: 1,
-                          borderColor: '#ccc',
+                          borderColor: themeColors.border,
                           borderRadius: 6,
                           marginTop: 5,
-                          backgroundColor: '#fff',
+                          backgroundColor: themeColors.dropdownBg,
+                          overflow: 'hidden',
                         }}
                       >
                         {AGENCY_ROLES.map(role => {
@@ -688,17 +811,23 @@ const SignUpScreen: React.FC = () => {
                             <TouchableOpacity
                               key={role.value}
                               onPress={() => handleAgencyRoleSelect(role.value)}
+                              activeOpacity={0.7}
                               style={{
                                 padding: 12,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#eee',
-                                backgroundColor: isSelected ? '#E6EBFF' : '#fff',
+                                borderBottomColor: themeColors.border,
+                                backgroundColor: isSelected
+                                  ? themeColors.selectedBg
+                                  : themeColors.dropdownBg,
                               }}
                             >
                               <Text
                                 style={{
-                                  color: isSelected ? '#00007B' : '#000',
+                                  color: isSelected
+                                    ? themeColors.selectedText
+                                    : themeColors.text,
                                   fontWeight: isSelected ? '700' : '400',
+                                  fontSize: 15,
                                 }}
                               >
                                 {role.label}
@@ -706,8 +835,6 @@ const SignUpScreen: React.FC = () => {
                             </TouchableOpacity>
                           );
                         })}
-
-
                       </View>
                     )}
                   </View>
@@ -907,17 +1034,42 @@ const styles = StyleSheet.create({
     // backgroundColor: '#f9f9f9',
     fontSize: 16,
   },
+  // passwordContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   borderWidth: 1,
+  //   borderColor: '#ccc',
+  //   borderRadius: 5,
+  //   marginBottom: 15,
+  //   paddingRight: 10,
+  // },
+  // passwordInput: { flex: 1, height: 45, paddingHorizontal: 10 },
+  // toggleText: { color: '#0E3386', fontWeight: '600' },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginBottom: 15,
+    borderRadius: 6,
     paddingRight: 10,
   },
-  passwordInput: { flex: 1, height: 45, paddingHorizontal: 10 },
-  toggleText: { color: '#0E3386', fontWeight: '600' },
+
+  passwordInput: {
+    flex: 1,
+    height: 45,
+    paddingHorizontal: 10,
+    fontSize: 16,
+  },
+
+  toggleBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+
+  toggleText: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+
   button: {
     backgroundColor: '#000078',
     padding: 15,
@@ -925,7 +1077,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   loginBox: { flexDirection: 'row', justifyContent: 'center', marginTop: 25 },
   signup: { color: '#333', fontSize: 14 },
   link: { color: '#000078', fontWeight: '600', fontSize: 14 },

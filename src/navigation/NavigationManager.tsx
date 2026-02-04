@@ -52,13 +52,32 @@ import TopOrganisation from '../screens/OrganizationModules/TopOrganization';
 import JobDetailScreen from '../screens/JobDetailScreen';
 import CompanySetupScreen from '../screens/CompanySetupScreen';
 import OrganisationDetailScreen from '../screens/OrganisationDetailScreen'
-import CrispChatScreen from '../screens/CrispChatScreen';
+// import CrispChatScreen from '../screens/CrispChatScreen';
 import JobListScreen from '../screens/OrganizationModules/JobListScreen';
 import LatestJobsScreen from '../screens/LatestJobsScreen';
 import FindLawyers from '../screens/FindLawyers';
 import LawyerDetails from '../screens/LawyerDetails';
 import FindSuppliers from '../screens/FindSuppliers';
 import SupplierDetails from '../screens/SupplierDetails';
+import JobPostScreen from '../screens/JobPostScreen'
+import InvoiceScreen from '../screens/InvoiceScreen';
+import TaxGroupScreen from '../screens/Common/MasterData/TaxGroupScreen';
+import AgencySupplierMasterdata from '../screens/Common/MasterData/AgencySupplierMasterdata';
+import CompanyLocationScreen from '../screens/Common/MasterData/CompanyLocationScreen';
+import InviteIndividualBuyer from '../screens/InviteIndividualBuyer';
+import GLAccountScreen from '../screens/Common/MasterData/GLAccountScreen';
+import BusinessUnitScreen from '../screens/Common/MasterData/BusinessUnitScreen';
+import PostedJobsScreen from '../screens/PostedJobsScreen';
+import EditJobScreen from '../screens/EditJobScreen';
+import CostCenter from '../screens/Common/MasterData/CostCenter';
+import MsaType from '../screens/Common/MasterData/MsaType';
+import UnpscCode from '../screens/Common/MasterData/UnpscCode';
+import TaxRate from '../screens/Common/MasterData/TaxRate';
+import PaymentTerms from '../screens/Common/MasterData/PaymentTerms';
+import SowTypeScreen from '../screens/Common/MasterData/SowTypeScreen';
+import ExpensesCategoryScreen from '../screens/Common/MasterData/ExpensesCategoryScreen';
+import IncomeTaxSlabsScreen from '../screens/Common/MasterData/IncomeTaxSlabsScreen';
+import MaterialMasterData from '../screens/Common/MasterData/MaterialMasterData';
 const RootStack = createStackNavigator<RootStackParamList>();
 
 export type RootStackParamList = {
@@ -105,6 +124,8 @@ const NavigationManager = () => {
             shadowOpacity: 0,
             height: Platform.OS === 'android' ? 60 : undefined,
           },
+
+          headerBackTitleVisible: false,
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
           headerTitleAlign: 'left',
@@ -124,11 +145,11 @@ const NavigationManager = () => {
           component={MyProfile}
           options={{
             headerTitle: "My Profile",
-            headerShown: false,
+            headerShown: true,
+            headerBackTitleVisible: false,
           }}
         />
 
-        {/* <RootStack.Screen name="ESignatureScreen" component={ESignatureScreen} /> */}
         <RootStack.Screen name="SignWebViewScreen" component={SignWebViewScreen} />
         <RootStack.Screen name="LinkedInLoginScreen" component={LinkedInLoginScreen} />
         <RootStack.Screen name="SubscriptionHistoryScreen" component={SubscriptionHistoryScreen} options={{
@@ -324,6 +345,141 @@ const NavigationManager = () => {
             headerTitleStyle: { fontWeight: 'bold' },
           }}
         />
+        <RootStack.Screen
+          name="InviteIndividualBuyer"
+          component={InviteIndividualBuyer}
+          options={{
+            title: 'Invite Individual Buyer',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+         <RootStack.Screen
+          name="GLAccountScreen"
+          component={GLAccountScreen}
+          options={{
+            title: 'GL Account',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+         <RootStack.Screen
+          name="MsaType"
+          component={MsaType}
+          options={{
+            title: 'Msa Type',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+          <RootStack.Screen
+          name="UnpscCode"
+          component={UnpscCode}
+          options={{
+            title: 'UnpscCode',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+           <RootStack.Screen
+          name="TaxRate"
+          component={TaxRate}
+          options={{
+            title: 'Tax Rate',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="SowTypeScreen"
+          component={SowTypeScreen}
+          options={{
+            title: 'Sow Type ',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        
+            <RootStack.Screen
+          name="PaymentTerms"
+          component={PaymentTerms}
+          options={{
+            title: 'Payment Terms',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="ExpensesCategoryScreen"
+          component={ExpensesCategoryScreen}
+          options={{
+            title: 'Expenses Category',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <RootStack.Screen
+          name="MaterialMasterData"
+          component={MaterialMasterData}
+          options={{
+            title: 'Material Master Data',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+          <RootStack.Screen
+          name="IncomeTaxSlabsScreen"
+          component={IncomeTaxSlabsScreen}
+          options={{
+            title: 'Income Tax Slabs',
+            headerShown: true, 
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        
+         <RootStack.Screen
+          name="CostCenter"
+          component={CostCenter}
+          options={{
+            title: 'Cost Center',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+
+          <RootStack.Screen
+          name="BusinessUnitScreen"
+          component={BusinessUnitScreen}
+          options={{
+            title: 'Business Unit',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#0E3386' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
         <RootStack.Screen name="SubscriptionScreen" component={SubscriptionScreen} options={{
           title: 'Subscription Screen', headerShown: true,
           headerStyle: { backgroundColor: '#0E3386' },
@@ -333,20 +489,7 @@ const NavigationManager = () => {
         <RootStack.Screen name="TalentDashboard" component={TalentDrawerNavigator}
           options={{
             headerShown: false,
-            // title: 'Organisation Dashboard',
           }}
-        //  options={({ navigation }:any) => ({
-        //    title: 'Talent Dashboard',
-        //    headerRight: () => (
-        //      <TouchableOpacity
-        //        onPress={() => navigation.navigate('MyProfile')}
-        //        style={{ marginRight: 15 }}
-        //      >
-        //        <Icon name="account-circle" size={28} color="#fff" />
-        //      </TouchableOpacity>
-        //    ),
-        //  })} 
-
         />
         <RootStack.Screen
           name="Top Organisation"
@@ -401,18 +544,62 @@ const NavigationManager = () => {
             headerTitleStyle: { fontWeight: 'bold' },
           }}
         />
+<RootStack.Screen
+          name="TaxGroupScreen"
+          component={TaxGroupScreen}
+          options={{
+          title:"Tax Group",
+
+            headerShown: true,
+          }}
+        />
         <RootStack.Screen
+          name="CompanyLocationScreen"
+          component={CompanyLocationScreen}
+          options={{
+          title:"Company Location",
+
+            headerShown: true,
+          }}
+        />
+        <RootStack.Screen
+          name="AgencySupplierMasterdata"
+          component={AgencySupplierMasterdata}
+          options={{
+          title:"Agency Supplier Masterdata",
+
+            headerShown: true,
+          }}
+        />
+        {/* <RootStack.Screen
           name="CrispChat"
           component={CrispChatScreen}
           options={{ title: "Live Chat Support" }}
-        />
+        /> */}
 
+<RootStack.Screen
+          name="PostedJobsScreen"
+          component={PostedJobsScreen}
+          options={{
+          title:"Posted Jobs ",
+
+            headerShown: true,
+          }}
+        />
+        <RootStack.Screen
+          name="EditJobScreen"
+          component={EditJobScreen}
+          options={{
+          title:"Edit Job ",
+
+          }}
+        />
+        
         <RootStack.Screen
           name="OrganisationDrawer"
           component={OrganisationDrawer}
           options={{
             headerShown: false,
-            // title: 'Organisation Dashboard',
           }}
         />
         <RootStack.Screen
@@ -420,7 +607,6 @@ const NavigationManager = () => {
           component={JobListScreen}
           options={{
             headerShown: true,
-            // title: 'Organisation Dashboard',
           }}
         />
         <RootStack.Screen
@@ -471,25 +657,31 @@ const NavigationManager = () => {
           component={AgencyDrawerNavigator}
           options={{
             headerShown: false,
+
           }}
-        // options={({ navigation }) => ({
-        //   title: 'Agency Dashboard',
-        //   headerRight: () => (
-        //     <TouchableOpacity 
-        //       onPress={() => navigation.navigate('MyProfile')}
-        //       style={{ marginRight: 15 }}
-        //     >
-        //       <Icon name="account-circle" size={28} color="#fff" />
-        //     </TouchableOpacity>
-        //   ),
-        // })}
         />
+
+        <RootStack.Screen
+          name="JobPostScreen"
+          component={JobPostScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+
         <RootStack.Screen
           name="LawyerDashboard"
           component={LawyerDashboard}
           options={{
+            headerShown: Platform.OS === 'android',
+          }}
+
+        />
+        <RootStack.Screen
+          name="InvoiceScreen"
+          component={InvoiceScreen}
+          options={{
             headerShown: true,
-            // title: 'Organisation Dashboard',
           }}
         />
         <RootStack.Screen

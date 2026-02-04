@@ -18,7 +18,7 @@ const AppHeader: React.FC<Props> = ({ title, showBack = true }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="arrow-back" size={24} color="#fff" />
+          <Icon name="arrow-back" size={24} color="#fff"/>
         </TouchableOpacity>
       ) : (
         <View style={{ width: 24 }} />
@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    // justifyContent: "space-between",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     paddingTop:50,

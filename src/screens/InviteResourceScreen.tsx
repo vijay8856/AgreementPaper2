@@ -13,7 +13,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const InviteResourceScreen = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -22,47 +22,48 @@ const InviteResourceScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTagged, setIsTagged] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [userType, setUserType] = useState('')
 
-const[userType,setUserType]=useState('')
 
 
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        if (keys.length > 0) {
+          const result = await AsyncStorage.multiGet(keys);
 
-useEffect(() => {
-  const fetchAllData = async () => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      if (keys.length > 0) {
-        const result = await AsyncStorage.multiGet(keys);
-
-        const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
-          if (value !== null) {
-            try {
-              acc[key] = JSON.parse(value);
-            } catch {
-              acc[key] = value;
+          const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
+            if (value !== null) {
+              try {
+                acc[key] = JSON.parse(value);
+              } catch {
+                acc[key] = value;
+              }
             }
+            return acc;
+          }, {});
+
+          // 🔑 user_type lives inside the parsed userData object
+          const typeFromStorage =
+            dataObj.userData?.user_type || // preferred location
+            dataObj.userType;              // or the separate key if it exists
+
+          if (typeFromStorage) {
+            setUserType(typeFromStorage);
           }
-          return acc;
-        }, {});
 
-        // 🔑 user_type lives inside the parsed userData object
-        const typeFromStorage =
-          dataObj.userData?.user_type || // preferred location
-          dataObj.userType;              // or the separate key if it exists
-
-        if (typeFromStorage) {
-          setUserType(typeFromStorage);
+          console.log("User type is:", typeFromStorage);
         }
-
-        console.log("User type is:", typeFromStorage);
+      } catch (error) {
+        console.error("Error fetching all AsyncStorage data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching all AsyncStorage data:", error);
-    }
-  };
+    };
 
-  fetchAllData();
-}, []);
+    fetchAllData();
+  }, []);
 
 
   const handleSubmit = async () => {
@@ -89,9 +90,9 @@ useEffect(() => {
     try {
       setLoading(true);
       const res = await Services.inviteUsers(payload);
-      console.log("pay",payload);
-      console.log("res",res);
-      
+      console.log("pay", payload);
+      console.log("res", res);
+
       setLoading(false);
       if (res.success) {
         Toast.show({ type: 'success', text1: 'Resource invited successfully' });
@@ -130,6 +131,7 @@ useEffect(() => {
             value={firstName}
             onChangeText={setFirstName}
             placeholder="Enter first name"
+            placeholderTextColor={"Black"}
           />
 
           <FormField
@@ -137,6 +139,8 @@ useEffect(() => {
             value={lastName}
             onChangeText={setLastName}
             placeholder="Enter last name"
+            placeholderTextColor={"Black"}
+
           />
 
           <FormField
@@ -145,26 +149,32 @@ useEffect(() => {
             onChangeText={setEmail}
             placeholder="Enter email"
             keyboardType="email-address"
+            placeholderTextColor={"Black"}
+
           />
 
-          <FormField
+          <PasswordField
             label="Password *"
             value={password}
             onChangeText={setPassword}
             placeholder="Create password"
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            onToggle={() => setShowPassword(!showPassword)}
+            show={showPassword}
           />
 
-          <FormField
+          <PasswordField
             label="Confirm Password *"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm password"
-            secureTextEntry
+            secureTextEntry={!showConfirmPassword}
+            onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+            show={showConfirmPassword}
           />
 
           <View style={styles.toggleContainer}>
-            <Text style={styles.toggleLabel}>Tag this individual buyer to my team</Text>
+            <Text style={styles.toggleLabel}>Tag this Resource to my team</Text>
             <TouchableOpacity
               style={[styles.toggleButton, isTagged && styles.toggleActive]}
               onPress={() => setIsTagged(!isTagged)}
@@ -206,13 +216,46 @@ const FormField = ({
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder}
-      placeholderTextColor="#999"
+      placeholderTextColor="#141414ff"
       secureTextEntry={secureTextEntry}
       keyboardType={keyboardType}
     />
   </View>
 );
+const PasswordField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  secureTextEntry,
+  onToggle,
+  show,
+}: any) => (
+  <View style={styles.formField}>
+    <Text style={styles.fieldLabel}>{label}</Text>
 
+    <View style={styles.passwordContainer}>
+      <TextInput
+        style={styles.passwordInput}
+        value={value}
+        onChangeText={onChangeText}
+        placeholderTextColor={"black"}
+
+        placeholder={placeholder}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize="none"
+      />
+
+      <TouchableOpacity onPress={onToggle} style={styles.eyeButton}>
+        <Icon
+          name={show ? 'eye-off-outline' : 'eye-outline'}
+          size={22}
+          color="#666"
+        />
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -232,15 +275,21 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    margin: 16,
+    paddingHorizontal: 20,
+    flex: 1,
+    backgroundColor: '#ffffffff',
+    borderRadius: 12,
     padding: 16,
+    marginBottom: 10,
+
+    // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.50,
+    shadowRadius: 8,
+
+    // Android shadow
+    elevation: 10,
   },
   formField: {
     marginBottom: 20,
@@ -250,10 +299,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+
   },
   input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    height: 50,
+    padding: 10,
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    borderRadius: 5,
     paddingVertical: 8,
     fontSize: 16,
     color: '#333',
@@ -304,6 +357,29 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  dropdownItemTextSelected: {
+    fontWeight: '700',
+    color: '#0E3386',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    height: 50,
+  },
+
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+
+  eyeButton: {
+    paddingLeft: 8,
   },
 });
 

@@ -112,9 +112,7 @@ const formatBlocksToHtml = (blocks: any[]) => {
     flushList();
 
     if (t === "signature") {
-      // collect signature blocks to later render in signature area
       pendingSignatures.push(c);
-      // continue collecting, but also check if next is not signature then flush
       const next = blocks[i + 1];
       if (!next || (next.type || "").toLowerCase() !== "signature") {
         flushSignatures();
@@ -122,7 +120,6 @@ const formatBlocksToHtml = (blocks: any[]) => {
       continue;
     }
 
-    // For headings, paragraphs, hr etc flush signatures first (so signatures stay grouped)
     flushSignatures();
 
     if (/^h[1-6]$/.test(t)) {

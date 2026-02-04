@@ -35,7 +35,8 @@ local.properties
 !debug.keystore
 .kotlin/
 .env
-
+TempIOS/
+**/GoogleService-Info.plist
 # node.js
 #
 node_modules/

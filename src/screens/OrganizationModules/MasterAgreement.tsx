@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -12,7 +15,8 @@ import {
   Dimensions,
   ActivityIndicator,
   Modal,
-  RefreshControl
+  RefreshControl,
+  
 } from 'react-native';
 import Services from '../../Services/services';
 import { useNavigation } from '@react-navigation/native';
@@ -21,102 +25,147 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width } = Dimensions.get('window');
 
 const MasterAgreement = () => {
-    const navigation = useNavigation()
+  const navigation = useNavigation()
   const [activeTab, setActiveTab] = useState(1);
- 
-const [refreshing, setRefreshing] = useState(false);
+
+  const [refreshing, setRefreshing] = useState(false);
   const [msaData, setMsaData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const tabs = [{label:"Contractor MSA" , value:1}, {label:"Service MSA" , value:2},{label:'Approved' , value:3}, {label:'Pending' , value:4}, {label:'Rejected' , value:5}];
-const [userType, setUserType] = useState("");
+  const tabs = [{ label: "Contractor MSA", value: 1 }, { label: "Service MSA", value: 2 }, { label: 'Approved', value: 3 }, { label: 'Pending', value: 4 }, { label: 'Rejected', value: 5 }];
+  const [userType, setUserType] = useState("");
 
-useEffect(() => {
-  const loadUserType = async () => {
-    const type = await AsyncStorage.getItem("userType");
-    setUserType(type);     // "RESOURCE_USER" or "ORG_USER" or any other
+  useEffect(() => {
+    const loadUserType = async () => {
+      const type = await AsyncStorage.getItem("userType");
+      setUserType(type);     // "RESOURCE_USER" or "ORG_USER" or any other
+    };
+    loadUserType();
+  }, []);
+
+  const filteredTabs = userType === "RESOURCE_USER"
+    ? tabs.filter(t => t.value !== 2)     // remove Service SOW
+    : tabs;
+
+
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;  // <-- API needs this format
   };
-  loadUserType();
-}, []);
+  // const fetchMSAData = async (tab:any) => {
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
 
-const filteredTabs = userType === "RESOURCE_USER"
-  ? tabs.filter(t => t.value !== 2)     // remove Service SOW
-  : tabs;
+  //     let response;
 
+  //     // Common pagination object
+  //     const params = { limit: 6, offset: 0 };
+  // if (startDate) params.date_from = formatDate(startDate);
+  //       if (endDate) params.date_to = formatDate(endDate);
+  //     if (tab === 1) {
+  //       // Contractor MSA
+  //       response = await Services.getMSAContractorList(params);
+  //     } else if (tab === 2) {
+  //       // Service MSA
+  //       response = await Services.getMSAServiceList(params);
+  //     } else if (tab === 3) {
+  //       // Approved
+  //       response = await Services.getMSAStatusList({
+  //         ...params,
+  //         status: "approved",
+  //       });
+  //     } else if (tab === 4) {
+  //       // Pending
+  //       response = await Services.getMSAStatusList({
+  //         ...params,
+  //         status: "pending_approval",
+  //       });
+  //     } else if (tab === 5) {
+  //       // Rejected
+  //       response = await Services.getMSAStatusList({
+  //         ...params,
+  //         status: "rejected",
+  //       });
+  //     }
 
-const formatDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;  // <-- API needs this format
-};
-const fetchMSAData = async (tab:any) => {
-  try {
-    setLoading(true);
-    setError(null);
+  //     if (response?.success) {
+  //       // assuming API returns `data.results` as list
+  //       setMsaData(response.data?.results || []);
+  //     } else {
+  //       setError(response?.error || "Failed to load data");
+  //     }
+  //   } catch (err) {
+  //     console.log("fetchMSAData error:", err);
+  //     // setError("Failed to load data");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-    let response;
+  const fetchMSAData = async (tab: any) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    // Common pagination object
-    const params = { limit: 6, offset: 0 };
-if (startDate) params.date_from = formatDate(startDate);
+      let response;
+      const params: any = { limit: 6, offset: 0 };
+
+      if (startDate) params.date_from = formatDate(startDate);
       if (endDate) params.date_to = formatDate(endDate);
-    if (tab === 1) {
-      // Contractor MSA
-      response = await Services.getMSAContractorList(params);
-    } else if (tab === 2) {
-      // Service MSA
-      response = await Services.getMSAServiceList(params);
-    } else if (tab === 3) {
-      // Approved
-      response = await Services.getMSAStatusList({
-        ...params,
-        status: "approved",
-      });
-    } else if (tab === 4) {
-      // Pending
-      response = await Services.getMSAStatusList({
-        ...params,
-        status: "pending_approval",
-      });
-    } else if (tab === 5) {
-      // Rejected
-      response = await Services.getMSAStatusList({
-        ...params,
-        status: "rejected",
-      });
+
+      if (tab === 1) {
+        response = await Services.getMSAContractorList(params);
+      } else if (tab === 2) {
+        response = await Services.getMSAServiceList(params);
+      } else if (tab === 3) {
+        response = await Services.getMSAStatusList({ ...params, status: "approved" });
+      } else if (tab === 4) {
+        response = await Services.getMSAStatusList({ ...params, status: "pending_approval" });
+      } else if (tab === 5) {
+        response = await Services.getMSAStatusList({ ...params, status: "rejected" });
+      }
+
+      if (response?.success) {
+        setMsaData(response.data?.results ?? []);
+        if (!response.data?.results?.length) {
+          setError("No records found");
+        }
+      } else {
+        const errorMessage =
+          typeof response?.error === "string"
+            ? response.error
+            : response?.error?.detail || "Failed to load data";
+
+        setError(errorMessage);
+        setMsaData([]);
+      }
+    } catch (err: any) {
+      console.log("fetchMSAData error:", err);
+      setError("Something went wrong. Please try again.");
+      setMsaData([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (response?.success) {
-      // assuming API returns `data.results` as list
-      setMsaData(response.data?.results || []);
-    } else {
-      setError(response?.error || "Failed to load data");
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await fetchMSAData(activeTab);
+    } catch (err) {
+      console.log("Refresh error:", err);
+    } finally {
+      setRefreshing(false);
     }
-  } catch (err) {
-    console.log("fetchMSAData error:", err);
-    // setError("Failed to load data");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-const onRefresh = async () => {
-  try {
-    setRefreshing(true);
-    await fetchMSAData(activeTab);
-  } catch (err) {
-    console.log("Refresh error:", err);
-  } finally {
-    setRefreshing(false);
-  }
-};
+  };
 
 
   // 👇 call API whenever activeTab changes
@@ -125,10 +174,10 @@ const onRefresh = async () => {
   }, [activeTab, startDate, endDate]);
 
 
-const handleViewDetails = async (item:any) => {
-    console.log("itemmm",item);
-    
-    setLoading(true); 
+  const handleViewDetails = async (item: any) => {
+    console.log("itemmm", item);
+
+    setLoading(true);
     try {
       const res = await Services.getMSADetail(item);
 
@@ -146,99 +195,99 @@ const handleViewDetails = async (item:any) => {
       setLoading(false); // Stop loading
     }
   };
-const getName = (item: any) => {
-  if (item.masterdata_detail.name) {
-    return `${item.masterdata_detail.name} `;
-    // ${item.masterdata_detail.email}
-  } else if (item.resource_datail?.user_detail) {
-    return `${item.resource_datail.user_detail.first_name} ${item.resource_datail.user_detail.last_name}`;
-  } else if (item.agency_datail?.user_detail) {
-    return `${item.agency_datail.user_detail.first_name} ${item.agency_datail.user_detail.last_name}`;
-  }
-  return "";
-};
-
-const renderStatusBadge = (status: string) => {
-  let backgroundColor, textColor, label;
-
-  switch (status) {
-    case 'approved':
-    case 'Approved':
-      backgroundColor = '#E8F5E9';
-      textColor = '#2E7D32';
-      label = 'Approved';
-      break;
-
-    case 'pending_approval':
-    case 'Pending':
-      backgroundColor = '#FFF8E1';
-      textColor = '#F57C00';
-      label = 'Pending';
-      break;
-
-    case 'rejected':
-    case 'Rejected':
-      backgroundColor = '#FFEBEE';
-      textColor = '#D32F2F';
-      label = 'Rejected';
-      break;
-
-    default:
-      backgroundColor = '#F5F5F5';
-      textColor = '#616161';
-      label = status; // fallback: show the raw status
-  }
-    
- return (
-    <View
-      style={{
-        backgroundColor,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-      }}
-    >
-      <Text style={{ color: textColor, fontWeight: '600' }}>{label}</Text>
-    </View>
-  );
+  const getName = (item: any) => {
+    if (item.masterdata_detail.name) {
+      return `${item.masterdata_detail.name} `;
+      // ${item.masterdata_detail.email}
+    } else if (item.resource_datail?.user_detail) {
+      return `${item.resource_datail.user_detail.first_name} ${item.resource_datail.user_detail.last_name}`;
+    } else if (item.agency_datail?.user_detail) {
+      return `${item.agency_datail.user_detail.first_name} ${item.agency_datail.user_detail.last_name}`;
+    }
+    return "";
   };
 
-  const renderItem = ({ item}:any) => (
+  const renderStatusBadge = (status: string) => {
+    let backgroundColor, textColor, label;
+
+    switch (status) {
+      case 'approved':
+      case 'Approved':
+        backgroundColor = '#E8F5E9';
+        textColor = '#2E7D32';
+        label = 'Approved';
+        break;
+
+      case 'pending_approval':
+      case 'Pending':
+        backgroundColor = '#FFF8E1';
+        textColor = '#F57C00';
+        label = 'Pending';
+        break;
+
+      case 'rejected':
+      case 'Rejected':
+        backgroundColor = '#FFEBEE';
+        textColor = '#D32F2F';
+        label = 'Rejected';
+        break;
+
+      default:
+        backgroundColor = '#F5F5F5';
+        textColor = '#616161';
+        label = status; // fallback: show the raw status
+    }
+
+    return (
+      <View
+        style={{
+          backgroundColor,
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: textColor, fontWeight: '600' }}>{label}</Text>
+      </View>
+    );
+  };
+
+  const renderItem = ({ item }: any) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.msaNo}>{item.msa_number}</Text>
         {renderStatusBadge(item.status)}
       </View>
-      
+
       <Text style={styles.msaTitle}>{item.name}</Text>
       <Text style={styles.msaType}>
-  {item.msa_flow === 1 ? 'Contractor' : item.msa_flow === 2 ? 'Service' : ''}
-</Text>
+        {item.msa_flow === 1 ? 'Contractor' : item.msa_flow === 2 ? 'Service' : ''}
+      </Text>
 
-      
+
       <View style={styles.divider} />
-      
+
       <View style={styles.detailsRow}>
-    <View style={styles.detailItem}>
-  <Text style={styles.detailLabel}>Resource</Text>
-  <Text style={styles.detailValue}>{getName(item)}</Text>
-</View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Resource</Text>
+          <Text style={styles.detailValue}>{getName(item)}</Text>
+        </View>
 
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>Date</Text>
-<Text style={styles.detailValue}>
-  {new Date(item.start_date).toDateString()}
-</Text>
+          <Text style={styles.detailValue}>
+            {new Date(item.start_date).toDateString()}
+          </Text>
 
         </View>
       </View>
-      
+
       <View style={styles.detailsRow}>
         <View style={styles.detailItem}>
           <Text style={styles.detailLabel}>SOWs</Text>
-        <Text style={styles.detailValue}>
-  {item.sow_data && item.sow_data.length > 0 ? item.sow_data.length : 0}
-</Text>
+          <Text style={styles.detailValue}>
+            {item.sow_data && item.sow_data.length > 0 ? item.sow_data.length : 0}
+          </Text>
 
         </View>
         <View style={styles.detailItem}>
@@ -248,238 +297,223 @@ const renderStatusBadge = (status: string) => {
       </View>
 
       <View style={styles.actionButtons}>
-         <TouchableOpacity
-      style={styles.viewButton}
-     onPress={() => handleViewDetails(item.slug)}
+        <TouchableOpacity
+          style={styles.viewButton}
+          onPress={() => handleViewDetails(item.slug)}
 
-      disabled={loading} // Disable button while loading
-    >
-      {loading ? (
-        <ActivityIndicator size="small" color="#fff" />
-      ) : (
-        <Text style={styles.viewButtonText}>View Details</Text>
-      )}
-    </TouchableOpacity>
-  
+          disabled={loading} // Disable button while loading
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.viewButtonText}>View Details</Text>
+          )}
+        </TouchableOpacity>
+
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-        <ScrollView    refreshControl={
-      <RefreshControl
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        colors={['#007BFF']}
-        tintColor={'#007BFF'}
+    <>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#123B8C" // Android only, safe to keep
       />
-    }>
-      <StatusBar barStyle="dark-content" />
-      
-      {/* Header */}
-   <View style={styles.header}>
-  <Text style={styles.headerTitle}>Master Service Agreements</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#007BFF']}
+          tintColor={'#007BFF'}
+        />
+      }>
+        
 
-  {userType !== "RESOURCE_USER" && (
-    <TouchableOpacity
-      style={styles.addButton}
-      onPress={() => setModalVisible(true)}
-    >
-      <Text style={styles.addButtonText}>+ Add MSA</Text>
-    </TouchableOpacity>
-  )}
-</View>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Master Service Agreements</Text>
+
+          {userType !== "RESOURCE_USER" && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={styles.addButtonText}>+ Add MSA</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
 
-      {/* Tabs */}
-   <ScrollView 
-  horizontal
-  style={styles.tabsContainer}
->
-  {filteredTabs.map((tab) => (
-    <TouchableOpacity
-      key={tab.value}
-      style={[
-        styles.tab,
-        activeTab === tab.value && styles.activeTab
-      ]}
-      onPress={() => setActiveTab(tab.value)}
-    >
-      <Text
-        style={[
-          styles.tabText,
-          activeTab === tab.value && styles.activeTabText
-        ]}
-      
-      >
-        {tab.label}
-      </Text>
-    </TouchableOpacity>
-  ))}
-</ScrollView>
-  <View style={styles.filterContainer}>
-      <Text style={styles.filterTitle}>Date Range</Text>
-      <View style={styles.dateInputs}>
-        {/* From Date */}
-        <TouchableOpacity
-          style={styles.dateInput}
-          onPress={() => setShowStartPicker(true)}
+        {/* Tabs */}
+        <ScrollView
+          horizontal
+          style={styles.tabsContainer}
         >
-          <Text>{startDate ? formatDate(startDate) : "From"}</Text>
-        </TouchableOpacity>
+          {filteredTabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.value}
+              style={[
+                styles.tab,
+                activeTab === tab.value && styles.activeTab
+              ]}
+              onPress={() => setActiveTab(tab.value)}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab.value && styles.activeTabText
+                ]}
 
-        {/* Show Start Date Picker */}
-        {showStartPicker && (
-          <DateTimePicker
-            value={startDate || new Date()}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selectedDate) => {
-              setShowStartPicker(false);
-              if (selectedDate) setStartDate(selectedDate);
-            }}
-          />
-        )}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <View style={styles.filterContainer}>
+          <Text style={styles.filterTitle}>Date Range</Text>
+          <View style={styles.dateInputs}>
+            {/* From Date */}
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowStartPicker(true)}
+            >
+              <Text>{startDate ? formatDate(startDate) : "From"}</Text>
+            </TouchableOpacity>
 
-        {/* To Date */}
-        <TouchableOpacity
-          style={styles.dateInput}
-          onPress={() => setShowEndPicker(true)}
-        >
-          <Text>{endDate ? formatDate(endDate) : "To"}</Text>
-        </TouchableOpacity>
-
-        {/* Show End Date Picker */}
-        {showEndPicker && (
-          <DateTimePicker
-            value={endDate || new Date()}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, selectedDate) => {
-              setShowEndPicker(false);
-              if (selectedDate) setEndDate(selectedDate);
-            }}
-          />
-        )}
-
-        {/* Apply Button */}
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={() => fetchMSAData(activeTab)}
-        >
-          <Text style={styles.searchButtonText}>Apply</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-
-      {/* Results Count */}
-      <View style={styles.resultsContainer}>
-        <Text style={styles.resultsText}>{msaData.length} MSAs found</Text>
-      </View>
-
-      {/* MSA List */}
-     {/* <View style={styles.listWrapper}>
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#007BFF" />
-                </View>
-            ) : error ? (
-                <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={msaData}
-                    renderItem={renderItem}
-                    keyExtractor={(item: any) => item.id.toString()}
-                    contentContainerStyle={styles.listContainer}
-                    showsVerticalScrollIndicator={true}
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                />
+            {/* Show Start Date Picker */}
+            {showStartPicker && (
+              <DateTimePicker
+                value={startDate || new Date()}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  setShowStartPicker(false);
+                  if (selectedDate) setStartDate(selectedDate);
+                }}
+              />
             )}
-        </View> */}
 
+            {/* To Date */}
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowEndPicker(true)}
+            >
+              <Text>{endDate ? formatDate(endDate) : "To"}</Text>
+            </TouchableOpacity>
 
-<View style={styles.listWrapper}>
-  <ScrollView 
- 
-  >
-    {loading ? (
-        <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#007BFF" />
+            {/* Show End Date Picker */}
+            {showEndPicker && (
+              <DateTimePicker
+                value={endDate || new Date()}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  setShowEndPicker(false);
+                  if (selectedDate) setEndDate(selectedDate);
+                }}
+              />
+            )}
+
+            {/* Apply Button */}
+            <TouchableOpacity
+              style={styles.searchButton}
+              onPress={() => fetchMSAData(activeTab)}
+            >
+              <Text style={styles.searchButtonText}>Apply</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-    ) : error ? (
-        <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-        </View>
-    ) : (
-        <View style={styles.listContainer}>
-            {/* {msaData.map((item) => renderItem({ item }))}
-             */}
-             {msaData.map((item) => renderItem({ item, key: item.id }))}
 
+        {/* Results Count */}
+        <View style={styles.resultsContainer}>
+          <Text style={styles.resultsText}>{msaData.length} MSAs found</Text>
         </View>
-    )}
-  </ScrollView>
-</View>
-<Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <Text style={styles.modalTitle}>Select Type</Text>
 
-      {/* Option 1 - Contractor MSA */}
-      <View style={styles.optionCard}>
-        <Text style={styles.optionTitle}>Master Service Agreement for Contractors</Text>
-        <Text style={styles.optionDesc}>
-          Use this option if you are creating MSA for Services by Contractors through Agencies or Supplier
-        </Text>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => {
-            setModalVisible(false);
-            navigation.navigate("CreateMSA", { type: "contractor" });
-          }}
+        {/* MSA List */}
+        <View style={styles.listWrapper}>
+          <ScrollView
+
+          >
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#007BFF" />
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : (
+              <View style={styles.listContainer}>
+                         {msaData.map((item) => (
+                 <React.Fragment key={item.id}>
+                   {renderItem({ item })}
+                 </React.Fragment>
+               ))}
+
+              </View>
+            )}
+          </ScrollView>
+        </View>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
         >
-          <Text style={styles.createButtonText}>Create</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Select Type</Text>
 
-      {/* Option 2 - Service MSA */}
-      <View style={styles.optionCard}>
-        <Text style={styles.optionTitle}>Master Service Agreement</Text>
-        <Text style={styles.optionDesc}>
-          Use this option if you are creating MSA for Service Procurement
-        </Text>
-        <TouchableOpacity
-          style={styles.createButton2}
-          onPress={() => {
-            setModalVisible(false);
-            navigation.navigate("CreateMSA", { type: "service" });
-          }}
-        >
-          <Text style={styles.createButtonText}>Create</Text>
-        </TouchableOpacity>
-      </View>
+              {/* Option 1 - Contractor MSA */}
+              <View style={styles.optionCard}>
+                <Text style={styles.optionTitle}>Master Service Agreement for Contractors</Text>
+                <Text style={styles.optionDesc}>
+                  Use this option if you are creating MSA for Services by Contractors through Agencies or Supplier
+                </Text>
+                <TouchableOpacity
+                  style={styles.createButton}
+                  onPress={() => {
+                    setModalVisible(false);
+                    navigation.navigate("CreateMSA", { type: "contractor" });
+                  }}
+                >
+                  <Text style={styles.createButtonText}>Create</Text>
+                </TouchableOpacity>
+              </View>
 
-      {/* Close button */}
-      <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-        <Text style={styles.closeButtonText}>X</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+              {/* Option 2 - Service MSA */}
+              <View style={styles.optionCard}>
+                <Text style={styles.optionTitle}>Master Service Agreement</Text>
+                <Text style={styles.optionDesc}>
+                  Use this option if you are creating MSA for Service Procurement
+                </Text>
+                <TouchableOpacity
+                  style={styles.createButton2}
+                  onPress={() => {
+                    setModalVisible(false);
+                    navigation.navigate("CreateMSA", { type: "service" });
+                  }}
+                >
+                  <Text style={styles.createButtonText}>Create</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Close button */}
+              <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.closeButtonText}>X</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
 
 
-</ScrollView>
+      </ScrollView>
     </SafeAreaView>
+    </>
   );
 };
 
@@ -488,7 +522,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -497,8 +531,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-  marginBottom:10,
-    
+    marginBottom: 10,
+
   },
   headerTitle: {
     fontSize: 16,
@@ -515,38 +549,38 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-tabsContainer: {
-  paddingHorizontal: 10,
-  borderBottomWidth: 1,
-  borderBottomColor: '#e0e0e0',
-  minHeight: 20,     
-},
+  tabsContainer: {
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    minHeight: 20,
+  },
 
-tab: {
-  paddingHorizontal: 10,
-  paddingVertical: 10,   
-  marginRight: 25,
-  borderRadius: 20,
-  backgroundColor: '#f0f0f0',
-  justifyContent: "center",
-  alignItems: "center",
-  minHeight: 40,    
-  marginBottom:10,
-},
+  tab: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginRight: 25,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 40,
+    marginBottom: 10,
+  },
 
-activeTab: {
-  backgroundColor: '#0E3386',
-},
+  activeTab: {
+    backgroundColor: '#0E3386',
+  },
 
-tabText: {
-  fontSize: 12,       
-  color: '#333',
-  fontWeight: '500',
-},
+  tabText: {
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
+  },
 
-activeTabText: {
-  color: '#fff',
-},
+  activeTabText: {
+    color: '#fff',
+  },
 
   filterContainer: {
     backgroundColor: 'white',
@@ -578,7 +612,7 @@ activeTabText: {
     borderRadius: 6,
     padding: 10,
     fontSize: 14,
-    minWidth:100
+    minWidth: 100
   },
   searchButton: {
     backgroundColor: '#0E3386',
@@ -604,18 +638,21 @@ activeTabText: {
   listContainer: {
     padding: 16,
   },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+ card: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 16,
 
-  },
+  // iOS shadow
+  shadowColor: '#000',
+  shadowOffset: { width: 1, height: 2 },
+  shadowOpacity: 0.40,
+  shadowRadius: 8,
+
+  // Android shadow
+  elevation: 4,
+},
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -700,91 +737,91 @@ activeTabText: {
     fontWeight: 'bold',
   },
   modalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(0,0,0,0.5)",
-  justifyContent: "center",
-  alignItems: "center",
-},
-modalContainer: {
-  backgroundColor: "#fff",
-  borderRadius: 12,
-  padding: 20,
-  width: "90%",
-  alignItems: "center",
-},
-modalTitle: {
-  fontSize: 18,
-  fontWeight: "bold",
-  marginBottom: 20,
-},
-optionCard: {
-  backgroundColor: "#F9F9F9",
-  borderRadius: 10,
-  padding: 15,
-  marginVertical: 10,
-  width: "100%",
-  borderWidth:1,
-  borderColor:"gray",
-  minHeight:200
-},
-optionTitle: {
-  fontSize: 16,
-  fontWeight: "600",
-  marginBottom: 18,
-},
-optionDesc: {
-  fontSize: 14,
-  color: "#666",
-  marginBottom: 12,
-},
-createButton: {
-  backgroundColor: "#0033A0",
-  paddingVertical: 8,
-  borderRadius: 6,
-  alignItems: "center",
-},
-createButton2: {
-  backgroundColor: "#0033A0",
-  paddingVertical: 8,
-  borderRadius: 6,
-  alignItems: "center",
-  marginTop:"15%"
-},
-createButtonText: {
-  color: "#fff",
-  fontWeight: "600",
-},
-closeButton: {
-  position: "absolute",
-  top: 10,
-  right: 10,
-},
-closeButtonText: {
-  fontSize: 18,
-  fontWeight: "bold",
-  color: "#333",
-},
-    listWrapper: {
-        flex: 1, 
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    width: "90%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  optionCard: {
+    backgroundColor: "#F9F9F9",
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 10,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "gray",
+    minHeight: 200
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 18,
+  },
+  optionDesc: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 12,
+  },
+  createButton: {
+    backgroundColor: "#0033A0",
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  createButton2: {
+    backgroundColor: "#0033A0",
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: "center",
+    marginTop: "15%"
+  },
+  createButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  listWrapper: {
+    flex: 1,
 
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+
 });
 
 export default MasterAgreement;

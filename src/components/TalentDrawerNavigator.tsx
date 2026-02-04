@@ -9,6 +9,7 @@ import JobDetailScreen from '../screens/JobDetailScreen';
 import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
 import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
 import ViewTalentProfileScreen from '../screens/ViewTalentProfileScreen';
+import InvoiceScreen from '../screens/InvoiceScreen';
 
 const Drawer = createDrawerNavigator();
 
@@ -19,6 +20,7 @@ export const TalentDrawerNavigator = () => {
                 drawerStyle: {
                     backgroundColor: '#fff',
                     width: 240,
+                        headerBackTitleVisible: false,
                 },
                 drawerActiveTintColor: '#0E3386',
                 drawerInactiveTintColor: '#333',
@@ -33,7 +35,7 @@ export const TalentDrawerNavigator = () => {
                 component={TalentDashboard}
                 options={{
                     headerShown: true,
-
+    headerBackTitleVisible: false,
                 }}
             />
             <Drawer.Screen
@@ -103,6 +105,17 @@ export const TalentDrawerNavigator = () => {
                     headerTitleStyle: { fontWeight: 'bold' },
                 }}
             />
+             <Drawer.Screen
+                    name="InvoiceScreen"
+                    component={InvoiceScreen}
+                    options={{
+                      title: 'Invoice Screen',
+                      headerShown: true,
+                      headerStyle: { backgroundColor: '#0E3386' },
+                      headerTintColor: '#fff',
+                      headerTitleStyle: { fontWeight: 'bold' },
+                    }}
+                  />
             <Drawer.Screen
                 name="SupplierAgencyScreen"
                 component={SupplierAgencyScreen}

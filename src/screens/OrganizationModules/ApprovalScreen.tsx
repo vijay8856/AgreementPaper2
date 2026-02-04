@@ -234,46 +234,8 @@ const renderSowItem = ({ item }: any) => (
 
   return (
     <>
-         {/* <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>MSA Approval List</Text>
-        <FlatList
-          data={msaData}
-          keyExtractor={(item) => item.slug?.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={msaData?.length === 0 && styles.center}
-          ListEmptyComponent={
-            <Text style={styles.noData}>No MSA data found</Text>
-          }
-          scrollEnabled={false}
-          nestedScrollEnabled={true}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SOW Approval List</Text>
-        <FlatList
-          data={sowData}
-          keyExtractor={(item) => item.slug?.toString()}
-          renderItem={renderSowItem}
-          contentContainerStyle={sowData?.length === 0 && styles.center}
-          ListEmptyComponent={
-            <Text style={styles.noData}>No SOW data found</Text>
-          }
-          scrollEnabled={false}
-          nestedScrollEnabled={true}
-        />
-      </View>
-    </ScrollView> */}
-     <View style={styles.container}>
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
+     
+         <View style={styles.tabContainer}>
         <TouchableOpacity 
           style={[styles.tab, activeTab === 'msa' && styles.activeTab]}
           onPress={() => setActiveTab('msa')}
@@ -291,6 +253,9 @@ const renderSowItem = ({ item }: any) => (
           </Text>
         </TouchableOpacity>
       </View>
+     <View style={styles.container}>
+      {/* Tab Navigation */}
+ 
 
       {/* Content based on active tab */}
       {activeTab === 'msa' ? (
@@ -335,7 +300,7 @@ export default ApprovalScreen;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 12,
+    paddingHorizontal:10
   },
   section: {
     flex: 1,
@@ -352,15 +317,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+card: {
+
+  marginTop:10,
+    flex: 1,
+    backgroundColor: '#ffffffff',
+    borderRadius: 12,
+    padding: 26,
+    marginBottom: 10,
+
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.40,
+    shadowRadius: 8,
+
+    // Android shadow
+    elevation: 10,
   },
   row: {
     flexDirection: "row",
@@ -400,10 +373,10 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   approve: {
-    backgroundColor: "#28a745",
+    backgroundColor: "#0E3386",
   },
   reject: {
-    backgroundColor: "#dc3545",
+    backgroundColor: "#0E3386",
   },
   buttonText: {
     color: "#fff",
@@ -461,19 +434,7 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#2E6EEE',
   },
-  // Card styles
-  // card: {
-  //   backgroundColor: "#FFFFFF",
-  //   borderRadius: 12,
-  //   padding: 16,
-  //   margin: 16,
-  //   marginVertical: 8,
-  //   shadowColor: "#000",
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.05,
-  //   shadowRadius: 4,
-  //   elevation: 2,
-  // },
+
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -524,30 +485,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
   },
-  // actions: {
-  //   flexDirection: "row",
-  //   justifyContent: "flex-end",
-  //   marginTop: 16,
-  // },
-  // button: {
-  //   paddingVertical: 8,
-  //   paddingHorizontal: 16,
-  //   borderRadius: 6,
-  //   marginLeft: 10,
-  //   minWidth: 80,
-  //   alignItems: 'center',
-  // },
+
   approveButton: {
     backgroundColor: "#10B981",
   },
   rejectButton: {
     backgroundColor: "#EF4444",
   },
-  // buttonText: {
-  //   color: "#fff",
-  //   fontWeight: "600",
-  //   fontSize: 14,
-  // },
+
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',

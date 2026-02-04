@@ -1,634 +1,615 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
-    ActivityIndicator,
-} from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import Services from "../Services/services";
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+  KeyboardAvoidingView,
+} from 'react-native';
+import Dropdown from '../components/Dropdown';
 
+import {SafeAreaView} from 'react-native-safe-area-context';
+import Services from '../Services/services';
+import {useNavigation} from '@react-navigation/native';
+import MultiSelectDropdown from '../components/MultiSelectDropdown';
+
+// --- Types ---
 type DropdownItem = {
-    id?: string;
-    name: string;
+  id?: string;
+  name?: string;
+  currency?: string;
 };
 
-const JobPostScreen: React.FC = () => {
-    const [loading, setLoading] = useState(false);
+const JobPostScreen = () => {
+  const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
+  const [skills, setSkills] = useState<DropdownItem[]>([]);
+  const [languages, setLanguages] = useState<DropdownItem[]>([]);
+  const [currencies, setCurrencies] = useState<DropdownItem[]>([]);
+  const [countries, setCountries] = useState<DropdownItem[]>([]);
+  const [states, setStates] = useState<DropdownItem[]>([]);
+  const [questions, setQuestions] = useState<string[]>(['']);
 
-    const [skills, setSkills] = useState<DropdownItem[]>([]);
-    const [languages, setLanguages] = useState<DropdownItem[]>([]);
-    const [currencies, setCurrencies] = useState<DropdownItem[]>([]);
-    const [countries, setCountries] = useState<DropdownItem[]>([]);
-    const [states, setStates] = useState<DropdownItem[]>([]);
-    const [questions, setQuestions] = useState<string[]>([""]);
+  const [jobLocation, setJobLocation] = useState<
+    'REMOTE' | 'HYBRID' | 'ONSITE' | ''
+  >('');
+  const [jobVisibility, setJobVisibility] = useState<
+    'EVERYONE' | 'INVITED' | 'ONLY_ME' | ''
+  >('');
 
-    const [jobLocation, setJobLocation] = useState<
-        "REMOTE" | "HYBRID" | "ONSITE" | ""
-    >("");
+  const [form, setForm] = useState({
+    jobTitle: '',
+    experience: '',
+    description: '',
+    payRate: '',
+    city: '',
+    companyName: '',
+    companyWebsite: '',
+    skills: [] as number[],
+    language: '',
+    jobType: '',
+    currency: '',
+    country: '',
+    state: '',
+  });
+  const resetForm = () => {
+    setForm({
+      jobTitle: '',
+      experience: '',
+      description: '',
+      payRate: '',
+      city: '',
+      companyName: '',
+      companyWebsite: '',
+      skills: [] as number[],
 
-    const [jobVisibility, setJobVisibility] = useState<
-        "EVERYONE" | "INVITED" | "ONLY_ME" | ""
-    >("");
+      language: '',
+      jobType: '',
+      currency: '',
+      country: '',
+      state: '',
+    });
 
+    setQuestions([]);
+    setJobVisibility('EVERYONE');
+    setJobLocation('REMOTE'); // or your default
+  };
 
-    const initialFormState = {
-        jobTitle: "",
-        experience: "",
-        description: "",
-        payRate: "",
-        city: "",
-        CompanyName: "",
-        CompanyWebsite: "",
-        skill: "",
-        language: "",
-        jobType: "",
-        currency: "",
-        country: "",
-        state: "",
-    };
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
-    const [form, setForm] = useState(initialFormState);
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      const [skillRes, langRes, currencyRes, countryRes] = await Promise.all([
+        Services.getSkillDropDownList({}),
+        Services.getLanguagesList({}),
+        Services.getCurrency(),
+        Services.getCountryList({}),
+      ]);
 
-    /** ---------- API CALLS ---------- */
-    const addQuestion = () => {
-        setQuestions(prev => [...prev, ""]);
-    };
-
-    const removeQuestion = (index: number) => {
-        setQuestions(prev => prev.filter((_, i) => i !== index));
-    };
-
-    const updateQuestion = (text: string, index: number) => {
-        const updated = [...questions];
-        updated[index] = text;
-        setQuestions(updated);
-    };
-
-
-    const validateForm = () => {
-        if (!form.jobTitle.trim()) return "Job title is required";
-        if (!form.description.trim()) return "Job description is required";
-        if (!form.experience) return "Experience level is required";
-
-        if (!form.skill) return "Please select at least one skill";
-        if (!form.language) return "Please select at least one language";
-
-        if (!form.jobType) return "Job type is required";
-        if (!form.payRate) return "Pay rate is required";
-        if (!form.currency) return "Currency is required";
-
-        if (!form.CompanyName.trim()) return "Company name is required";
-        if (!form.CompanyWebsite.trim()) return "Company website is required";
-
-        if (!form.country) return "Country is required";
-        if (!form.state) return "State is required";
-        if (!form.city.trim()) return "City is required";
-
-        if (!jobLocation) return "Job location type is required";
-        if (!jobVisibility) return "Job visibility is required";
-
-        const filledQuestions = questions.filter(q => q.trim());
-        if (filledQuestions.length < 1)
-            return "Please add at least one screening question";
-
-        return null;
-    };
-
-    useEffect(() => {
-        loadInitialDropdowns();
-    }, []);
-
-    const loadInitialDropdowns = async () => {
-        setLoading(true);
-
-        const [
-            skillRes,
-            langRes,
-            currencyRes,
-            countryRes,
-        ] = await Promise.all([
-            Services.getSkillDropDownList({}),
-            Services.getLanguagesList({}),
-            Services.getCurrency(),
-            Services.getCountryList({}),
-        ]);
-        console.log("langRes", langRes);
-        console.log("countryRes", countryRes);
-
-
-        if (skillRes.success) setSkills(skillRes.data || []);
-        if (langRes.success) setLanguages(langRes.data || []);
-        if (currencyRes.success) setCurrencies(currencyRes.data || []);
-        if (countryRes.success) setCountries(countryRes.data || []);
-
-        setLoading(false);
-    };
-
-    const onCountryChange = async (countryName: string) => {
-        setForm(prev => ({ ...prev, country: countryName, state: "" }));
-        setStates([]);
-
-        const res = await Services.getCountryDetailsState(countryName);
-        if (res.success) {
-            setStates(res.data);
-        }
-    };
-
-    /** ---------- UI ---------- */
-
-    if (loading) {
-        return (
-            <View style={styles.loader}>
-                <ActivityIndicator size="large" />
-            </View>
-        );
+      if (skillRes.success) setSkills(skillRes.data || []);
+      if (langRes.success) setLanguages(langRes.data || []);
+      if (currencyRes.success) setCurrencies(currencyRes.data || []);
+      if (countryRes.success) setCountries(countryRes.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    const submitJobPost = async () => {
-        const error = validateForm();
-        if (error) {
-            alert(error);
-            return;
-        }
+  };
 
-        setLoading(true);
+  const onCountryChange = async (countryName: string) => {
+    setForm(prev => ({...prev, country: countryName, state: ''}));
+    setStates([]);
+    const res = await Services.getCountryDetailsState(countryName);
+    if (res.success) setStates(res.data || []);
+  };
+  const addQuestion = () => {
+    setQuestions(prev => [...prev, '']);
+  };
 
-        const payload = {
-            title: form.jobTitle,
-            job_description: form.description,
+  const removeQuestion = (index: number) => {
+    setQuestions(prev => prev.filter((_, i) => i !== index));
+  };
 
-            skills: [form.skill], 
-            experience: null,
-            experience_level: Number(form.experience),
+  const updateQuestion = (text: string, index: number) => {
+    const updated = [...questions];
+    updated[index] = text;
+    setQuestions(updated);
+  };
 
-            language: [form.language], 
+  const validateForm = () => {
+    if (!form.jobTitle) return 'Job title is required';
+    if (!form.description) return 'Job description is required';
+    if (!form.experience) return 'Experience is required';
+    if (!form.skills) return 'Skill is required';
+    if (!form.language) return 'Language is required';
+    if (!form.jobType) return 'Job type is required';
+    if (!form.payRate) return 'Pay rate is required';
+    if (!form.currency) return 'Currency is required';
+    if (!form.companyName) return 'Company name is required';
+    // if (!form.companyWebsite) return 'Company website is required';
+    if (!form.country || !form.state || !form.city)
+      return 'Location is required';
+    if (!jobLocation) return 'Job location type required';
+    if (!jobVisibility) return 'Job visibility required';
+    const filledQuestions = questions.filter(q => q.trim());
+    if (filledQuestions.length < 1)
+      return 'Please add at least one screening question';
 
-            job_type: form.jobType === "FULL_TIME" ? 1
-                : form.jobType === "PART_TIME" ? 2
-                    : 3,
+    return null;
+  };
 
-            pay_rate: Number(form.payRate),
-            currency_code: form.currency,
+  const submitJob = async () => {
+    const error = validateForm();
+    if (error) {
+      alert(error);
+      return;
+    }
 
-            company_name: form.CompanyName,
-            company_website: form.CompanyWebsite,
+    setLoading(true);
 
-            company_country: countries.find(c => c.name === form.country)?.id,
-            company_state: form.state,
-            company_city: form.city,
-
-            job_visibility:
-                jobVisibility === "EVERYONE" ? 1 :
-                    jobVisibility === "INVITED" ? 2 : 3,
-
-            questions: questions
-                .filter(q => q.trim())
-                .map(q => ({ question: q })),
-
-            is_active: true,
-            show_job_pay_rate: true,
-            is_company_site_link: true,
-
-            job_location_type:
-                jobLocation === "REMOTE" ? "Remote" :
-                    jobLocation === "HYBRID" ? "Hybrid" : "Onsite",
-        };
-
-        console.log("JOB POST PAYLOAD 👉", payload);
-
-        const res = await Services.jobPost(payload);
-
-        setLoading(false);
-
-        if (res.success) {
-            setForm(initialFormState);
-            setQuestions([""]);
-            setJobLocation("");
-            setJobVisibility("");
-            alert("✅ Job posted successfully");
-        } else {
-            alert(res.error || "Failed to post job");
-        }
+    const payload = {
+      title: form.jobTitle,
+      job_description: form.description,
+      skills: form.skills,
+      experience_level: Number(form.experience),
+      language: [form.language],
+      job_type: form.jobType,
+      pay_rate: Number(form.payRate),
+      currency_code: form.currency,
+      company_name: form.companyName,
+      company_website: form.companyWebsite || null,
+      company_country: countries.find(c => c.name === form.country)?.id,
+      company_state: form.state,
+      company_city: form.city,
+      job_visibility:
+        jobVisibility === 'EVERYONE' ? 1 : jobVisibility === 'INVITED' ? 2 : 3,
+      questions: questions.filter(q => q.trim()).map(q => ({question: q})),
+      job_location_type:
+        jobLocation.charAt(0) + jobLocation.slice(1).toLowerCase(),
+      is_active: true,
     };
+    console.log('form', payload);
 
+    try {
+      const res = await Services.jobPost(payload);
+
+      if (res.success) {
+        alert('✅ Job posted successfully');
+        resetForm();
+        navigation.goBack(); // ✅ go back
+      } else {
+        alert(res.error || 'Failed to post job');
+      }
+    } catch (err) {
+      alert('Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.header}>Tell us about your position or Job Post</Text>
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0A2FFF" />
+      </View>
+    );
+  }
 
-            <Input
-                label="Job Title *"
-                value={form.jobTitle}
-                onChangeText={v => setForm({ ...form, jobTitle: v })}
-            />
-
-            <Dropdown
-                label="Skills *"
-                value={form.skill}
-                items={skills}
-                labelKey="name"
-                valueKey="id"
-                onChange={(v) => setForm({ ...form, skill: v })}
-            />
-
-
-            <Input
-                label="Experience Level (In Years) *"
-                value={form.experience}
-                keyboardType="numeric"
-                onChangeText={v => setForm({ ...form, experience: v })}
-            />
-
-            <Dropdown
-                label="Languages *"
-                value={form.language}
-                items={languages}
-                labelKey="name"
-                valueKey="id"
-                onChange={(v) => setForm({ ...form, language: v })}
-            />
-
-
-            <Text style={styles.label}>Describe your job *</Text>
-            <TextInput
-                multiline
-                numberOfLines={5}
-                style={styles.textArea}
-                placeholder="Job description"
-                value={form.description}
-                onChangeText={v => setForm({ ...form, description: v })}
-            />
-
-            <Text style={styles.section}>What does this Job Pay?</Text>
-
-            <Dropdown
-                label="Job Type *"
-                value={form.jobType}
-                items={[
-                    { label: "Full Time", value: "FULL_TIME" },
-                    { label: "Part Time", value: "PART_TIME" },
-                    { label: "Contract", value: "CONTRACT" },
-                ]}
-                labelKey="label"
-                valueKey="value"
-                onChange={(v) => setForm({ ...form, jobType: v })}
-            />
-
-
-            <Dropdown
-                label="Currency *"
-                value={form.currency}
-                items={currencies}
-                labelKey="currency"
-                valueKey="currency"
-                onChange={(v) => setForm({ ...form, currency: v })}
-            />
-
-
-            <Input
-                label="Pay Rate *"
-                value={form.payRate}
-                keyboardType="numeric"
-                onChangeText={v => setForm({ ...form, payRate: v })}
-            />
-
-            <Text style={styles.section}>
-                What Questions do you want to ask Candidates?
+  return (
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{flex: 1}}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Post a Job</Text>
+            <Text style={styles.subtitle}>
+              Fill in the details to find your next hire
             </Text>
+          </View>
 
-            <Text style={styles.helperText}>
-                It’s recommended to ask at least three questions to ensure quality applications.
+          <Card title="Job Details">
+            <Input
+              label="Job Title"
+              placeholder="e.g. Senior Product Designer"
+              value={form.jobTitle}
+              onChangeText={v => setForm({...form, jobTitle: v})}
+            />
+            {/* <Dropdown
+              label="Primary Skill"
+              value={form.skill}
+              items={skills}
+              labelKey="name"
+              valueKey="id"
+              onChange={(v: string) => setForm({ ...form, skill: v })}
+            /> */}
+
+            <MultiSelectDropdown
+              label="Primary Skill"
+              values={form.skills}
+              items={skills}
+              labelKey="name"
+              valueKey="id"
+              onChange={(selectedIds: number[]) =>
+                setForm(prev => ({
+                  ...prev,
+                  skills: selectedIds, // ✅ already an array
+                }))
+              }
+            />
+
+            <View style={styles.row}>
+              <View style={{flex: 1, marginRight: 8}}>
+                <Input
+                  label="Experience"
+                  placeholder="Years"
+                  keyboardType="numeric"
+                  value={form.experience}
+                  onChangeText={v => setForm({...form, experience: v})}
+                />
+              </View>
+              <View style={{flex: 1, marginLeft: 8}}>
+                <Dropdown
+                  label="Language"
+                  placeholderTextColor={'black'}
+                  value={form.language}
+                  items={languages}
+                  labelKey="name"
+                  valueKey="id"
+                  onChange={(v: string) => setForm({...form, language: v})}
+                />
+              </View>
+            </View>
+            <Input
+              label="Job Description"
+              multiline
+              placeholder="Describe the role..."
+              value={form.description}
+              onChangeText={v => setForm({...form, description: v})}
+              style={styles.textArea}
+            />
+          </Card>
+
+          <Card title="Compensation & Type">
+            <Dropdown
+              label="Job Type"
+              value={form.jobType}
+              items={[
+                {label: 'Full Time', value: 1},
+                {label: 'Part Time', value: 2},
+                {label: 'Contract', value: 3},
+              ]}
+              labelKey="label"
+              valueKey="value"
+              onChange={v => setForm({...form, jobType: v})}
+            />
+            <View style={styles.row}>
+              <View style={{flex: 1, marginRight: 8}}>
+                <Dropdown
+                  label="Currency"
+                  value={form.currency}
+                  items={currencies}
+                  labelKey="currency"
+                  valueKey="currency"
+                  onChange={(v: string) => setForm({...form, currency: v})}
+                />
+              </View>
+              <View style={{flex: 1, marginLeft: 8}}>
+                <Input
+                  label="Pay Rate"
+                  placeholder="Amount"
+                  keyboardType="numeric"
+                  value={form.payRate}
+                  onChangeText={v => setForm({...form, payRate: v})}
+                />
+              </View>
+            </View>
+          </Card>
+          <Card title="Screening Questions">
+            <Text style={{color: '#ced3daff', marginBottom: 12}}>
+              Ask at least one question to filter candidates
             </Text>
 
             {questions.map((q, index) => (
-                <View key={index} style={styles.questionRow}>
-                    <TextInput
-                        style={styles.questionInput}
-                        placeholder={`Question ${index + 1}`}
-                        value={q}
-                        onChangeText={(text) => updateQuestion(text, index)}
-                    />
+              <View key={index} style={styles.questionRow}>
+                <TextInput
+                  style={styles.questionInput}
+                  placeholder={`Question ${index + 1}`}
+                  placeholderTextColor="#94A3B8"
+                  value={q}
+                  onChangeText={text => updateQuestion(text, index)}
+                />
 
-                    {questions.length > 1 && (
-                        <TouchableOpacity onPress={() => removeQuestion(index)}>
-                            <Text style={styles.deleteIcon}>🗑</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
+                {questions.length > 1 && (
+                  <TouchableOpacity onPress={() => removeQuestion(index)}>
+                    <Text style={styles.deleteIcon}>🗑</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             ))}
 
-            <TouchableOpacity style={styles.addQuestionBtn} onPress={addQuestion}>
-                <Text style={styles.addQuestionText}>+ Add Question</Text>
-            </TouchableOpacity>
-
-
-
-            <Text style={styles.section}>Tell us a little about your Company</Text>
-            <Text style={styles.helperText}>It’s recommended to ask at least three questions in order to ensure you receive quality applications.
-            </Text>
-            <Text style={styles.label}>Company Name *</Text>
-            <TextInput
-                multiline
-                numberOfLines={5}
-                style={styles.textArea}
-                placeholder="Company Name"
-                value={form.CompanyName}
-                onChangeText={v => setForm({ ...form, CompanyName: v })}
-            />
-            <Text style={styles.label2}> Company website *</Text>
-            <TextInput
-                multiline
-                numberOfLines={5}
-                style={styles.textArea2}
-                placeholder="Company website"
-                value={form.CompanyWebsite}
-                onChangeText={v => setForm({ ...form, CompanyWebsite: v })}
-            />
-
-            <Dropdown
-                label="Country *"
-                value={form.country}
-                items={countries}
-                labelKey="name"
-                valueKey="name"
-                onChange={(countryName) => onCountryChange(countryName)}
-            />
-
-            <Dropdown
-                label="State *"
-                value={form.state}
-                items={states}
-                labelKey="name"
-                valueKey="name"
-                disabled={!states.length}
-                onChange={(v) => setForm({ ...form, state: v })}
-            />
-
-            <Input
-                label="City *"
-                value={form.city}
-                onChangeText={v => setForm({ ...form, city: v })}
-            />
-
-            <Text style={styles.section}>Job Location</Text>
-
-            <View style={styles.radioGroup}>
-                {[
-                    { label: "Remote", value: "REMOTE" },
-                    { label: "Hybrid", value: "HYBRID" },
-                    { label: "On site", value: "ONSITE" },
-                ].map(item => (
-                    <TouchableOpacity
-                        key={item.value}
-                        style={styles.radioItem}
-                        onPress={() => setJobLocation(item.value as any)}
-                    >
-                        <View
-                            style={[
-                                styles.radioCircle,
-                                jobLocation === item.value && styles.radioSelected,
-                            ]}
-                        />
-                        <Text>{item.label}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-
-            <Text style={styles.section}>Job Visibility</Text>
-
-            <View style={styles.radioGroup}>
-                {[
-                    { label: "Everyone", value: "EVERYONE" },
-                    { label: "Only invited users", value: "INVITED" },
-                    { label: "Only me", value: "ONLY_ME" },
-                ].map(item => (
-                    <TouchableOpacity
-                        key={item.value}
-                        style={styles.radioItem}
-                        onPress={() => setJobVisibility(item.value as any)}
-                    >
-                        <View
-                            style={[
-                                styles.radioCircle,
-                                jobVisibility === item.value && styles.radioSelected,
-                            ]}
-                        />
-                        <Text>{item.label}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
             <TouchableOpacity
-                style={styles.submitBtn}
-                onPress={submitJobPost}
-            >
-                <Text style={styles.submitText}>
-                    Post a Job for 60 Days (Free)
-                </Text>
+              style={styles.addQuestionBtn}
+              onPress={addQuestion}>
+              <Text style={styles.addQuestionText}>+ Add Question</Text>
             </TouchableOpacity>
+          </Card>
 
+          <Card title="Company & Location">
+            <Input
+              label="Company Name"
+              placeholder="Your company name"
+              value={form.companyName}
+              onChangeText={v => setForm({...form, companyName: v})}
+            />
+            <Dropdown
+              label="Country"
+              value={form.country}
+              items={countries}
+              labelKey="name"
+              valueKey="name"
+              onChange={onCountryChange}
+            />
+            <Input
+              label="Company Website (Optional)"
+              placeholder="https://example.com"
+              value={form.companyWebsite}
+              onChangeText={v => setForm({...form, companyWebsite: v})}
+            />
+
+            <View style={styles.row}>
+              <View style={{flex: 1, marginRight: 8}}>
+                <Dropdown
+                  label="State"
+                  value={form.state}
+                  items={states}
+                  labelKey="name"
+                  valueKey="name"
+                  disabled={!states.length}
+                  onChange={(v: string) => setForm({...form, state: v})}
+                />
+              </View>
+              <View style={{flex: 1, marginLeft: 8}}>
+                <Input
+                  label="City"
+                  placeholder="City"
+                  value={form.city}
+                  onChangeText={v => setForm({...form, city: v})}
+                />
+              </View>
+            </View>
+          </Card>
+
+          <Card title="Work Arrangement">
+            <Segment
+              options={['REMOTE', 'HYBRID', 'ONSITE']}
+              value={jobLocation}
+              onChange={setJobLocation}
+            />
+          </Card>
+
+          <Card title="Job Visibility">
+            <Segment
+              options={['EVERYONE', 'INVITED', 'ONLY_ME']}
+              value={jobVisibility}
+              onChange={setJobVisibility}
+            />
+          </Card>
+
+          <View style={{height: 120}} />
         </ScrollView>
-    );
-};
 
-export default JobPostScreen;
-
-/** ---------- REUSABLE COMPONENTS ---------- */
-
-const Input = ({ label, ...props }: any) => (
-    <View style={styles.field}>
-        <Text style={styles.label}>{label}</Text>
-        <TextInput style={styles.input} {...props} />
-    </View>
-);
-
-type DropdownProps = {
-    label: string;
-    value: any;
-    items: any[];
-    onChange: (value: any) => void;
-    labelKey: string;
-    valueKey: string;
-    disabled?: boolean;
-};
-
-const Dropdown = ({
-    label,
-    value,
-    items,
-    onChange,
-    labelKey,
-    valueKey,
-    disabled,
-}: DropdownProps) => (
-    <View style={styles.field}>
-        <Text style={styles.label}>{label}</Text>
-
-        <View style={[styles.pickerBox, disabled && { opacity: 0.5 }]}>
-            <Picker
-                enabled={!disabled}
-                selectedValue={value}
-                onValueChange={onChange}
-            >
-                <Picker.Item label="Select" value="" />
-
-                {items.map((item, index) => (
-                    <Picker.Item
-                        key={index}
-                        label={item[labelKey]?.toString() || ""}
-                        value={item[valueKey]}
-                    />
-                ))}
-            </Picker>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.submitBtn}
+            onPress={submitJob}
+            activeOpacity={0.8}>
+            <Text style={styles.submitText}>Post Job — 60 Days Free</Text>
+          </TouchableOpacity>
         </View>
-    </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
+
+// --- Custom Components ---
+
+const Card = ({title, children}: any) => (
+  <View style={styles.card}>
+    <Text style={styles.cardTitle}>{title}</Text>
+    <View style={styles.cardDivider} />
+    {children}
+  </View>
 );
 
+const Input = ({label, style, ...props}: any) => (
+  <View style={styles.field}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={[styles.input, style]}
+      placeholderTextColor="#94A3B8"
+      {...props}
+    />
+  </View>
+);
 
-/** ---------- STYLES ---------- */
+const Segment = ({options, value, onChange}: any) => (
+  <View style={styles.segment}>
+    {options.map((opt: string) => (
+      <TouchableOpacity
+        key={opt}
+        style={[styles.segmentItem, value === opt && styles.segmentActive]}
+        onPress={() => onChange(opt)}>
+        <Text
+          style={[
+            styles.segmentText,
+            value === opt && styles.segmentTextActive,
+          ]}>
+          {opt.replace('_', ' ')}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+);
+
+// --- Styles ---
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: "#fff",
-    },
-    header: {
-        fontSize: 20,
-        fontWeight: "600",
-        marginBottom: 16,
-    },
-    section: {
-        fontSize: 16,
-        fontWeight: "600",
-        marginVertical: 16,
-    },
-    field: {
-        marginBottom: 14,
-    },
-    label: {
-        marginBottom: 6,
-        fontSize: 14,
-        fontWeight: "500",
-    },
+  safe: {flex: 1, backgroundColor: '#F8FAFC'},
+  scroll: {paddingHorizontal: 20, paddingTop: 10},
+  header: {marginBottom: 24},
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#1E293B',
+    letterSpacing: -0.5,
+  },
+  subtitle: {fontSize: 15, color: '#64748B', marginTop: 4},
 
-    label2: {
-        marginTop: 10,
-        fontSize: 14,
-        fontWeight: "500",
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 6,
-        padding: 12,
-    },
-    pickerBox: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 6,
-    },
-    textArea: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 6,
-        padding: 12,
-        textAlignVertical: "top",
-    },
+  row: {flexDirection: 'row', justifyContent: 'space-between'},
 
-    textArea2: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 6,
-        padding: 12,
-        textAlignVertical: "top",
-        marginBottom: 10
+  card: {
+    backgroundColor: '#0E3386',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+      },
+      android: {elevation: 3},
+    }),
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ced3daff',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  cardDivider: {height: 1, backgroundColor: '#F1F5F9', marginBottom: 16},
 
-    },
-    submitBtn: {
-        backgroundColor: "#0A2FFF",
-        padding: 16,
-        borderRadius: 8,
-        alignItems: "center",
-        marginVertical: 30,
-    },
-    submitText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 16,
-    },
-    loader: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
+  field: {marginBottom: 18},
+  label: {fontSize: 14, fontWeight: '600', color: '#a4a9b0ff', marginBottom: 8},
+  input: {
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#1E293B',
+    backgroundColor: '#F8FAFC',
+  },
+  textArea: {height: 120, textAlignVertical: 'top', paddingTop: 14},
 
-    helperText: {
-        color: "#666",
-        fontSize: 13,
-        marginBottom: 12,
-    },
+  pickerBox: {
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  disabledBox: {opacity: 0.5, backgroundColor: '#F1F5F9'},
 
-    questionRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
-    },
+  segment: {flexDirection: 'row', flexWrap: 'wrap', gap: 10},
+  segmentItem: {
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  segmentActive: {backgroundColor: '#0A2FFF', borderColor: '#0A2FFF'},
+  segmentText: {color: '#64748B', fontWeight: '600', fontSize: 13},
+  segmentTextActive: {color: '#FFFFFF'},
 
-    questionInput: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 6,
-        padding: 12,
-    },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: -4},
+        shadowOpacity: 0.03,
+        shadowRadius: 10,
+      },
+      android: {elevation: 10},
+    }),
+  },
 
-    deleteIcon: {
-        fontSize: 18,
-        color: "red",
-        marginLeft: 10,
-    },
+  questionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
 
-    addQuestionBtn: {
-        borderWidth: 1,
-        borderColor: "#0A2FFF",
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        borderRadius: 20,
-        alignSelf: "flex-start",
-        marginTop: 6,
-    },
+  questionInput: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    backgroundColor: '#F8FAFC',
+    color: '#1E293B',
+  },
 
-    addQuestionText: {
-        color: "#0A2FFF",
-        fontWeight: "600",
-    },
+  deleteIcon: {
+    fontSize: 18,
+    color: '#EF4444',
+    marginLeft: 10,
+  },
 
-    radioGroup: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        marginBottom: 16,
-    },
+  addQuestionBtn: {
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 6,
+  },
 
-    radioItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginRight: 20,
-        marginBottom: 10,
-    },
+  addQuestionText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
 
-    radioCircle: {
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        borderWidth: 2,
-        borderColor: "#0A2FFF",
-        marginRight: 8,
-    },
-
-    radioSelected: {
-        backgroundColor: "#0A2FFF",
-    },
-
+  submitBtn: {
+    backgroundColor: '#0E3386',
+    paddingVertical: 18,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  submitText: {color: '#FFFFFF', fontSize: 17, fontWeight: '700'},
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
 });
+
+export default JobPostScreen;

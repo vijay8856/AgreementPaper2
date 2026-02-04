@@ -46,6 +46,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// export const API_URL = "https://pointed-julissa-racemic.ngrok-free.dev/";
 export const API_URL = "https://api.agreementpaper.com/";
 export const MEDIA_URL = process.env.REACT_APP_MEDIA_URL;
 export const COPY_URL = process.env.REACT_APP_COPY_URL;
@@ -82,13 +83,13 @@ export const AUTH_MULTYPART_HEADERS2 = async () => {
 
 export const AUTH_MULTYPART_HEADERS = async () => {
   const token = await AsyncStorage.getItem('Token');
-  console.log("yestoken",token);
-  
+  console.log("yestoken", token);
+
   return {
     headers: {
-        "Content-Type": "multipart/form-data",
-  Accept: "application/json",
-  Authorization: `Token ${token}`,
+      "Content-Type": "multipart/form-data",
+      Accept: "application/json",
+      Authorization: `Token ${token}`,
     },
   };
 };
@@ -96,13 +97,13 @@ export const AUTH_MULTYPART_HEADERS = async () => {
 // use AUTH_HEADERS when you have passed data with json and normal data object
 export const AUTH_HEADERS = async () => {
   const token = await AsyncStorage.getItem('Token');
-  console.log("token",token);
-  
+  console.log("token", token);
+
   return {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Token ${token}`,
-      
+
     },
   };
 };

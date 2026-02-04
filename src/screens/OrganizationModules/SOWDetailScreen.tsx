@@ -54,21 +54,7 @@ const SOWDetailScreen = ({ route }: any) => {
   const [selectedApprover, setSelectedApprover] = useState(data.approver_detail || null);
   const [currencies, setCurrencies] = useState([]);
 
-  // const onRefresh = async () => {
-  //   try {
-  //     setRefreshing(true);
-  //     const res = await Services.getSOWDetail(sowData.slug);
-  //     if (res.success) {
-  //       setSowData(res.data);
-  //     } else {
-  //       console.log("Refresh error:", res.error);
-  //     }
-  //   } catch (err) {
-  //     console.log("Unexpected refresh error:", err);
-  //   } finally {
-  //     setRefreshing(false);
-  //   }
-  // };
+
   const onRefresh = async () => {
     try {
       setRefreshing(true);
@@ -268,14 +254,6 @@ const SOWDetailScreen = ({ route }: any) => {
       // Status and approval - preserve existing values
       formData.append('status', sowData.status || 'pending_approval');
 formData.append('sow_flow', '1');
-      // // Approver selection - NEW FIELDS
-      // if (sowApprover === 'manual' && selectedApprover) {
-
-      //    // Manual approval flow
-      // } else {
-      //   formData.append('sow_flow', '2'); // Automatic approval flow
-      // }
-
       // Final calculated amount
       formData.append('grand_total', String(sowData.grand_total || 0));
 
@@ -449,19 +427,6 @@ formData.append('sow_flow', '1');
                 {sowApprover === 'manual' && <View style={styles.radioInnerCircle} />}
               </View>
             </TouchableOpacity>
-
-            {/* <TouchableOpacity
-              style={[styles.radioOption, sowApprover === 'auto' && styles.radioSelected]}
-              onPress={() => {
-                setSowApprover('auto');
-                setSelectedApprover(null);
-              }}
-            >
-              <Text style={styles.radioText}>Automatic Approval</Text>
-              <View style={styles.radioCircle}>
-                {sowApprover === 'auto' && <View style={styles.radioInnerCircle} />}
-              </View>
-            </TouchableOpacity> */}
           </View>
 
           {/* Show selected approver details */}
@@ -842,13 +807,6 @@ formData.append('sow_flow', '1');
           <Text style={styles.sectionTitle}>Work Timesheet</Text>
           <View style={styles.checkboxRow}>
 
-            {/* <Text style={styles.checkboxLabel}>Is Hourly</Text>
-  <Switch
-    value={sowData.is_hour}
-    onValueChange={(value) => setSowData({...sowData, is_hour: value})}
-    disabled={!isEditing}
-  /> */}
-
             {renderWorkTimesheetField()}
           </View>
           <View style={styles.rowContainer}>
@@ -932,15 +890,6 @@ formData.append('sow_flow', '1');
             sowData.account,
             "account"
           )}
-          {/* {renderEditableField(
-            "Saving Percentage",
-            sowData.savings_percentage,
-            (text:any) => setSowData({...sowData, savings_percentage: text}),
-            "savings_percentage",
-            "",
-            "numeric"
-          )} */}
-
           {renderDropdownField(
             "Cost Center ",
             "cost_center",

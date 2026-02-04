@@ -13,6 +13,7 @@ import {
     Alert,
     FlatList,
     Modal,
+    KeyboardAvoidingView,
 } from "react-native";
 
 
@@ -172,6 +173,7 @@ const ProfileModal = ({ visible, onClose, title, data, onSelect, selectedProfile
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search..."
+                        placeholderTextColor={"black"}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         autoFocus={true}
@@ -211,6 +213,10 @@ import DocumentPicker from "react-native-document-picker";
 import { launchImageLibrary } from "react-native-image-picker";
 import ApproverModal from "../components/Modals/ApproverModal";
 import Toast from "react-native-toast-message";
+import SelectField from "../components/Modals/SelectField";
+import SelectModal from "../components/Modals/SelectModal";
+import SelectPickerModal from "../components/Modals/SelectModal";
+import DatePickerSheet from "../components/DatePickerSheet";
 const CreateMSA = ({ route, navigation }: any) => {
     const { type } = route.params;
     console.log("log", type);
@@ -240,9 +246,7 @@ const CreateMSA = ({ route, navigation }: any) => {
     const [paymentTermsList, setPaymentTermsList] = useState<any[]>([]);
     const [paymentTerms, setPaymentTerms] = useState<any[]>([]);
 
-    const [frequency, setFrequency] = useState("");
-    const [terminationClause, setTerminationClause] = useState("");
-    const [confidentiality, setConfidentiality] = useState("");
+
     const [specialClauses, setSpecialClauses] = useState("");
     const [comments, setComments] = useState("");
     const [files, setFiles] = useState<any[]>([]);
@@ -256,7 +260,6 @@ const CreateMSA = ({ route, navigation }: any) => {
     const [assignResource, setAssignResource] = useState(false);
     const [assignMasterData, setAssignMasterData] = useState(false);
     const [currencies, setCurrencies] = useState<any[]>([]);
-    const [selectedCurrency, setSelectedCurrency] = useState("");
     const [selectedPaymentTerm, setSelectedPaymentTerm] = useState("");
 
 
@@ -284,6 +287,30 @@ const CreateMSA = ({ route, navigation }: any) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    const [activeDateField, setActiveDateField] = useState<'start' | 'end' | null>(null);
+
+
+
+
+    const [frequency, setFrequency] = useState<any>(null);
+    const [terminationClause, setTerminationClause] = useState<any>(null);
+    const [confidentiality, setConfidentiality] = useState<any>(null);
+    const [selectedCurrency, setSelectedCurrency] = useState<any>(null);
+
+
+
+    const [industryModal, setIndustryModal] = useState(false);
+    const [businessUnitModal, setBusinessUnitModal] = useState(false);
+    const [msaTypeModal, setMsaTypeModal] = useState(false);
+    const [glAccountModal, setGlAccountModal] = useState(false);
+    const [currencyModal, setCurrencyModal] = useState(false);
+    const [taxServiceModal, setTaxServiceModal] = useState(false);
+    const [taxGroupModal, setTaxGroupModal] = useState(false);
+    const [paymentTermModal, setPaymentTermModal] = useState(false);
+    const [confidentialityModal, setConfidentialityModal] = useState(false);
+    const [frequencyModal, setFrequencyModal] = useState(false);
+    const [terminationClauseModal, setTerminationClauseModal] = useState(false);
 
     const frequencyOptions = [
         { value: "1", label: "Recurring Monthly" },
@@ -333,12 +360,10 @@ const CreateMSA = ({ route, navigation }: any) => {
 
         // Payment Terms validation
         if (!selectedPaymentTerm) newErrors.selectedPaymentTerm = "Payment Terms is required";
-        if (!frequency) newErrors.frequency = "Frequency is required";
-        if (!terminationClause) newErrors.terminationClause = "Termination Clause is required";
-        if (!confidentiality) newErrors.confidentiality = "Confidentiality and IP Ownership is required";
-
-        // Currency validation
-        if (!selectedCurrency) newErrors.selectedCurrency = "Currency is required";
+        if (!frequency?.id) newErrors.frequency = "Frequency is required";
+        if (!terminationClause?.id) newErrors.terminationClause = "Termination Clause is required";
+        if (!confidentiality?.id) newErrors.confidentiality = "Confidentiality is required";
+        if (!selectedCurrency?.currency) newErrors.selectedCurrency = "Currency is required";
 
         // Budget validation
         if (!budget.trim()) {
@@ -624,6 +649,8 @@ const CreateMSA = ({ route, navigation }: any) => {
             try {
                 const response = await Services.getMSAFields();
                 if (response.success) {
+                    console.log("log us", response);
+
                     setFields(response.data.payload);
                 }
             } catch (err) {
@@ -643,6 +670,8 @@ const CreateMSA = ({ route, navigation }: any) => {
             try {
                 const response = await Services.getCurrencyDetails();
                 if (response.success) {
+                    console.log("cur", response);
+
                     setCurrencies(response.data);
 
                 }
@@ -694,10 +723,11 @@ const CreateMSA = ({ route, navigation }: any) => {
             console.log("Error picking image:", err);
         }
     };
-    const showDatePicker = (field: any) => {
-        setCurrentDateField(field);
+    const showDatePicker = (type: 'start' | 'end') => {
+        setActiveDateField(type);
         setDatePickerVisible(true);
     };
+
 
     const handleDateChange = (event: any, selectedDate: any) => {
         setDatePickerVisible(Platform.OS === 'ios');
@@ -709,16 +739,23 @@ const CreateMSA = ({ route, navigation }: any) => {
             }
         }
     };
+    const onDateChange = (_event: any, selectedDate?: Date) => {
+        if (!selectedDate) return;
+
+        if (activeDateField === 'start') {
+            setStartDate(selectedDate);
+            clearError('startDate');
+        }
+
+        if (activeDateField === 'end') {
+            setEndDate(selectedDate);
+            clearError('endDate');
+        }
+    };
 
 
     const handleSubmit = async () => {
-        // Validate required fields
-        // if (!msaName || !industry || !description || !businessUnit || !msaType ||
-        //     !glAccount || !taxService || !taxGroup || !savingsPercentage ||
-        //     !selectedPaymentTerm || !frequency || !terminationClause || !selectedCurrency || !budget) {
-        //   Alert.alert("Error", "Please fill all required fields");
-        //   return;
-        // }
+    
         if (!validateForm()) {
             Toast.show({
                 type: 'error',
@@ -746,43 +783,59 @@ const CreateMSA = ({ route, navigation }: any) => {
                 uri: file.uri || file.path,
                 fileType: file.fileType || 'other'
             }));
-            // Prepare the data for API
+
             const formData = {
                 msa_number: refNumber || null,
                 name: msaName,
-                budget: parseFloat(budget),
+                budget: Number(budget),
+
                 start_date: `${formatDate(startDate)} 00:00:00`,
                 end_date: `${formatDate(endDate)} 23:59:59`,
-                description: description,
-                savings_percentage: parseFloat(savingsPercentage),
-                comments: comments,
+
+                description,
+                savings_percentage: Number(savingsPercentage),
+                comments,
                 status: "pending_approval",
                 is_active: true,
-                msa_type: parseInt(msaType),
-                msa_flow: type === "contractor" ? 1 : 2, // 1 for Contractor, 2 for Service
-                unpsc_code: parseInt(industry),
-                business_unit: parseInt(businessUnit),
-                gl_account: parseInt(glAccount),
-                resource: assignResource && selectedResource ? selectedResource.id : null,
-                agency: assignAgency && selectedAgency ? selectedAgency.id : null,
-                tax_service_type: parseInt(taxService),
-                tax_group: parseInt(taxGroup),
-                approver: isMSAApproverEnabled && selectedApprover ? selectedApprover.id : null,
-                currency_code: selectedCurrency,
-                organisation: null,
-                masterdata: assignMasterData && selectedMasterData ? selectedMasterData.id : null,
-                for_organisation: false,
-                attachments: files.map(file => file.name || file.fileName),
-                attachment_data: attachmentData,
-                payment_term: parseInt(selectedPaymentTerm),
-                frequency: parseInt(frequency),
-                termination_clause: parseInt(terminationClause),
-                confidentiality_ownership: parseInt(confidentiality),
+
+                msa_type: Number(msaType?.id),
+                msa_flow: type === "contractor" ? 1 : 2,
+
+                unpsc_code: Number(industry?.id),
+                business_unit: Number(businessUnit?.id),
+                gl_account: Number(glAccount?.id),
+
+                tax_service_type: Number(taxService?.id),
+                tax_group: Number(taxGroup?.id),
+
+                payment_term: Number(selectedPaymentTerm?.id),
+
+                frequency: Number(frequency?.id),
+                termination_clause: Number(terminationClause?.id),
+                confidentiality_ownership: Number(confidentiality?.id),
+
+                // ✅ BACKEND EXPECTS STRING
+                currency_code: selectedCurrency?.currency,
+
+                agency: assignAgency ? selectedAgency?.id : null,
+                resource: assignResource ? selectedResource?.id : null,
+                masterdata: assignMasterData ? selectedMasterData?.id : null,
+
+                approver: isMSAApproverEnabled ? selectedApprover?.id : null,
+
                 special_clause: specialClauses,
+
                 jurisdiction_country: jurisdiction === "yes" ? selectedCountry : "N/A",
                 jurisdiction_state: jurisdiction === "yes" ? selectedState : "N/A",
-                jurisdiction_district: jurisdiction === "yes" ? district : "N/A"
+                jurisdiction_district: jurisdiction === "yes" ? district : "N/A",
+
+                organisation: null,
+                for_organisation: false,
+
+                attachments: files.map(f => f.name || f.fileName),
+                attachment_data: attachmentData,
             };
+
             // Call your API to create MSA
 
             console.log("formData", formData);
@@ -892,6 +945,15 @@ const CreateMSA = ({ route, navigation }: any) => {
 
     return (
         <SafeAreaView style={styles.container}>
+
+                    <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+              >
+
+
+
             <ScrollView style={styles.scroll}>
                 <Text style={styles.title}>Master Service Agreement({type}) </Text>
 
@@ -900,6 +962,7 @@ const CreateMSA = ({ route, navigation }: any) => {
                 <TextInput
                     style={[styles.input, errors.msaName && styles.inputError]}
                     placeholder="MSA NAME"
+                    placeholderTextColor={"black"}
                     value={msaName}
                     onChangeText={(text) => {
                         setMsaName(text);
@@ -909,28 +972,33 @@ const CreateMSA = ({ route, navigation }: any) => {
                 {errors.msaName && <Text style={styles.errorText}>{errors.msaName}</Text>}
 
                 {/* Industry Material Group */}
-                <Text style={styles.label}>Industry Material Group *</Text>
-                <View style={[styles.pickerContainer, errors.industry && styles.pickerError]}>
-                    <Picker
-                        selectedValue={industry}
-                        onValueChange={(val) => {
-                            setIndustry(val);
-                            clearError('industry');
-                        }}
-                    >
-                        <Picker.Item label="Select Industry Material Group" value="" />
-                        {fields?.unpsc_code?.map((item: any) => (
-                            <Picker.Item key={item.id} label={item.name} value={item.id} />
-                        ))}
-                    </Picker>
-                </View>
+                <TouchableOpacity
+                    style={styles.input}
+                    onPress={() => setIndustryModal(true)}
+                >
+                    <Text>
+                        {industry?.name || 'Select Industry Material Group'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={industryModal}
+                    title="Select Industry Material Group"
+                    data={fields?.unpsc_code}
+                    selectedValue={industry?.id}
+                    onSelect={(item) => setIndustry(item)}
+                    onClose={() => setIndustryModal(false)}
+                />
+
                 {errors.industry && <Text style={styles.errorText}>{errors.industry}</Text>}
 
                 {/* Description */}
-               <Text style={styles.label}>Description *</Text>
+                <Text style={styles.label}>Description *</Text>
                 <TextInput
                     style={[styles.input, styles.textArea, errors.description && styles.inputError]}
                     placeholder="Description"
+                    placeholderTextColor={"black"}
+
                     value={description}
                     onChangeText={(text) => {
                         setDescription(text);
@@ -980,66 +1048,99 @@ const CreateMSA = ({ route, navigation }: any) => {
                 <TextInput
                     style={styles.input}
                     placeholder="REFERENCE NUMBER"
+                    placeholderTextColor={"black"}
+
                     value={refNumber}
                     onChangeText={setRefNumber}
                 />
 
-                   {/* Business Unit */}
+                {/* Business Unit */}
                 <Text style={styles.label}>Business Unit *</Text>
-                <View style={[styles.pickerContainer, errors.businessUnit && styles.pickerError]}>
-                    <Picker
-                        selectedValue={businessUnit}
-                        onValueChange={(val) => {
-                            setBusinessUnit(val);
-                            clearError('businessUnit');
-                        }}
-                    >
-                        <Picker.Item label="Select Business Unit" value="" />
-                        {fields?.business_unit?.map((item: any) => (
-                            <Picker.Item key={item.id} label={item.name} value={item.id} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.businessUnit && <Text style={styles.errorText}>{errors.businessUnit}</Text>}
+
+                <TouchableOpacity
+                    style={[styles.input, errors.businessUnit && styles.inputError]}
+                    onPress={() => setBusinessUnitModal(true)}
+                >
+                    <Text>
+                        {businessUnit?.name || 'Select Business Unit'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={businessUnitModal}
+                    title="Select Business Unit"
+                    data={fields?.business_unit}
+                    selectedValue={businessUnit?.id}
+                    onSelect={(item) => {
+                        setBusinessUnit(item);
+                        clearError('businessUnit');
+                    }}
+                    onClose={() => setBusinessUnitModal(false)}
+                />
+
+                {errors.businessUnit && (
+                    <Text style={styles.errorText}>{errors.businessUnit}</Text>
+                )}
+
 
                 {/* MSA Type */}
                 <Text style={styles.label}>MSA Type *</Text>
-                <View style={[styles.pickerContainer, errors.msaType && styles.pickerError]}>
-                    <Picker
-                        selectedValue={msaType}
-                        onValueChange={(val) => {
-                            setMsaType(val);
-                            clearError('msaType');
-                        }}
-                    >
-                        <Picker.Item label="Select MSA Type" value="" />
-                        {fields?.msa_type?.map((item: any) => (
-                            <Picker.Item key={item.id} label={item.name} value={item.id} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.msaType && <Text style={styles.errorText}>{errors.msaType}</Text>}
+
+                <TouchableOpacity
+                    style={[styles.input, errors.msaType && styles.inputError]}
+                    onPress={() => setMsaTypeModal(true)}
+                >
+                    <Text>
+                        {msaType?.name || 'Select MSA Type'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={msaTypeModal}
+                    title="Select MSA Type"
+                    data={fields?.msa_type}
+                    selectedValue={msaType?.id}
+                    onSelect={(item) => {
+                        setMsaType(item);
+                        clearError('msaType');
+                    }}
+                    onClose={() => setMsaTypeModal(false)}
+                />
+
+                {errors.msaType && (
+                    <Text style={styles.errorText}>{errors.msaType}</Text>
+                )}
 
                 {/* GL Account */}
                 <Text style={styles.label}>GL Account *</Text>
-                <View style={[styles.pickerContainer, errors.glAccount && styles.pickerError]}>
-                    <Picker
-                        selectedValue={glAccount}
-                        onValueChange={(val) => {
-                            setGlAccount(val);
-                            clearError('glAccount');
-                        }}
-                    >
-                        <Picker.Item label="Select GL Account" value="" />
-                        {fields?.gl_account?.map((item: any) => (
-                            <Picker.Item key={item.id} label={item.name} value={item.id} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.glAccount && <Text style={styles.errorText}>{errors.glAccount}</Text>}
+
+                <TouchableOpacity
+                    style={[styles.input, errors.glAccount && styles.inputError]}
+                    onPress={() => setGlAccountModal(true)}
+                >
+                    <Text>
+                        {glAccount?.name || 'Select GL Account'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={glAccountModal}
+                    title="Select GL Account"
+                    data={fields?.gl_account}
+                    selectedValue={glAccount?.id}
+                    onSelect={(item) => {
+                        setGlAccount(item);
+                        clearError('glAccount');
+                    }}
+                    onClose={() => setGlAccountModal(false)}
+                />
+
+                {errors.glAccount && (
+                    <Text style={styles.errorText}>{errors.glAccount}</Text>
+                )}
 
                 <View style={styles.divider} />
-                  {/* Date and Currency Row */}
+                {/* Date and Currency Row */}
                 <View style={styles.row}>
                     <View style={styles.column}>
                         <Text style={styles.label}>Start Date *</Text>
@@ -1069,25 +1170,34 @@ const CreateMSA = ({ route, navigation }: any) => {
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>Currency *</Text>
-                        <View style={[styles.pickerContainer, errors.selectedCurrency && styles.pickerError]}>
-                            <Picker
-                                selectedValue={selectedCurrency}
-                                onValueChange={(val) => {
-                                    setSelectedCurrency(val);
-                                    clearError('selectedCurrency');
-                                }}
-                            >
-                                <Picker.Item label="Select Currency" value="" />
-                                {currencies.map((item: any) => (
-                                    <Picker.Item
-                                        key={item.id}
-                                        label={`${item.currency} - ${item.country_name}`}
-                                        value={item.currency}
-                                    />
-                                ))}
-                            </Picker>
-                        </View>
-                        {errors.selectedCurrency && <Text style={styles.errorText}>{errors.selectedCurrency}</Text>}
+
+                        <TouchableOpacity
+                            style={[styles.input, errors.selectedCurrency && styles.inputError]}
+                            onPress={() => setCurrencyModal(true)}
+                        >
+                            <Text>
+                                {selectedCurrency
+                                    ? `${selectedCurrency.currency} - ${selectedCurrency.country_name}`
+                                    : 'Select Currency'}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <SelectPickerModal
+                            visible={currencyModal}
+                            title="Select Currency"
+                            data={currencies}
+                            selectedValue={selectedCurrency?.id}
+                            onSelect={setSelectedCurrency}
+                            onClose={() => setCurrencyModal(false)}
+                            labelExtractor={(item) =>
+                                `${item.currency} - ${item.country_name}`
+                            }
+                        />
+
+                        {errors.selectedCurrency && (
+                            <Text style={styles.errorText}>{errors.selectedCurrency}</Text>
+                        )}
+
                     </View>
 
                 </View>
@@ -1097,6 +1207,8 @@ const CreateMSA = ({ route, navigation }: any) => {
                 <TextInput
                     style={[styles.input, errors.budget && styles.inputError]}
                     placeholder="Budget"
+                    placeholderTextColor={"black"}
+
                     value={budget}
                     onChangeText={(text) => {
                         setBudget(text);
@@ -1106,49 +1218,73 @@ const CreateMSA = ({ route, navigation }: any) => {
                 />
                 {errors.budget && <Text style={styles.errorText}>{errors.budget}</Text>}
 
-                 {/* Tax Information Row */}
+                {/* Tax Information Row */}
                 <View style={styles.row}>
                     <View style={styles.column}>
                         <Text style={styles.label}>Tax Service Type *</Text>
-                        <View style={[styles.pickerContainer, errors.taxService && styles.pickerError]}>
-                            <Picker
-                                selectedValue={taxService}
-                                onValueChange={(val) => {
-                                    setTaxService(val);
-                                    clearError('taxService');
-                                }}
-                            >
-                                <Picker.Item label="Select Tax Service" value="" />
-                                {fields?.tax_service_type?.map((item: any) => (
-                                    <Picker.Item key={item.id} label={item.name} value={item.id} />
-                                ))}
-                            </Picker>
-                        </View>
-                        {errors.taxService && <Text style={styles.errorText}>{errors.taxService}</Text>}
+
+                        <TouchableOpacity
+                            style={[styles.input, errors.taxService && styles.inputError]}
+                            onPress={() => setTaxServiceModal(true)}
+                        >
+                            <Text>
+                                {taxService?.name || 'Select Tax Service'}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <SelectPickerModal
+                            visible={taxServiceModal}
+                            title="Select Tax Service"
+                            data={fields?.tax_service_type}
+                            selectedValue={taxService?.id}
+                            onSelect={(item) => {
+                                setTaxService(item);
+                                clearError('taxService');
+                            }}
+                            onClose={() => setTaxServiceModal(false)}
+                        />
+
+                        {errors.taxService && (
+                            <Text style={styles.errorText}>{errors.taxService}</Text>
+                        )}
+
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>Tax Group *</Text>
-                        <View style={[styles.pickerContainer, errors.taxGroup && styles.pickerError]}>
-                            <Picker
-                                selectedValue={taxGroup}
-                                onValueChange={(val) => {
-                                    setTaxGroup(val);
-                                    clearError('taxGroup');
-                                }}
-                            >
-                                <Picker.Item label="Select Tax Group" value="" />
-                                {fields?.tax_group?.map((item: any) => (
-                                    <Picker.Item key={item.id} label={item.name} value={item.id} />
-                                ))}
-                            </Picker>
-                        </View>
-                        {errors.taxGroup && <Text style={styles.errorText}>{errors.taxGroup}</Text>}
+
+                        <TouchableOpacity
+                            style={[styles.input, errors.taxGroup && styles.inputError]}
+                            onPress={() => setTaxGroupModal(true)}
+                        >
+                            <Text>
+                                {taxGroup?.name || 'Select Tax Group'}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <SelectPickerModal
+                            visible={taxGroupModal}
+                            title="Select Tax Group"
+                            data={fields?.tax_group}
+                            selectedValue={taxGroup?.id}
+                            onSelect={(item) => {
+                                setTaxGroup(item);
+                                clearError('taxGroup');
+                            }}
+                            onClose={() => setTaxGroupModal(false)}
+                        />
+
+                        {errors.taxGroup && (
+                            <Text style={styles.errorText}>{errors.taxGroup}</Text>
+                        )}
+
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>Savings Percentage *</Text>
                         <TextInput
                             style={[styles.input, errors.savingsPercentage && styles.inputError]}
                             placeholder="SAVINGS PERCENTAGE"
+                    placeholderTextColor={"black"}
+
                             value={savingsPercentage}
                             onChangeText={(text) => {
                                 setSavingsPercentage(text);
@@ -1164,57 +1300,87 @@ const CreateMSA = ({ route, navigation }: any) => {
 
                 {/* Payment Terms */}
                 <Text style={styles.label}>Payment Terms *</Text>
-                <View style={[styles.pickerContainer, errors.selectedPaymentTerm && styles.pickerError]}>
-                    <Picker
-                        selectedValue={selectedPaymentTerm}
-                        onValueChange={(val) => {
-                            setSelectedPaymentTerm(val);
-                            clearError('selectedPaymentTerm');
-                        }}
-                    >
-                        <Picker.Item label="Select Payment Term" value="" />
-                        {paymentTermsList?.map((item: any) => (
-                            <Picker.Item key={item.id} label={item.name} value={item.id} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.selectedPaymentTerm && <Text style={styles.errorText}>{errors.selectedPaymentTerm}</Text>}
+
+                <TouchableOpacity
+                    style={[styles.input, errors.selectedPaymentTerm && styles.inputError]}
+                    onPress={() => setPaymentTermModal(true)}
+                >
+                    <Text>
+                        {selectedPaymentTerm?.name || 'Select Payment Term'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={paymentTermModal}
+                    title="Select Payment Term"
+                    data={paymentTermsList}
+                    selectedValue={selectedPaymentTerm?.id}
+                    onSelect={(item) => {
+                        setSelectedPaymentTerm(item);
+                        clearError('selectedPaymentTerm');
+                    }}
+                    onClose={() => setPaymentTermModal(false)}
+                />
+
+                {errors.selectedPaymentTerm && (
+                    <Text style={styles.errorText}>{errors.selectedPaymentTerm}</Text>
+                )}
 
                 {/* Confidentiality and IP Ownership */}
                 <Text style={styles.label}>Confidentiality and IP Ownership *</Text>
-                <View style={[styles.pickerContainer, errors.confidentiality && styles.pickerError]}>
-                    <Picker
-                        selectedValue={confidentiality}
-                        onValueChange={(val) => {
-                            setConfidentiality(val);
-                            clearError('confidentiality');
-                        }}
-                    >
-                        <Picker.Item label="Select Confidentiality" value="" />
-                        {confidentialityOptions.map((item) => (
-                            <Picker.Item key={item.value} label={item.label} value={item.value} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.confidentiality && <Text style={styles.errorText}>{errors.confidentiality}</Text>}
+
+                <TouchableOpacity
+                    style={[styles.input, errors.confidentiality && styles.inputError]}
+                    onPress={() => setConfidentialityModal(true)}
+                >
+                    <Text>
+                        {confidentiality?.name || 'Select Confidentiality'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={confidentialityModal}
+                    title="Select Confidentiality"
+                    data={confidentialityOptions.map(o => ({ id: o.value, name: o.label }))}
+                    selectedValue={confidentiality?.id}
+                    onSelect={(item) => {
+                        setConfidentiality(item);
+                        clearError('confidentiality');
+                    }}
+                    onClose={() => setConfidentialityModal(false)}
+                />
+
+                {errors.confidentiality && (
+                    <Text style={styles.errorText}>{errors.confidentiality}</Text>
+                )}
 
                 {/* Frequency */}
                 <Text style={styles.label}>Frequency *</Text>
-                <View style={[styles.pickerContainer, errors.frequency && styles.pickerError]}>
-                    <Picker
-                        selectedValue={frequency}
-                        onValueChange={(val) => {
-                            setFrequency(val);
-                            clearError('frequency');
-                        }}
-                    >
-                        <Picker.Item label="Select Frequency" value="" />
-                        {frequencyOptions.map((item) => (
-                            <Picker.Item key={item.value} label={item.label} value={item.value} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.frequency && <Text style={styles.errorText}>{errors.frequency}</Text>}
+
+                <TouchableOpacity
+                    style={[styles.input, errors.frequency && styles.inputError]}
+                    onPress={() => setFrequencyModal(true)}
+                >
+                    <Text>
+                        {frequency?.name || 'Select Frequency'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={frequencyModal}
+                    title="Select Frequency"
+                    data={frequencyOptions.map(o => ({ id: o.value, name: o.label }))}
+                    selectedValue={frequency?.id}
+                    onSelect={(item) => {
+                        setFrequency(item);
+                        clearError('frequency');
+                    }}
+                    onClose={() => setFrequencyModal(false)}
+                />
+
+                {errors.frequency && (
+                    <Text style={styles.errorText}>{errors.frequency}</Text>
+                )}
 
                 {/* Special Clauses */}
                 <View style={styles.column}>
@@ -1222,6 +1388,8 @@ const CreateMSA = ({ route, navigation }: any) => {
                     <TextInput
                         style={[styles.input, errors.specialClauses && styles.inputError]}
                         placeholder="SPECIAL CLAUSES"
+                    placeholderTextColor={"black"}
+
                         value={specialClauses}
                         onChangeText={(text) => {
                             setSpecialClauses(text);
@@ -1233,23 +1401,33 @@ const CreateMSA = ({ route, navigation }: any) => {
 
                 {/* Termination Clause */}
                 <Text style={styles.label}>Termination Clause *</Text>
-                <View style={[styles.pickerContainer, errors.terminationClause && styles.pickerError]}>
-                    <Picker
-                        selectedValue={terminationClause}
-                        onValueChange={(val) => {
-                            setTerminationClause(val);
-                            clearError('terminationClause');
-                        }}
-                    >
-                        <Picker.Item label="Select Termination Clause" value="" />
-                        {terminationClauseOptions.map((item) => (
-                            <Picker.Item key={item.value} label={item.label} value={item.value} />
-                        ))}
-                    </Picker>
-                </View>
-                {errors.terminationClause && <Text style={styles.errorText}>{errors.terminationClause}</Text>}
 
- {/* Jurisdiction */}
+                <TouchableOpacity
+                    style={[styles.input, errors.terminationClause && styles.inputError]}
+                    onPress={() => setTerminationClauseModal(true)}
+                >
+                    <Text>
+                        {terminationClause?.name || 'Select Termination Clause'}
+                    </Text>
+                </TouchableOpacity>
+
+                <SelectPickerModal
+                    visible={terminationClauseModal}
+                    title="Select Termination Clause"
+                    data={terminationClauseOptions.map(o => ({ id: o.value, name: o.label }))}
+                    selectedValue={terminationClause?.id}
+                    onSelect={(item) => {
+                        setTerminationClause(item);
+                        clearError('terminationClause');
+                    }}
+                    onClose={() => setTerminationClauseModal(false)}
+                />
+
+                {errors.terminationClause && (
+                    <Text style={styles.errorText}>{errors.terminationClause}</Text>
+                )}
+
+                {/* Jurisdiction */}
                 <View>
                     <Text style={styles.label}>Location/Jurisdiction *</Text>
                     <View style={styles.radioContainer}>
@@ -1315,6 +1493,8 @@ const CreateMSA = ({ route, navigation }: any) => {
                             <TextInput
                                 style={[styles.input, errors.district && styles.inputError]}
                                 placeholder="Enter District"
+                    placeholderTextColor={"black"}
+
                                 value={district}
                                 onChangeText={(text) => {
                                     setDistrict(text);
@@ -1333,6 +1513,7 @@ const CreateMSA = ({ route, navigation }: any) => {
                 <TextInput
                     style={[styles.input, styles.textArea, errors.comments && styles.inputError]}
                     placeholder="Comments"
+                    placeholderTextColor={'black'}
                     value={comments}
                     onChangeText={(text) => {
                         setComments(text);
@@ -1386,6 +1567,8 @@ const CreateMSA = ({ route, navigation }: any) => {
                 <TextInput
                     style={styles.input}
                     placeholder="UPDATED VERSION"
+                    placeholderTextColor={"black"}
+
                     value={version}
                     onChangeText={setVersion}
                 />
@@ -1503,7 +1686,21 @@ const CreateMSA = ({ route, navigation }: any) => {
                     onSelect={handleMasterDataSelect}
                     selectedProfile={selectedMasterData}
                 />
+
+                <DatePickerSheet
+                    visible={datePickerVisible}
+                    date={activeDateField === 'start' ? startDate : endDate}
+                    onChange={onDateChange}
+                    onClose={() => {
+                        setDatePickerVisible(false);
+                        setActiveDateField(null);
+                    }}
+                />
+
+                
+
             </ScrollView>
+              </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -1539,7 +1736,7 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: "#454141ff",
         padding: 12,
         borderRadius: 6,
         marginBottom: 8,
@@ -1579,9 +1776,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         marginBottom: 8,
+        
     },
     checkboxLabel: {
-        marginLeft: 8,
+        marginLeft: 15,
         fontSize: 14,
     },
     radioContainer: {
@@ -1705,7 +1903,7 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: '#3c3838ff',
         borderRadius: 5,
         padding: 10,
         marginBottom: 15,

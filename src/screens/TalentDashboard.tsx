@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState,useCallback  } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     StyleSheet,
     View,
@@ -13,6 +13,7 @@ import {
     ActivityIndicator,
     Image,
     DeviceEventEmitter,
+    Platform,
 
 } from 'react-native';
 import Services from '../Services/services';
@@ -22,6 +23,7 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import OrganizationProfileModal from '../components/Modals/OrganizationProfileModal';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Notifications from '../components/Modals/Notifications';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 const { height } = Dimensions.get("window");
@@ -40,9 +42,9 @@ const TalentDashboard = () => {
     const [hasPremiumAccess, setHasPremiumAccess] = useState(true);
     const [dashboardData, setDashboardData] = useState(null);
     const [userData, setUserData] = useState<any>({});
-const [companyName, setCompanyName] = useState("");
+    const [companyName, setCompanyName] = useState("");
 
-
+    const insets = useSafeAreaInsets();
     useEffect(() => {
         const checkProfileStatus = async () => {
             const isActive = await AsyncStorage.getItem('isActive');
@@ -127,223 +129,198 @@ const [companyName, setCompanyName] = useState("");
 
 
 
-  useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener(
-      "COMPANY_UPDATED",
-      (newName) => {
-        setCompanyName(newName); // 🔥 Instantly update dashboard header
-      }
-    );
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener(
+            "COMPANY_UPDATED",
+            (newName) => {
+                setCompanyName(newName); // 🔥 Instantly update dashboard header
+            }
+        );
 
-    return () => subscription.remove();
-  }, []);
-
-
-useEffect(() => {
-  const init = async () => {
-    try {
-      // ---- Fetch user name ----
-      const fName = await AsyncStorage.getItem('first_Name');
-      const lName = await AsyncStorage.getItem('last_Name');
-
-      if (fName) setFirstName(fName);
-      if (lName) setLastName(lName);
-
-      // ---- Fetch premium access ----
-      const storedValue = await AsyncStorage.getItem('hasPremiumAccess');
-      const premium = JSON.parse(storedValue || 'false');
-      setHasPremiumAccess(premium);
-
-      // ---- Fetch company name ----
-    
-   const storedCompany = await AsyncStorage.getItem('company');
-      console.log("storedCompany", storedCompany);
-
-      if (storedCompany) {
-        setCompanyName(storedCompany); // 🔥 Update state
-      }
-      // ---- Now update header ----
-      navigation.setOptions({
-        headerTitle: () => (
-          <View style={{ flexDirection: "column" }}>
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 15,
-                fontWeight: "bold",
-              }}
-            >
-              Talent Dashboard
-            </Text>
-
-            {companyName ? (
-              <Text
-                style={{
-                  color: "#fff",
-                  fontSize: 12,
-                  marginTop: 2,
-                }}
-              >
-                {companyName ? `(${companyName})` : ""}
-              </Text>
-            ) : null}
-          </View>
-        ),
-
-        headerRight: () => (
-          <>
-            <View>
-              <Notifications />
-            </View>
-
-            <View style={{ flexDirection: "row", marginRight: 10 }}>
-              {/* Premium / Upgrade Button */}
-              {premium ? (
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("SubscriptionScreen")}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginRight: 12,
-                    backgroundColor: "#ffd700",
-                    paddingHorizontal: 10,
-                    paddingVertical: 6,
-                    borderRadius: 6,
-                  }}
-                >
-                  <Icon name="crown" size={14} color="#000" />
-                  <Text
-                    style={{
-                      color: "#000",
-                      fontSize: 12,
-                      fontWeight: "bold",
-                      marginLeft: 5,
-                    }}
-                  >
-                    Premium
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("SubscriptionScreen")}
-                  style={{
-                    marginRight: 12,
-                    backgroundColor: "#fbbf24",
-                    paddingHorizontal: 10,
-                    paddingVertical: 6,
-                    borderRadius: 6,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#000",
-                      fontSize: 12,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Upgrade Plan
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Profile Icon */}
-              <TouchableOpacity
-                onPress={() => navigation.navigate("MyProfile")}
-              >
-                {userData?.profile_pic ? (
-                  <Image
-                    source={{
-                      uri: `${userData.profile_pic}?t=${Date.now()}`,
-                    }}
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 15,
-                      borderWidth: 1,
-                      borderColor: "#fff",
-                    }}
-                  />
-                ) : (
-                  <Icon name="account-circle" size={28} color="#fff" />
-                )}
-              </TouchableOpacity>
-            </View>
-          </>
-        ),
-
-        headerStyle: {
-          backgroundColor: "#0E3386",
-        },
-        headerTintColor: "#fff",
-        headerTitleStyle: {
-          fontWeight: "bold",
-        },
-      });
-    } catch (e) {
-      console.log("Error loading dashboard data:", e);
-    }
-  };
-
-  init();
-}, [navigation, hasPremiumAccess, userData ,companyName]);
+        return () => subscription.remove();
+    }, []);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-useFocusEffect(
-    useCallback(() => {
-        const fetchDashboardData = async () => {
-            setDashboardLoading(true);
+    useEffect(() => {
+        const init = async () => {
             try {
-                const response = await Services.getResourceDashboard();
-                console.log("Dashboard API Response:", response);
+                // ---- Fetch user data ----
+                const fName = await AsyncStorage.getItem('first_Name');
+                const lName = await AsyncStorage.getItem('last_Name');
+                if (fName) setFirstName(fName);
+                if (lName) setLastName(lName);
 
-                if (response.success) {
-                    setDashboardData(response.data.payload);
-                } else {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Error',
-                        text2: response.error || 'Failed to fetch dashboard data',
-                    });
+                // ---- Fetch premium access ----
+                const storedValue = await AsyncStorage.getItem('hasPremiumAccess');
+                const premium = JSON.parse(storedValue || 'false');
+                setHasPremiumAccess(premium);
+
+                // ---- Fetch company name ----
+                const storedCompany = await AsyncStorage.getItem('company');
+                if (storedCompany) {
+                    setCompanyName(storedCompany);
                 }
-            } catch (err) {
-                console.error("Dashboard fetch error:", err);
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error',
-                    text2: 'Something went wrong while loading dashboard',
+
+                // ---- Apply Header Fixes ----
+                navigation.setOptions({
+                    headerTitleAlign: 'left',
+                    headerBackTitle: '',
+                    // 1. Fix for Dynamic Island / Notch
+                    headerStatusBarHeight: Platform.OS === 'ios' ? insets.top : undefined,
+
+                    headerTitle: () => (
+                        <View style={{ flexDirection: "column", justifyContent: 'center', height: 44 }}>
+                            <Text
+                                style={{
+                                    color: "#fff",
+                                    // 2. Smaller font for iOS to prevent icon overlap
+                                    fontSize: Platform.OS === 'ios' ? 13 : 15,
+                                    fontWeight: "bold",
+                                }}
+                                numberOfLines={1}
+                            >
+                                Talent Dashboard
+                            </Text>
+
+                            {companyName ? (
+                                <Text
+                                    style={{
+                                        color: "#E5E7EB",
+                                        fontSize: 10,
+                                        marginTop: 1,
+                                    }}
+                                    numberOfLines={1}
+                                >
+                                    ({companyName})
+                                </Text>
+                            ) : null}
+                        </View>
+                    ),
+
+                    headerRight: () => (
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: 'center',
+                            marginRight: 10,
+                            height: 44
+                        }}>
+                            <View>
+                                <Notifications />
+                            </View>
+
+                            <View style={{ flexDirection: "row", alignItems: 'center', marginLeft: 5 }}>
+                                {/* Premium / Upgrade Button */}
+                                {premium ? (
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate("SubscriptionScreen")}
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            marginHorizontal: 8,
+                                            backgroundColor: "#ffd700",
+                                            paddingHorizontal: 8,
+                                            paddingVertical: 5,
+                                            borderRadius: 6,
+                                        }}
+                                    >
+                                        <Icon name="crown" size={12} color="#000" />
+                                        <Text style={{ color: '#000', fontSize: 11, fontWeight: 'bold', marginLeft: 3 }}>
+                                            Premium
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate("SubscriptionScreen")}
+                                        style={{
+                                            marginHorizontal: 8,
+                                            backgroundColor: "#fbbf24",
+                                            paddingHorizontal: 8,
+                                            paddingVertical: 5,
+                                            borderRadius: 6,
+                                        }}
+                                    >
+                                        <Text style={{ color: '#000', fontSize: 11, fontWeight: 'bold' }}>
+                                            Upgrade
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+
+                                {/* Profile Icon */}
+                                <TouchableOpacity onPress={() => navigation.navigate("MyProfile")}>
+                                    {userData?.profile_pic ? (
+                                        <Image
+                                            source={{
+                                                uri: `${userData.profile_pic}?t=${Date.now()}`,
+                                            }}
+                                            style={{
+                                                width: 28,
+                                                height: 28,
+                                                borderRadius: 14,
+                                                borderWidth: 1,
+                                                borderColor: "#fff",
+                                            }}
+                                        />
+                                    ) : (
+                                        <Icon name="account-circle" size={26} color="#fff" />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    ),
+                    headerBackTitleVisible: false,
+                    headerStyle: {
+                        backgroundColor: "#0E3386",
+                        // 3. Dynamic height calculation
+                        height: Platform.OS === 'ios' ? 44 + insets.top : 100,
+                        elevation: 0,
+                        shadowOpacity: 0,
+                    },
+                    headerTintColor: "#fff",
                 });
-            } finally {
-                setDashboardLoading(false);
+            } catch (e) {
+                console.log("Error loading dashboard data:", e);
             }
         };
 
-        fetchDashboardData();
+        init();
+    }, [navigation, hasPremiumAccess, userData, companyName, insets.top])
 
-        // Cleanup if needed
-        return () => {};
-    }, [])
-);
+
+    useFocusEffect(
+        useCallback(() => {
+            const fetchDashboardData = async () => {
+                setDashboardLoading(true);
+                try {
+                    const response = await Services.getResourceDashboard();
+                    console.log("Dashboard API Response:", response);
+
+                    if (response.success) {
+                        setDashboardData(response.data.payload);
+                    } else {
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Error',
+                            text2: response.error || 'Failed to fetch dashboard data',
+                        });
+                    }
+                } catch (err) {
+                    console.error("Dashboard fetch error:", err);
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error',
+                        text2: 'Something went wrong while loading dashboard',
+                    });
+                } finally {
+                    setDashboardLoading(false);
+                }
+            };
+
+            fetchDashboardData();
+
+            // Cleanup if needed
+            return () => { };
+        }, [])
+    );
 
 
     const earningCategories = [
@@ -536,11 +513,6 @@ useFocusEffect(
                                     </View>
                                 )}
 
-                                {/* View Details Button */}
-                                {/* <TouchableOpacity style={styles.viewDetailsButton}>
-                                    <Text style={styles.viewDetailsText}>View Details</Text>
-                                    <Icon name="chevron-right" size={16} color={item.iconColor} />
-                                </TouchableOpacity> */}
                             </View>
                         </View>
                     )}
@@ -550,20 +522,24 @@ useFocusEffect(
     };
 
     const allItems = [
-         { id: 1, icon: 'file-document-outline', label: 'AI-Full Review', screen: 'AIResFullReview', premium: false },
-        // { id: 2, icon: 'chip', label: 'AI-Review', screen: 'AIReview', premium: false },
-        // { id: 10, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: false },
-        { id: 2, icon: 'application-edit', label: 'MasterAgreement', screen: 'MasterAgreement', premium: false },
+        { id: 1, icon: 'file-document-outline', label: 'AI-Full Review', screen: 'AIResFullReview', premium: false },
+        { id: 2, icon: 'clipboard-text-outline', label: 'Job List ', screen: 'LatestJobsScreen', premium: false },
         { id: 3, icon: 'animation', label: 'StatementOfWork', screen: 'StatementOfWork', premium: false },
-        { id: 5, icon: 'briefcase-plus', label: 'Top Organisation', screen: 'Top Organisation', premium: false },
         { id: 4, icon: 'cog-outline', label: 'Settings', screen: 'Settings', premium: false },
+        { id: 5, icon: 'briefcase-plus', label: 'Top Organisation', screen: 'Top Organisation', premium: false },
         { id: 6, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
-        { id: 8, icon: 'account-group', label: 'Find Suppliers', screen: 'FindSuppliers', premium: false },
-        // { id: 16, icon: 'help-circle-outline', label: 'Supplier Details', screen: 'SupplierDetails', premium: false },
-        { id: 9, icon: 'scale-balance', label: 'Find Lawyers', screen: 'FindLawyers', premium: false },
         { id: 7, icon: 'help-circle-outline', label: 'Help', screen: 'HelpScreen', premium: false },
-    
-    
+        { id: 8, icon: 'account-group', label: 'Find Suppliers', screen: 'FindSuppliers', premium: false },
+        { id: 9, icon: 'scale-balance', label: 'Find Lawyers', screen: 'FindLawyers', premium: false },
+        { id: 10, icon: 'chip', label: 'AI-Review', screen: 'AIReview', premium: false },
+        { id: 11, icon: 'account-tie', label: 'Suppliers/Agencies', screen: 'SupplierAgency', premium: false },
+        // { id: 10, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: false },
+        // { id: 2, icon: 'application-edit', label: 'MasterAgreement', screen: 'MasterAgreement', premium: false },
+        // { id: 16, icon: 'help-circle-outline', label: 'Supplier Details', screen: 'SupplierDetails', premium: false },
+
+
+
+
     ];
 
     const gridItems = allItems.filter(item => hasPremiumAccess || !item.premium);
@@ -572,21 +548,7 @@ useFocusEffect(
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <ScrollView style={styles.scrollView}>
-                {/* <View style={styles.header2}>
-                    <TouchableOpacity
-                        onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-                        style={styles.menuButton}
-                    >
-                        <Icon name="menu" size={28} color="#fff" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Talent Dashboard</Text>
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('MyProfile')}
-                        style={styles.profileButton}
-                    >
-                        <Icon name="account-circle" size={28} color="#fff" />
-                    </TouchableOpacity>
-                </View> */}
+
 
                 {/* Header Section */}
                 <View style={styles.headerCard}>
@@ -606,7 +568,7 @@ useFocusEffect(
                             <Text style={styles.primaryButtonText}>View Jobs</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.secondaryButton}
-                            onPress={() => navigation.navigate("ViewTalentProfileScreen" )}
+                            onPress={() => navigation.navigate("ViewTalentProfileScreen")}
                         >
                             <Text style={styles.secondaryButtonText}>View Profile</Text>
                         </TouchableOpacity>
@@ -657,9 +619,7 @@ useFocusEffect(
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Your Application Status</Text>
-                        {/* <TouchableOpacity onPress={() => navigation.navigate("ApplicationStatus")}>
-                            <Text style={styles.viewAllText}>View Details</Text>
-                        </TouchableOpacity> */}
+
                     </View>
                     {renderAppliedJobsCard()}
                 </View>

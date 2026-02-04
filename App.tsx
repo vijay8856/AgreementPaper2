@@ -89,17 +89,15 @@ import UpdateChecker from './src/components/UpdateChecker';
 import { ToastProvider } from './src/components/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { withIAPContext } from 'react-native-iap';   // ← IMPORTANT
-
-import {
-  configure,
-  setTokenId,
-  setUserEmail,
-  setUserNickname,
-  setUserPhone,
-  setUserCompany,
-  setSessionSegments,
-  resetSession
-} from 'react-native-crisp-chat-sdk';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+// import {
+//   configure,
+//   setTokenId,
+//   setUserEmail,
+//   setUserNickname,
+//   setUserCompany,
+//   resetSession
+// } from './src/utils/crisp';
 
 
 const CRISP_WEBSITE_ID = "03838c24-284f-44fa-8de1-2702cc316c7b";
@@ -110,60 +108,60 @@ function App(): React.JSX.Element {
     const timer = setTimeout(() => setIsLoading(false), 3000);
     return () => clearTimeout(timer);
   }, []);
-useEffect(() => {
-  const initCrisp = async () => {
-    try {
-      // 1️⃣ Initialize Crisp with your website ID
-      configure("03838c24-284f-44fa-8de1-2702cc316c7b");
+// useEffect(() => {
+//   const initCrisp = async () => {
+//     try {
+//       // 1️⃣ Initialize Crisp with your website ID
+//       configure("03838c24-284f-44fa-8de1-2702cc316c7b");
 
-      // 2️⃣ Get user details saved at login
-      const [
-        userId,
-        email,
-        firstName,
-        lastName,
-        company,
-        hasLoggedIn,
-      ] = await AsyncStorage.multiGet([
-        "userId",
-        "email",
-        "first_Name",
-        "last_Name",
-        "company",
-        "hasLoggedIn",
-      ]).then((pairs) => pairs.map(p => p[1]));
+//       // 2️⃣ Get user details saved at login
+//       const [
+//         userId,
+//         email,
+//         firstName,
+//         lastName,
+//         company,
+//         hasLoggedIn,
+//       ] = await AsyncStorage.multiGet([
+//         "userId",
+//         "email",
+//         "first_Name",
+//         "last_Name",
+//         "company",
+//         "hasLoggedIn",
+//       ]).then((pairs) => pairs.map(p => p[1]));
 
-      // 3️⃣ If NOT logged in → clean Crisp session
-      if (!hasLoggedIn || !userId) {
-        setTokenId(null);
-        resetSession();
-        return;
-      }
+//       // 3️⃣ If NOT logged in → clean Crisp session
+//       if (!hasLoggedIn || !userId) {
+//         setTokenId(null);
+//         resetSession();
+//         return;
+//       }
 
-      // 4️⃣ Bind Crisp session using userId (very important)
-      setTokenId(userId);
+//       // 4️⃣ Bind Crisp session using userId (very important)
+//       setTokenId(userId);
 
-      // 5️⃣ Set identity values
-      if (email) setUserEmail(email);
-      if (firstName || lastName)
-        setUserNickname(`${firstName ?? ""} ${lastName ?? ""}`.trim());
+//       // 5️⃣ Set identity values
+//       if (email) setUserEmail(email);
+//       if (firstName || lastName)
+//         setUserNickname(`${firstName ?? ""} ${lastName ?? ""}`.trim());
 
-      // 6️⃣ Set company info (optional)
-      if (company) {
-        setUserCompany({
-          name: company,
-        });
-      }
+//       // 6️⃣ Set company info (optional)
+//       if (company) {
+//         setUserCompany({
+//           name: company,
+//         });
+//       }
 
-    } catch (error) {
-      console.log("CRISP INIT ERROR:", error);
-    }
-  };
+//     } catch (error) {
+//       console.log("CRISP INIT ERROR:", error);
+//     }
+//   };
 
-  initCrisp();
-}, []);
+//   initCrisp();
+// }, []);
 
-
+MaterialCommunityIcons.loadFont();
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />

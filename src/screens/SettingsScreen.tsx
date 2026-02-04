@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   Switch,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Services from '../Services/services';
@@ -47,13 +48,6 @@ const SettingsScreen = () => {
     question: '',
   });
 
-  // Toggle privacy setting
-  // const togglePrivacy = (setting: keyof typeof privacySettings) => {
-  //   setPrivacySettings(prev => ({
-  //     ...prev,
-  //     [setting]: !prev[setting]
-  //   }));
-  // };
 const togglePrivacy = (setting: keyof typeof privacySettings) => {
   // Optimistically update UI
   const newSettings = {
@@ -158,15 +152,18 @@ const updatePrivacySettings = async () => {
 
   return (
     <View style={styles.container}>
+      
       {/* Header */}
-      <LinearGradient
-        colors={['#0E3386', '#1A3B8B']}
-        style={styles.header}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <Text style={styles.headerTitle}>Manage settings</Text>
-      </LinearGradient>
+   {Platform.OS !== 'ios' && (
+  <LinearGradient
+    colors={['#0E3386', '#1A3B8B']}
+    style={styles.header}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 0 }}
+  >
+    <Text style={styles.headerTitle}>Manage settings</Text>
+  </LinearGradient>
+)}
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
@@ -263,26 +260,13 @@ const PermissionSection = ({
       value={privacySettings.showAddress}
       onToggle={() => togglePrivacy('showAddress')}
     />
-    {/* <PermissionRow
-      label="Show my Experience"
-      value={privacySettings.showExperience}
-      onToggle={() => togglePrivacy('showExperience')}
-    /> */}
+
     <PermissionRow
       label="Show my LinkedIn URL"
       value={privacySettings.showLinkedIn}
       onToggle={() => togglePrivacy('showLinkedIn')}
     />
-    {/* <PermissionRow
-      label="Share my CV/Resume"
-      value={privacySettings.shareCV}
-      onToggle={() => togglePrivacy('shareCV')}
-    />
-    <PermissionRow
-      label="Share my Rate"
-      value={privacySettings.shareRate}
-      onToggle={() => togglePrivacy('shareRate')}
-    /> */}
+ 
   </View>
 );
 

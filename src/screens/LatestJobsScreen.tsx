@@ -18,6 +18,7 @@ import Services from "../Services/services";
 import RenderHtml from "react-native-render-html";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AppTextInput from "../components/AppTextInput";
 
 const { width } = Dimensions.get("window");
 type CountryType = {
@@ -60,7 +61,7 @@ const LatestJobsScreen = ({ navigation }: any) => {
     const [submitting, setSubmitting] = useState(false);
     const [dashboardLoading, setDashboardLoading] = useState(false);
     const [allCountries, setAllCountries] = useState<CountryType[]>([]);
-  const [userType, setUserType] = useState<string | null>(null);
+    const [userType, setUserType] = useState<string | null>(null);
 
     // dynamic question answers
     const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -72,20 +73,20 @@ const LatestJobsScreen = ({ navigation }: any) => {
 
 
 
-useEffect(() => {
-  const getUserType = async () => {
-    try {
-      const type = await AsyncStorage.getItem("userType");
-      console.log("type",type);
-      
-      setUserType(type);
-    } catch (error) {
-      console.log("Error reading UserType", error);
-    }
-  };
+    useEffect(() => {
+        const getUserType = async () => {
+            try {
+                const type = await AsyncStorage.getItem("userType");
+                console.log("type", type);
 
-  getUserType();
-}, []);
+                setUserType(type);
+            } catch (error) {
+                console.log("Error reading UserType", error);
+            }
+        };
+
+        getUserType();
+    }, []);
 
     const toggleSkill = (id: number | string) => {
         setSelectedSkills(prev => {
@@ -299,13 +300,6 @@ useEffect(() => {
 
             {/* BUTTONS */}
             <View style={styles.buttonRow}>
-                {/* <TouchableOpacity
-                    style={styles.applyBtn}
-                    onPress={() => alert("Apply API Coming Soon")}
-                >
-                    <Text style={styles.btnText}>Apply</Text>
-                </TouchableOpacity> */}
-
                 <TouchableOpacity
                     style={styles.detailBtn}
                     onPress={() =>
@@ -317,14 +311,14 @@ useEffect(() => {
                     <Text style={styles.btnText}>View Details</Text>
                 </TouchableOpacity>
                 {/* APPLY BUTTON */}
-          {userType !== "AGENCY_USER" && (
-  <TouchableOpacity
-    style={styles.applyBtn}
-    onPress={() => openApplyModal(item.id)}
-  >
-    <Text style={styles.applyBtnText}>Apply Now</Text>
-  </TouchableOpacity>
-)}
+                {userType !== "AGENCY_USER" && (
+                    <TouchableOpacity
+                        style={styles.applyBtn}
+                        onPress={() => openApplyModal(item.id)}
+                    >
+                        <Text style={styles.applyBtnText}>Apply Now</Text>
+                    </TouchableOpacity>
+                )}
 
 
             </View>
@@ -523,14 +517,8 @@ useEffect(() => {
                             )
                         }
                     />
-
-
                 )}
             </ScrollView>
-
-
-
-
             {/* APPLY FORM MODAL */}
             <Modal visible={showApplyModal} transparent animationType="fade" onRequestClose={() => setShowApplyModal(false)}>
                 <TouchableWithoutFeedback onPress={closeAllDropdowns}>
@@ -568,7 +556,7 @@ useEffect(() => {
                                             onChangeText={setEmail}
                                             style={styles.input}
                                         />
-                                        <TextInput
+                                        <AppTextInput
                                             placeholder="Contact No."
                                             keyboardType="phone-pad"
                                             value={contact}
@@ -623,7 +611,7 @@ useEffect(() => {
 
                                     <View style={{ height: 8 }} />
 
-                                    <TextInput
+                                    <AppTextInput
                                         placeholder="Company Name"
                                         value={companyName}
                                         onChangeText={setCompanyName}
@@ -650,7 +638,7 @@ useEffect(() => {
 
                                     {countryDropdownOpen && (
                                         <View style={styles.dropdownContainer}>
-                                            <TextInput
+                                            <AppTextInput
                                                 placeholder="Search country..."
                                                 value={countryQuery}
                                                 onChangeText={handleSearchCountry}
@@ -723,7 +711,7 @@ useEffect(() => {
                                         </>
                                     )}
 
-                                    <TextInput
+                                    <AppTextInput
                                         placeholder="Location / City"
                                         value={locationCity}
                                         onChangeText={setLocationCity}
@@ -745,7 +733,7 @@ useEffect(() => {
                                             {job.job_questions.map((q: any, i: number) => (
                                                 <View key={i} style={styles.questionContainer}>
                                                     <Text style={styles.questionText}>{i + 1}. {q.question}</Text>
-                                                    <TextInput
+                                                    <AppTextInput
                                                         placeholder="Your answer"
                                                         value={answers[i] || ""}
                                                         onChangeText={(t) => handleAnswerChange(i, t)}
@@ -929,7 +917,7 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginBottom: 12,
-        backgroundColor: "#fff",
+        backgroundColor: "#f6f8f9ff",
     },
 
     disabledInput: {

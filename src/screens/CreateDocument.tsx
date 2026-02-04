@@ -91,10 +91,10 @@ const CreateDocument: React.FC<CreateDocumentProps> = (props) => {
     setError(null);
 
     const documentData = {
-      
 
 
-test_mode: false,
+
+      test_mode: false,
       draft: true,
       with_signature_page: true,
       reminders: true,
@@ -114,7 +114,7 @@ test_mode: false,
           file_base64: fileBase64,
         },
       ],
-    
+
       recipients: [
         {
           email: recipientEmail,
@@ -127,13 +127,13 @@ test_mode: false,
           subject: 'Please sign this document',
         },
       ],
-      
+
     };
 
     try {
       const response = await Services.createSignWellDocument(documentData);
-      console.log("response,response",response);
-      
+      console.log("response,response", response);
+
       if (response.recipients[0].embedded_signing_url) {
         setRequestingRedirectUrl(response.recipients[0].embedded_signing_url);
         // setRequestingRedirectUrl(response.embedded_edit_url);

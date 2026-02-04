@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import Services from '../../Services/services';
 
-const ApproverModal = ({ visible, onClose, onSelectApprover, selectedApprover }:any) => {
+const ApproverModal = ({ visible, onClose, onSelectApprover, selectedApprover }: any) => {
   const [approvers, setApprovers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchApprovers = async () => {
     setLoading(true);
     try {
-        const data2 = {
-                    limit: 10,
-                    msa:"msa"
-                };
+      const data2 = {
+        limit: 10,
+        msa: "msa"
+      };
       const data = await Services.getApproverCoustom(data2);
 
       setApprovers(data?.data);
@@ -29,7 +29,7 @@ const ApproverModal = ({ visible, onClose, onSelectApprover, selectedApprover }:
     }
   }, [visible]);
 
-  const handleSelectApprover = (approver:any) => {
+  const handleSelectApprover = (approver: any) => {
     onSelectApprover(approver);
     onClose();
   };
@@ -44,7 +44,7 @@ const ApproverModal = ({ visible, onClose, onSelectApprover, selectedApprover }:
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Select Approver</Text>
-          
+
           {loading ? (
             <ActivityIndicator size="large" color="#007AFF" />
           ) : (
@@ -59,16 +59,16 @@ const ApproverModal = ({ visible, onClose, onSelectApprover, selectedApprover }:
                   ]}
                   onPress={() => handleSelectApprover(item)}
                 >
-                 <Text style={styles.approverName}>
-  {`${(item as any)?.first_name ?? ""} ${(item as any)?.last_name ?? ""}`}
-</Text>
-         <Text style={styles.approverEmail}>{item.email}</Text>
+                  <Text style={styles.approverName}>
+                    {`${(item as any)?.first_name ?? ""} ${(item as any)?.last_name ?? ""}`}
+                  </Text>
+                  <Text style={styles.approverEmail}>{item.email}</Text>
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
           )}
-          
+
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>Cancel</Text>
           </TouchableOpacity>

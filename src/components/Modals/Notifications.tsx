@@ -267,7 +267,7 @@ function Notifications() {
 
 const styles = StyleSheet.create({
   container: {
-    marginRight: 10,
+    // marginRight: 10,
   },
   badgeContainer: {
     position: "relative",

@@ -9,12 +9,18 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
+  useColorScheme,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Services from '../Services/services';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import { useRoute } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
+import { BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+
 // Define the navigation stack type
 type RootStackParamList = {
   SignUp: undefined;
@@ -36,38 +42,75 @@ interface ServiceResponse {
     message: string;
   };
 }
-
+const OTP_LENGTH = 5;
 const VerifyEmailScreen: React.FC = () => {
+  const route = useRoute<any>();
+
+  const emailFromRoute = route.params?.email;
+  console.log("email", emailFromRoute);
+
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [otp, setOtp] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
+  const [email, setEmail] = useState<string>(emailFromRoute || '');
   const [loading, setLoading] = useState<boolean>(false);
   const [resendLoading, setResendLoading] = useState<boolean>(false);
-
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   // Create refs for OTP inputs
   const otpInputs = useRef<(TextInput | null)[]>([]);
+  const isDark = useColorScheme() === 'dark';
 
+  const themeColors = {
+    text: isDark ? '#272424ff' : '#111827',
+    otp: isDark ? '#f5efefff' : '#111827',
 
-const SIGNUP_TYPES = [
-  { label: 'Enterprise', value: 'ORGANISATION_USER', screen: 'OrganisationDrawer' },
-  { label: 'Supplier & Agency Network', value: 'AGENCY_USER', screen: 'AgencyDashboard' },
-  { label: 'Talent', value: 'RESOURCE_USER', screen: 'TalentDashboard' },
-  { label: 'Individual Buyer', value: 'INDIVIDUAL_USER', screen: 'Dashboard' },
-  { label: 'Lawyer Network', value: 'LAWYER_USER', screen: 'LawyerDashboard' },
-];
+    placeholder: isDark ? '#9CA3AF' : '#6B7280',
+    border: isDark ? '#374151' : '#D1D5DB',
+    bg: isDark ? '#1F2937' : '#FFFFFF',
+    boxBg: isDark ? '#111827' : '#FFFFFF',
+    activeBorder: '#0E3386',
+  };
+
+  const SIGNUP_TYPES = [
+    { label: 'Enterprise', value: 'ORGANISATION_USER', screen: 'OrganisationDrawer' },
+    { label: 'Supplier & Agency Network', value: 'AGENCY_USER', screen: 'AgencyDashboard' },
+    { label: 'Talent', value: 'RESOURCE_USER', screen: 'TalentDashboard' },
+    { label: 'Individual Buyer', value: 'INDIVIDUAL_USER', screen: 'Dashboard' },
+    { label: 'Lawyer Network', value: 'LAWYER_USER', screen: 'LawyerDashboard' },
+  ];
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => true
+      );
+
+      return () => backHandler.remove();
+    }, [])
+  );
 
 
 
   useEffect(() => {
     const getEmailFromStorage = async (): Promise<void> => {
+      if (emailFromRoute) {
+        return;
+      }
+
       try {
-        const userData = await AsyncStorage.getItem("signUp_data");
+        const userData = await AsyncStorage.getItem('signUp_data');
+
         if (!userData) {
           navigation.navigate('SignUp');
           return;
         }
+
         const parsedData: SignUpData = JSON.parse(userData);
-        setEmail(parsedData.email);
+
+        if (parsedData?.email) {
+          setEmail(parsedData.email);
+        } else {
+          navigation.navigate('SignUp');
+        }
       } catch (error) {
         console.error('Error reading from AsyncStorage:', error);
         navigation.navigate('SignUp');
@@ -75,110 +118,96 @@ const SIGNUP_TYPES = [
     };
 
     getEmailFromStorage();
-  }, [navigation]);
-const handleVerifyCode = async (): Promise<void> => {
-  if (otp.length !== 5) {
-    
-     Toast.show({
-                type: 'info',
-                text1: 'Invalid OTP',
-                text2:  'Please enter a 5-digit OTP code',
-                position: 'top',
-              });
-    // Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
-    return;
-  }
+  }, [emailFromRoute, navigation]);
 
-  setLoading(true);
-  try {
-    const payload = { email, code: parseInt(otp, 10) };
-    const result: ServiceResponse = await Services.verifyCode(payload);
 
-    console.log("result of verifyCode", result);
+  const finalEmail = emailFromRoute || email;
 
-    if (result.success) {
-      const userType = result.data?.payload?.user_type;
-      const agencyType =result.data?.payload?.agency_type
-   if (userType) {
-        await AsyncStorage.setItem("userData", JSON.stringify(result.data));
-         await AsyncStorage.setItem("userPayload", JSON.stringify(result.data.payload));
-          await AsyncStorage.setItem("userId", String(result.data.payload.id));
-          await AsyncStorage.setItem( 'company', result.data.payload.profile?.company_name?.toString() || '')
- await AsyncStorage.setItem('slug', result.data.payload?.profile?.slug || '' ) 
-        await AsyncStorage.setItem('userType', userType);
-           await AsyncStorage.setItem('agencyType', agencyType || ''); 
-        console.log('User type saved:', userType);
-      } 
-      // Find matching type
-      const matchedType = SIGNUP_TYPES.find(type => type.value === userType);
 
-      if (matchedType) {
-           Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: result.success?.message || 'Email verified successfully!',
-                position: 'top',
-              });
-        // Alert.alert('Success', 'Email verified successfully!');
-       navigation.navigate(matchedType.screen as keyof RootStackParamList);
+
+
+  const handleVerifyCode = async (): Promise<void> => {
+    const otpString = otp.join('');
+
+    // ✅ Correct validation
+    if (otpString.length !== OTP_LENGTH) {
+      Toast.show({
+        type: 'info',
+        text1: 'Invalid OTP',
+        text2: 'Please enter all 5 digits',
+        position: 'top',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        email: finalEmail,
+        code: Number(otpString), // ✅ FULL OTP
+      };
+
+      console.log('OTP PAYLOAD 👉', payload);
+
+      const result: ServiceResponse = await Services.verifyCode(payload);
+
+      console.log('result of verifyCode', result);
+      if (!result.success) {
+        Toast.show({
+          type: 'error',
+          text1: 'Verification failed',
+          text2: result.error,
+        });
+        return; // back enabled
+      }
+
+      if (result.success) {
+        const userType = result.data?.payload?.user_type;
+        const agencyType = result.data?.payload?.agency_type;
+
+        if (userType) {
+          await AsyncStorage.setItem('userData', JSON.stringify(result.data));
+          await AsyncStorage.setItem('userPayload', JSON.stringify(result.data.payload));
+          await AsyncStorage.setItem('userId', String(result.data.payload.id));
+          await AsyncStorage.setItem('company', result.data.payload.profile?.company_name || '');
+          await AsyncStorage.setItem('slug', result.data.payload.profile?.slug || '');
+          await AsyncStorage.setItem('userType', userType);
+          await AsyncStorage.setItem('agencyType', agencyType || '');
+        }
+
+        const matchedType = SIGNUP_TYPES.find(type => type.value === userType);
+        Toast.show({
+          type: 'info',
+          text1: 'Info',
+          text2: result.data.message,
+          position: 'top',
+        });
+
+
+
+        if (matchedType) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: matchedType.screen }],
+            })
+          );
+        }
+
       } else {
         Toast.show({
-                type: 'error',
-                text1: 'Error ',
-                text2: result.error?.message || 'Unknown user type. Please contact support.',
-                position: 'top',
-              });
-        // Alert.alert('Error', 'Unknown user type. Please contact support.');
+          type: 'error',
+          text1: 'Verification failed',
+          text2: result.error,
+        });
+
       }
-    } else {
-       Toast.show({
-                type: 'error',
-                text1: 'Error ',
-                text2: result.error?.message || 'Verification failed',
-                position: 'top',
-              });
-      // Alert.alert('Error', result.error?.message || 'Verification failed');
+    } catch (error) {
+
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Verification error:', error);
-     Toast.show({
-                type: 'error',
-                text1: 'Error ',
-                text2:   'Something went wrong. Please try again.',
-                position: 'top',
-              });
-    // Alert.alert('Error', 'Something went wrong. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-//   const handleVerifyCode = async (): Promise<void> => {
-//     if (otp.length !== 5) {
-//       Alert.alert('Invalid OTP', 'Please enter a 5-digit OTP code');
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const payload = { email, code: parseInt(otp, 10) };
-//       const result: ServiceResponse = await Services.verifyCode(payload);
-
-// console.log("result of verifyCode",result);
-
-
-//       if (result.success) {
-//         Alert.alert('Success', 'Email verified successfully!');
-//         navigation.navigate('Dashboard');
-//       } else {
-//         Alert.alert('Error', result.error?.message || 'Verification failed');
-//       }
-//     } catch (error) {
-//       console.error('Verification error:', error);
-//       Alert.alert('Error', 'Something went wrong. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  };
 
   const handleResendCode = async (): Promise<void> => {
     setResendLoading(true);
@@ -188,44 +217,60 @@ const handleVerifyCode = async (): Promise<void> => {
 
 
       if (result.success) {
-          Toast.show({
-                type: 'success',
-                text1: 'Done',
-                text2: result.success?.message || 'Verification code resent successfully!',
-                position: 'top',
-              });
-        // Alert.alert('Success', 'Verification code resent successfully!');
+        Toast.show({
+          type: 'success',
+          text1: 'Done',
+          text2: result.success?.message || 'Verification code resent successfully!',
+          position: 'top',
+        });
       } else {
-          Toast.show({
-                type: 'error',
-                text1: 'Failed to resent Code ',
-                text2: result.error?.message || 'Please Try Again',
-                position: 'top',
-              });
-        // Alert.alert('Error', result.error?.message || 'Failed to resend code');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to resent Code ',
+          text2: result.error?.message || 'Please Try Again',
+          position: 'top',
+        });
       }
     } catch (error) {
       console.error('Resend error:', error);
-       Toast.show({
-                type: 'error',
-                text1: 'Failed to resend verification code',
-                text2:  'Please Try Again',
-                position: 'top',
-              });
-      // Alert.alert('Error', 'Failed to resend verification code');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to resend verification code',
+        text2: 'Please Try Again',
+        position: 'top',
+      });
     } finally {
       setResendLoading(false);
     }
   };
 
-  const handleOtpChange = (text: string, index: number): void => {
-    const newOtp = otp.split('');
-    newOtp[index] = text;
-    setOtp(newOtp.join(''));
-    
-    // Focus next input if text is entered and not the last input
-    if (text && index < 4 && otpInputs.current[index + 1]) {
+
+  const handleOtpChange = (value: string, index: number) => {
+    if (!/^\d?$/.test(value)) return; // allow only digits
+
+    const updatedOtp = [...otp];
+    updatedOtp[index] = value;
+    setOtp(updatedOtp);
+
+    // Move to next input
+    if (value && index < OTP_LENGTH - 1) {
       otpInputs.current[index + 1]?.focus();
+    }
+  };
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (otp[index]) {
+        // Clear current box
+        const updatedOtp = [...otp];
+        updatedOtp[index] = '';
+        setOtp(updatedOtp);
+      } else if (index > 0) {
+        // Move to previous box and clear it
+        otpInputs.current[index - 1]?.focus();
+        const updatedOtp = [...otp];
+        updatedOtp[index - 1] = '';
+        setOtp(updatedOtp);
+      }
     }
   };
 
@@ -241,23 +286,43 @@ const handleVerifyCode = async (): Promise<void> => {
 
       <View style={styles.emailContainer}>
         <Text style={styles.emailLabel}>We have sent an email to:</Text>
-        <Text style={styles.emailText}>{email}</Text>
+        <Text style={styles.emailText}>
+          {emailFromRoute || email}
+        </Text>
+
       </View>
 
-      <View style={styles.otpContainer}>
-        <Text style={styles.otpLabel}>Enter Your 5 Digits OTP</Text>
+
+
+      <View style={styles.container}>
+        <Text style={[styles.otpLabel, { color: themeColors.text }]}>
+          Enter Your 5 Digit OTP
+        </Text>
+
         <View style={styles.otpInputContainer}>
-          {[...Array(5)].map((_, index) => (
+          {Array.from({ length: OTP_LENGTH }).map((_, index) => (
             <TextInput
               key={index}
-              style={styles.otpInput}
+              ref={(ref) => (otpInputs.current[index] = ref)}
+              style={[
+                styles.otpInput,
+                {
+                  color: themeColors.otp,
+                  backgroundColor: themeColors.boxBg,
+                  borderColor: otp[index]
+                    ? themeColors.activeBorder
+                    : themeColors.border,
+                },
+              ]}
+              keyboardType="number-pad"
               maxLength={1}
-              keyboardType="numeric"
-              value={otp[index] || ''}
-              onChangeText={(text: string) => handleOtpChange(text, index)}
-              ref={(ref: TextInput | null) => {
-                otpInputs.current[index] = ref;
-              }}
+              value={otp[index]}
+              onChangeText={(text) => handleOtpChange(text, index)}
+              onKeyPress={(e) => handleKeyPress(e, index)}
+              placeholder="•"
+              placeholderTextColor={themeColors.placeholder}
+              textAlign="center"
+              autoFocus={index === 0}
             />
           ))}
         </View>
@@ -289,9 +354,29 @@ const handleVerifyCode = async (): Promise<void> => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
+
+  otpLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 20,
+  },
+
+  otpInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+
+  otpInput: {
+    width: 50,
+    height: 55,
+    borderWidth: 1.5,
+    borderRadius: 10,
+    fontSize: 20,
+    fontWeight: '600',
   },
   headerContainer: {
     alignItems: 'center',
@@ -324,26 +409,7 @@ const styles = StyleSheet.create({
   otpContainer: {
     marginBottom: 30,
   },
-  otpLabel: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  otpInputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 40,
-  },
-  otpInput: {
-    width: 50,
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    textAlign: 'center',
-    fontSize: 20,
-  },
+
   footerContainer: {
     alignItems: 'center',
     marginBottom: 30,

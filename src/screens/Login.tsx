@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -15,29 +14,29 @@ import {
   ScrollView,
   Linking,
   Modal,
-
+  useColorScheme,
 } from 'react-native';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../navigation/types';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
-import { ActivityIndicator } from 'react-native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import {ActivityIndicator} from 'react-native';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import Checkbox from '../components/CommanCheckbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { GOOGLE_WEB_CLIENT_ID } from '@env';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { CommonActions } from '@react-navigation/native';
+import {CommonActions} from '@react-navigation/native';
 import CustomAlert from '../components/CustomAlert';
-import { useIsFocused } from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 
+type LoginScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'Login'
+>;
 
-type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
-
-const { width } = Dimensions.get('window');
-
-
+const {width} = Dimensions.get('window');
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -56,18 +55,35 @@ const LoginScreen: React.FC = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const isFocused = useIsFocused();
+
+  const isDark = useColorScheme() === 'dark';
+  console.log('isdark', isDark);
+  // useEffect(() => {
+  //   GoogleSignin.configure({
+  //     webClientId: "601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
+  //     //  GOOGLE_WEB_CLIENT_ID,
+  //     iosClientId:
+  //   'client_60123061-6hdifq4bnvua13lbj7kq8ebufmrm.apps.googleusercontent.com',
+  //     offlineAccess: true,
+  //     forceCodeForRefreshToken: true,
+  //   });
+  // }, []);
+
+  // ORIGINAL_ID
+    //  iosClientId:
+    //     '601221483061-6hdifq4bhgd5nvua13lbj7kq8ebufmrm.apps.googleusercontent.com',
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: "601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
-      //  GOOGLE_WEB_CLIENT_ID,
+      iosClientId:
+        '601221483061-6hdifq4bhgd5ua13lbj7kq8ebufmrm.apps.googleusercontent.com',
+      webClientId:
+        '601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com',
+
       offlineAccess: true,
-      forceCodeForRefreshToken: true,
     });
   }, []);
 
-
   const handleSignup = () => {
-
     navigation.navigate('SignUp');
   };
 
@@ -77,22 +93,24 @@ const LoginScreen: React.FC = () => {
 
       // -------- Google Login flow ----------
       if (loginType === 'google') {
-        console.log("    come in try");
+        console.log('    come in try');
 
-        await GoogleSignin.hasPlayServices();
+        if (Platform.OS === 'android') {
+          await GoogleSignin.hasPlayServices();
+        }
+
         await GoogleSignin.signOut();
 
         const userInfo = await GoogleSignin.signIn();
 
         const tokens = await GoogleSignin.getTokens();
 
-
         const accessToken = tokens?.accessToken;
         const idToken = tokens?.idToken;
 
-        console.log("accessToken", accessToken);
-        console.log("tokens", tokens);
-        console.log("userInfo", userInfo);
+        console.log('accessToken', accessToken);
+        console.log('tokens', tokens);
+        console.log('userInfo', userInfo);
 
         if (!accessToken) {
           await GoogleSignin.signOut();
@@ -108,121 +126,22 @@ const LoginScreen: React.FC = () => {
 
         // Try login with access token
         let tokenResult = await Services.sendAccessToken(accessToken);
-        console.log("sendAccessToken result", tokenResult);
 
-        //       if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
-        //   setLoading(false); // Stop loader before showing alert
-        // Alert.alert(
-        //     'Account Not Found',
-        //     'No account was found with your Google account. Would you like to sign up instead?',
-        //     [
-        //       {
-        //         text: 'Cancel',
-        //         style: 'cancel',
-        //       },
-        //       {
-        //         text: 'Go to Signup',
-        //         onPress: () => {
-        //           // Navigate to Signup screen instead of calling googleSignup
-        //           navigation.navigate('SignUp', { from: 'google' });
-        //         },
-        //       },
-        //     ],
-        //     { cancelable: false }
-        //   );
-        //   return; 
-        // }
-        if (!tokenResult.success && tokenResult.error === 'No Account Found! Please Sign Up First.') {
+        console.log('A: tokenResult raw');
+        console.log(tokenResult);
+
+        await new Promise(res => setTimeout(res, 500));
+
+        console.log('B: after delay', tokenResult);
+
+        if (
+          !tokenResult.success &&
+          tokenResult.error === 'No Account Found! Please Sign Up First.'
+        ) {
           setLoading(false);
           setAlertVisible(true);
           return;
-        }
-        //   Alert.alert(
-        //     'Account Not Found',
-        //     'No account was found with your Google account. Would you like to Google sign up instead?',
-        //     [
-        //       {
-        //         text: 'Cancel',
-        //         style: 'cancel',
-        //       },
-        //       {
-        //         text: 'Google Sign Up',
-        //         onPress: async () => {
-        //           try {
-        //             setLoading(true); // Show loader again on signup
-        //             const tokenResult2 = await Services.googleSignup(accessToken);
-        //             console.log("googleSignup result", tokenResult2);
-
-        //             if (!tokenResult2.success) {
-        //               setLoading(false);
-        //               Toast.show({
-        //                 type: 'error',
-        //                 text1: 'Google Signup Failed',
-        //                 text2: tokenResult2.error || 'Could not sign up with Google',
-        //                 position: 'top',
-        //               });
-        //               return;
-        //             }
-
-        //             // Success: Save user data and navigate
-        //             const user = tokenResult2?.data?.user;
-        // console.log("useruser",user);
-        //   await AsyncStorage.multiSet([
-        //         ['first_Name', user?.first_name || ''],
-        //         ['last_Name', user?.last_name || ''],
-        //         ['email', user?.email || ''],
-        //         ['profilePic', user?.profile?.logo || ''],
-        //         ['Token', tokenResult.data?.key || ''],
-        //         ['hasLoggedIn', 'true'],
-        //         ['userType', String(user?.user_type || '')],
-        //         ['userId', String(user?.id || '')],
-        //                     ['isActive', user?.profile?.is_active?.toString() || 'false'],
-
-        //       ]);
-        // //             await AsyncStorage.setItem('first_Name', user?.first_name || '');
-        // //             await AsyncStorage.setItem('last_Name', user?.last_name || '');
-        // //             await AsyncStorage.setItem('email', user?.email || '');
-        // //             await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-        // //             await AsyncStorage.setItem('Token', tokenResult2.data?.key || '');
-        // //             await AsyncStorage.setItem('hasLoggedIn', 'true');
-        // // await AsyncStorage.setItem('userType', user?.user_type);
-        // // await AsyncStorage.setItem('userId', user?.id);
-
-
-        //             Toast.show({
-        //               type: 'success',
-        //               text1: 'Signup successful!',
-        //               position: 'top',
-        //             });
-
-        //             setTimeout(() => {
-        //               setLoading(false);
-        //               navigation.dispatch(
-        //                 CommonActions.reset({
-        //                   index: 0,
-        //                   routes: [{ name: 'AuthLoading' }],
-        //                 })
-        //               );
-        //             }, 1000);
-        //           } catch (signupErr: any) {
-        //             setLoading(false);
-        //             Toast.show({
-        //               type: 'error',
-        //               text1: 'Signup Error',
-        //               text2: signupErr.message || 'Something went wrong during signup',
-        //               position: 'top',
-        //             });
-        //           }
-        //         }
-        //       }
-        //     ],
-        //     { cancelable: false }
-        //   );
-
-        //   return;
-        // }
-
-        else if (!tokenResult.success) {
+        } else if (!tokenResult.success) {
           // Other login failure (not "Account not found")
           setLoading(false);
           Toast.show({
@@ -236,7 +155,7 @@ const LoginScreen: React.FC = () => {
 
         // Save user data and navigate to Dashboard
         const user = tokenResult?.data?.user;
-        console.log("useruser", user);
+        console.log('useruser', user);
 
         await AsyncStorage.multiSet([
           ['first_Name', user?.first_name || ''],
@@ -248,18 +167,9 @@ const LoginScreen: React.FC = () => {
           ['userType', String(user?.user_type || '')],
           ['userId', String(user?.id || '')],
           ['isActive', user?.profile?.is_active?.toString() || 'false'],
-           ['company', user.profile?.company_name?.toString() || ''],
-            ['slug', user?.profile?.slug || '']
+          ['company', user.profile?.company_name?.toString() || ''],
+          ['slug', user?.profile?.slug || ''],
         ]);
-        //       await AsyncStorage.setItem('first_Name', user?.first_name || '');
-        //       await AsyncStorage.setItem('last_Name', user?.last_name || '');
-        //       await AsyncStorage.setItem('email', user?.email || '');
-        //       await AsyncStorage.setItem('profilePic', user?.profile?.logo || '');
-        //       await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
-        //       await AsyncStorage.setItem('hasLoggedIn', 'true');
-        // await AsyncStorage.setItem('userType', user?.user_type);
-        // await AsyncStorage.setItem('userId', user?.id);
-
 
         Toast.show({
           type: 'success',
@@ -272,8 +182,8 @@ const LoginScreen: React.FC = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: 'AuthLoading' }],
-            })
+              routes: [{name: 'AuthLoading'}],
+            }),
           );
         }, 1000);
       }
@@ -299,27 +209,33 @@ const LoginScreen: React.FC = () => {
           setLoading(false);
           return;
         }
-        // console.log("email",email);
-        // console.log("password",password);
-
 
         const result = await Services.login(email, password);
-        console.log("result login", result);
+        console.log('result login', result);
 
-        if (result.data.status === 200) {
+        if (result.success) {
+          // 🔴 EMAIL VERIFICATION CHECK
+          if (result.data?.payload?.is_verify === false) {
+            setLoading(false);
+
+            Toast.show({
+              type: 'error',
+              text1: 'Email Not Verified',
+              text2: 'Redirecting to verification screen...',
+              position: 'top',
+            });
+
+            navigation.navigate('VerifyEmail', {
+              email: result.data.payload?.email || email,
+            });
+
+            return; // ⛔ stop login flow
+          }
           Toast.show({
             type: 'success',
             text1: result?.data?.message || 'Login successful!',
             position: 'top',
           });
-
-          // await AsyncStorage.setItem('Token', result.data?.key || '');
-          // await AsyncStorage.setItem('first_Name', result?.data?.data?.first_name || '');
-          // await AsyncStorage.setItem('last_Name', result.data?.data?.last_name || '');
-          // await AsyncStorage.setItem('email', result.data?.data?.email || '');
-          // await AsyncStorage.setItem('hasLoggedIn', 'true');
-          // await AsyncStorage.setItem('userType', result.data?.payload?.user_type);
-          // await AsyncStorage.setItem('isActive', result.data?.payload?.profile?.is_active);
 
           await AsyncStorage.multiSet([
             ['Token', result.data.key || ''],
@@ -328,65 +244,57 @@ const LoginScreen: React.FC = () => {
             ['email', result.data.payload?.email || ''],
             ['hasLoggedIn', 'true'],
             ['userType', result.data.payload?.user_type || ''],
-            ['isActive', result.data.payload?.profile?.is_active?.toString() || 'false'],
+            [
+              'isActive',
+              result.data.payload?.profile?.is_active?.toString() || 'false',
+            ],
             ['userId', result.data.payload?.id?.toString() || ''],
-            ['company', result.data.payload?.profile?.company_name?.toString() || ''],
+            [
+              'company',
+              result.data.payload?.profile?.company_name?.toString() || '',
+            ],
             ['slug', result.data.payload?.profile?.slug || ''],
-            ['agencyType', result.data.payload?.agency_type || '']
-
-            
-
-
+            ['agencyType', result.data.payload?.agency_type || ''],
           ]);
-
 
           setTimeout(() => {
             setLoading(false);
             navigation.navigate('AuthLoading');
           }, 1000);
         } else {
+          // ❌ HANDLE LOGIN FAILURE (403, 401, etc.)
           setLoading(false);
+
           Toast.show({
             type: 'error',
             text1: 'Login Failed',
-            text2: result.data?.message || 'Invalid credentials',
+            text2: result.error?.message || 'Something went wrong',
             position: 'top',
           });
         }
       }
     } catch (err: any) {
       setLoading(false);
-      const errorMessage = err?.message || 'Something went wrong during login';
-      const errorCode = err?.code || 'No code';
-      const fullError = JSON.stringify(err, null, 2);
 
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: `${errorCode}: ${errorMessage}`,
+        text2: 'Network error or unexpected issue',
+        position: 'top',
       });
-
-      console.log('🛑 Google login failed:');
-      console.log('➡️ Code:', errorCode);
-      console.log('➡️ Message:', errorMessage);
-      console.log('➡️ Full Error:', fullError);
     }
   };
-
 
   const handleLinkedinLogin = () => {
     navigation.navigate('LinkedInLoginScreen');
   };
-
-
 
   const renderSocialButtons = () => (
     <View style={styles.socialContainer}>
       <TouchableOpacity
         style={styles.socialButton}
         onPress={() => isFocused && handleLogin('google')}
-        disabled={loading || !isFocused}
-      >
+        disabled={loading || !isFocused}>
         <Image
           source={require('../assets/images/search.png')}
           style={styles.socialIcon}
@@ -394,9 +302,9 @@ const LoginScreen: React.FC = () => {
         <Text style={styles.socialText}>Login Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.socialButton}
-        onPress={handleLinkedinLogin}
-      >
+      <TouchableOpacity
+        style={styles.socialButton}
+        onPress={handleLinkedinLogin}>
         <Image
           source={require('../assets/images/linkedin.png')}
           style={styles.socialIcon}
@@ -404,12 +312,11 @@ const LoginScreen: React.FC = () => {
         <Text style={styles.socialText}>Login LinkedIn</Text>
       </TouchableOpacity>
     </View>
-
   );
   const handleSendResetCode = async () => {
     setLoading(true);
     try {
-      const res = await Services.forgetPassword({ email: otpEmail });
+      const res = await Services.forgetPassword({email: otpEmail});
       if (res.success) {
         setResetStep(2);
       } else {
@@ -419,7 +326,7 @@ const LoginScreen: React.FC = () => {
           text2: res.error?.email || 'Unknown error',
         });
       }
-    } catch (e) {
+    } catch (e: any) {
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -430,33 +337,16 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  //  const handleSendResetCode = async () => {
-  //   setLoading(true)
-  //   const res = await Services.forgetPassword({ email: otpEmail });
-
-  //   if (res.success) {
-  //     setResetStep(2);
-  //   setLoading(false)
-
-  //   } else {
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Failed to send code',
-  //       text2:res.error.email
-  //     });
-  //   }
-  // };
-
   const handleResetPassword = async () => {
     const formData = new FormData();
     formData.append('code', otpCode); // or token, as per your API
     formData.append('password', newPassword);
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       const res = await Services.forgetPasswordReset(formData); // API call with FormData
-      setLoading(false)
+      setLoading(false);
 
       if (res.success) {
         setPasswordModalVisible(false);
@@ -486,7 +376,9 @@ const LoginScreen: React.FC = () => {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}>
           <Image
             source={require('../assets/images/a200.png')}
             style={styles.logo}
@@ -520,12 +412,14 @@ const LoginScreen: React.FC = () => {
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
               placeholderTextColor={'black'}
-              style={[styles.inputLoginPassword, { flex: 1, borderWidth: 0, color: "#000" }]}
+              style={[
+                styles.inputLoginPassword,
+                {flex: 1, borderWidth: 0, color: '#100d0dff', fontSize: 16},
+              ]}
             />
             <TouchableOpacity
-              onPress={() => setPasswordVisible((prev) => !prev)}
-              style={styles.eyeButton}
-            >
+              onPress={() => setPasswordVisible(prev => !prev)}
+              style={styles.eyeButton}>
               <Icon
                 name={passwordVisible ? 'eye' : 'eye-off'}
                 size={22}
@@ -533,73 +427,48 @@ const LoginScreen: React.FC = () => {
               />
             </TouchableOpacity>
           </View>
-          {/* <TextInput
-            style={styles.input1}
-
-        placeholder="Enter password"
-        placeholderTextColor="#888"
-        secureTextEntry={!showPassword}  // toggle here
-        value={password}
-        onChangeText={setPassword}
-      />
-      <TouchableOpacity
-        style={styles.iconContainer}
-        onPress={() => setShowPassword(!showPassword)}
-      >
-        <Icon
-          name={showPassword ? 'eye-off' : 'eye'}
-          size={22}
-          color="#888"
-        />
-      </TouchableOpacity> */}
           <View style={styles.signupbox}>
-            <Text style={styles.signup}>Don't have an account?</Text>
+            <Text style={styles.signup}>Don't have an account ?{'  '}</Text>
             <TouchableOpacity onPress={handleSignup}>
-              <Text style={styles.link} >Sign up</Text>
+              <Text style={styles.link}>Sign up</Text>
             </TouchableOpacity>
           </View>
-
-
-
-
-
           <TouchableOpacity onPress={() => setPasswordModalVisible(true)}>
             <Text style={styles.forgotPassword}>Forgot password</Text>
           </TouchableOpacity>
-
-
         </ScrollView>
         {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
           <View style={styles.checkboxRow}>
-            <Checkbox
-              value={agreeTerms}
-              onValueChange={setAgreeTerms}
-            />
-
+            <Checkbox value={agreeTerms} onValueChange={setAgreeTerms} />
           </View>
           <Text style={styles.termsText}>
-            <Text style={styles.termsLabel}>By creating your account, you agree to our </Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => Linking.openURL('https://agreementpaper.com/termsCondition')}>
+            <Text style={styles.termsLabel}>
+              By creating your account, you agree to our{' '}
+            </Text>
+            <TouchableOpacity
+              style={styles.settingsItem}
+              onPress={() =>
+                Linking.openURL('https://agreementpaper.com/termsCondition')
+              }>
               <Text style={styles.settingsText}>Terms and Conditions &</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.settingsItem2}
-              onPress={() => Linking.openURL('https://agreementpaper.com/legal')}
-            >
-              <Text style={styles.settingsText2}>{' '}Privacy Policy</Text>
+              onPress={() =>
+                Linking.openURL('https://agreementpaper.com/legal')
+              }>
+              <Text style={styles.settingsText2}> Privacy Policy</Text>
             </TouchableOpacity>
           </Text>
         </View>
         {/* Fixed Login Button */}
 
-
         <View style={styles.fixedButtonContainer}>
           <TouchableOpacity
             style={[styles.button, loading && styles.disabledButton]}
             onPress={() => handleLogin('email')}
-            disabled={loading}
-          >
+            disabled={loading}>
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
@@ -607,102 +476,6 @@ const LoginScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         </View>
-
-        {/* <Modal visible={passwordModalVisible} animationType="slide" transparent>
-  <View style={{ flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.90)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
-
-
-          {resetStep === 1 ? (
-            <>
-              <TextInput
-                placeholder="Enter your email"
-                value={otpEmail}
-                onChangeText={setOtpEmail}
-                style={styles.input1}
-              />
-              <TouchableOpacity style={styles.button2} onPress={handleSendResetCode}>
-                <Text style={styles.buttonText}>Send OTP</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <TextInput
-                placeholder="Enter OTP"
-                value={otpCode}
-                onChangeText={setOtpCode}
-                style={styles.input1}
-              />
-              <TextInput
-                placeholder="New Password"
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry
-                style={styles.input1}
-              />
-              <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
-                <Text style={styles.buttonText}>Reset Password</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          <TouchableOpacity
-            onPress={() => {
-              setPasswordModalVisible(false);
-              setResetStep(1);
-            }}
-            style={styles.buttonlink}
-          >
-            <Text style={styles.link2}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal> */}
-
-        {/* <Modal visible={passwordModalVisible} animationType="slide" transparent={true}>
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      {resetStep === 1 ? (
-        <>
-          <TextInput
-            placeholder="Enter your email"
-            value={otpEmail}
-            onChangeText={setOtpEmail}
-            style={styles.input1}
-          />
-          <TouchableOpacity style={styles.button2} onPress={handleSendResetCode}>
-            <Text style={styles.buttonText}>Send OTP</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <TextInput
-            placeholder="Enter OTP"
-            value={otpCode}
-            onChangeText={setOtpCode}
-            style={styles.input1}
-          />
-          <TextInput
-            placeholder="New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            style={styles.input1}
-          />
-          <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
-            <Text style={styles.buttonText}>Reset Password</Text>
-          </TouchableOpacity>
-        </>
-      )}
-      <TouchableOpacity
-        onPress={() => {
-          setPasswordModalVisible(false);
-          setResetStep(1);
-        }}
-        style={styles.buttonlink}
-      >
-        <Text style={styles.link2}>Cancel</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal> */}
         <Modal visible={passwordModalVisible} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -710,6 +483,7 @@ const LoginScreen: React.FC = () => {
                 <>
                   <TextInput
                     placeholder="Enter your email"
+                    placeholderTextColor={'Black'}
                     value={otpEmail}
                     onChangeText={setOtpEmail}
                     style={styles.input1}
@@ -717,7 +491,10 @@ const LoginScreen: React.FC = () => {
                     autoCapitalize="none"
                   />
 
-                  <TouchableOpacity style={styles.button2} onPress={handleSendResetCode} disabled={loading}>
+                  <TouchableOpacity
+                    style={styles.button2}
+                    onPress={handleSendResetCode}
+                    disabled={loading}>
                     {loading ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
@@ -733,21 +510,25 @@ const LoginScreen: React.FC = () => {
                     onChangeText={setOtpCode}
                     style={styles.input1}
                     keyboardType="number-pad"
+                    placeholderTextColor={'Black'}
                   />
 
                   {/* Password field with eye icon */}
                   <View style={styles.passwordWrapper2}>
                     <TextInput
                       placeholder="New Password"
+                      placeholderTextColor={'Black'}
                       value={newPassword}
                       onChangeText={setNewPassword}
                       secureTextEntry={!passwordVisible}
-                      style={[styles.inputNewPassword, { flex: 1, borderWidth: 0 }]}
+                      style={[
+                        styles.inputNewPassword,
+                        {flex: 1, borderWidth: 0},
+                      ]}
                     />
                     <TouchableOpacity
-                      onPress={() => setPasswordVisible((prev) => !prev)}
-                      style={styles.eyeButton}
-                    >
+                      onPress={() => setPasswordVisible(prev => !prev)}
+                      style={styles.eyeButton}>
                       <Icon
                         name={passwordVisible ? 'eye' : 'eye-off'}
                         size={22}
@@ -756,7 +537,9 @@ const LoginScreen: React.FC = () => {
                     </TouchableOpacity>
                   </View>
 
-                  <TouchableOpacity style={styles.resetbutton} onPress={handleResetPassword}>
+                  <TouchableOpacity
+                    style={styles.resetbutton}
+                    onPress={handleResetPassword}>
                     <Text style={styles.buttonText}>Reset Password</Text>
                   </TouchableOpacity>
                 </>
@@ -767,8 +550,7 @@ const LoginScreen: React.FC = () => {
                   setPasswordModalVisible(false);
                   setResetStep(1);
                 }}
-                style={styles.buttonlink}
-              >
+                style={styles.buttonlink}>
                 <Text style={styles.link2}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -780,10 +562,9 @@ const LoginScreen: React.FC = () => {
           onDismiss={() => setAlertVisible(false)}
           onConfirm={() => {
             setAlertVisible(false);
-            navigation.navigate("SignUp");
+            navigation.navigate('SignUp');
           }}
         />
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -804,14 +585,8 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     justifyContent: 'space-between',
-    paddingLeft: 8
+    paddingLeft: 8,
   },
-  // input: {
-  //   flex: 1,
-  //   paddingVertical: 10,
-  //   fontSize: 16,
-  //   color: '#000',
-  // },
   iconContainer: {
     paddingHorizontal: 6,
     justifyContent: 'center',
@@ -845,7 +620,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#141313ff',
     borderRadius: 8,
     marginBottom: 15,
     paddingHorizontal: 10,
@@ -859,12 +634,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 10,
     maxWidth: 290,
-
   },
   eyeButton: {
     paddingHorizontal: 6,
   },
-
   baseTag: {
     fontSize: 12,
     marginBottom: 40,
@@ -905,13 +678,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   input: {
-    borderColor: '#ccc',
+    borderColor: '#201a1aff',
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
     fontSize: 16,
     marginBottom: 16,
     color: '#000',
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
   },
 
   fixedButtonContainer: {
@@ -936,7 +710,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   signup: {
-    color: '#666',
+    color: '#0e0e0eff',
     textAlign: 'left',
     marginTop: 8,
   },
@@ -945,16 +719,15 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     flexDirection: 'row',
     gap: 5,
-    marginBottom: 15
+    marginBottom: 15,
   },
   termsContainer: {
     marginTop: 20,
     paddingHorizontal: 10,
-    flexDirection: "column",
+    flexDirection: 'column',
   },
   checkboxRow: {
-    flexDirection: "column",
-
+    flexDirection: 'column',
   },
   termsLabel: {
     fontSize: 14,
@@ -992,36 +765,45 @@ const styles = StyleSheet.create({
     color: '#000078',
   },
   settingsText2: {
-
     fontSize: 14,
     color: '#000078',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // optional dim background
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   modalContent: {
     width: '90%',
-    backgroundColor: '#fff', // solid white box
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
   },
 
   input1: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 10, width: '94%', marginVertical: 10,
+    borderWidth: 1,
+    borderColor: '#211818ff',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    width: '94%',
+    marginVertical: 10,
   },
   inputNewPassword: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1c1919ff',
+    borderRadius: 8,
     width: '80%',
   },
   inputLoginPassword: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1c1717ff',
+    borderRadius: 8,
     width: '80%',
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
   },
   resetbutton: {
     backgroundColor: '#000078',
@@ -1029,7 +811,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: '29%',
     marginTop: 10,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   button2: {
     backgroundColor: '#000078',
@@ -1037,7 +819,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: '35%',
     marginTop: 10,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   buttonlink: {
     backgroundColor: '#000078',
@@ -1045,10 +827,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: '40%',
     borderRadius: 8,
     marginTop: 10,
-    alignItems: 'center'
+    alignItems: 'center',
   },
-  link2: { color: '#fff', fontWeight: 'bold' },
-
+  link2: {color: '#fff', fontWeight: 'bold'},
 });
 
 export default LoginScreen;

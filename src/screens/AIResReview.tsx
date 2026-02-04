@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Platform,
   Image,
+  SafeAreaView,
 
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -413,31 +414,73 @@ const AIReviewScreen = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header */}
-        <LinearGradient
-          colors={['#0E3386', '#1A3B8B']}
-          style={styles.header}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={styles.headerTitle}>Upload Contract</Text>
-          <Text style={styles.headerSubtitle}>
-            Please upload contract to review its (PDF) format
-          </Text>
-          <TouchableOpacity
-            style={styles.uploadButton}
-            onPress={handleUpload}
-          >
-            <Icon name="cloud-upload" size={24} color="white" />
-            <Text style={styles.uploadButtonText}>
-              {uploadedFile ? uploadedFile.name : 'Upload PDF Document'}
-            </Text>
-          </TouchableOpacity>
-          {uploadedFile && (
-            <Text style={styles.fileSizeText}>
-              {Math.round(uploadedFile.size / 1024)} KB
-            </Text>
-          )}
-        </LinearGradient>
+        {Platform.OS === 'ios' ? (
+  <SafeAreaView style={{ backgroundColor: '#0E3386' }}>
+     <View style={styles.headerContentWrapper}>
+
+
+
+    <LinearGradient
+      colors={['#3959a5ff', '#3658a5ff']}
+      style={[styles.header, { paddingTop: 12 ,}]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+    >
+      <Text style={styles.headerTitle}>Upload Contract</Text>
+      <Text style={styles.headerSubtitle}>
+        Please upload contract to review its (PDF) format
+      </Text>
+
+     
+    </LinearGradient>
+    
+     <TouchableOpacity
+        style={styles.uploadButtonIos}
+        onPress={handleUpload}
+      >
+        <Icon name="cloud-upload" size={24} color="white" />
+        <Text style={styles.uploadButtonText}>
+          {uploadedFile ? uploadedFile.name : 'Upload PDF Document'}
+        </Text>
+      </TouchableOpacity>
+
+      {uploadedFile && (
+        <Text style={styles.fileSizeText}>
+          {Math.round(uploadedFile.size / 1024)} KB
+        </Text>
+      )}
+     </View>
+  </SafeAreaView>
+) : (
+  <LinearGradient
+    colors={['#0E3386', '#1A3B8B']}
+    style={styles.header}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 0 }}
+  >
+    <Text style={styles.headerTitle}>Upload Contract</Text>
+    <Text style={styles.headerSubtitle}>
+      Please upload contract to review its (PDF) format
+    </Text>
+
+    <TouchableOpacity
+      style={styles.uploadButton}
+      onPress={handleUpload}
+    >
+      <Icon name="cloud-upload" size={24} color="white" />
+      <Text style={styles.uploadButtonText}>
+        {uploadedFile ? uploadedFile.name : 'Upload PDF Document'}
+      </Text>
+    </TouchableOpacity>
+
+    {uploadedFile && (
+      <Text style={styles.fileSizeText}>
+        {Math.round(uploadedFile.size / 1024)} KB
+      </Text>
+    )}
+  </LinearGradient>
+)}
+
 
         {/* Questions Section */}
         <View style={styles.card}>
@@ -769,9 +812,13 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingBottom: 20,
   },
+  headerContentWrapper: {
+  paddingHorizontal: 16,   // 🔥 controls width for BOTH
+  marginTop: 12,
+},
   header: {
-    padding: 24,
-    borderBottomLeftRadius: 20,
+    padding: 15,
+    borderTopLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
   headerTitle: {
@@ -783,13 +830,14 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
-    marginBottom: 18,
+    marginBottom: 25,
   },
   fileSizeText: {
     color: 'white',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 5
+    marginTop: 5,
+    marginBottom:10
   },
   card: {
     backgroundColor: 'white',
@@ -857,15 +905,26 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     flexDirection: 'row',
-    backgroundColor: '#0E3386',
+    backgroundColor: '#355192ff',
     borderRadius: 10,
     padding: 15,
+    margin:5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+    uploadButtonIos: {
+    flexDirection: 'row',
+    backgroundColor: '#355192ff',
+    borderRadius: 10,
+    // padding: 15,
+paddingVertical:20,
+    margin:10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   uploadButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 10,
     fontWeight: '600',
     marginLeft: 10,
   },

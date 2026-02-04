@@ -11,11 +11,11 @@ import InviteResourceScreen from '../screens/InviteResourceScreen';
 import LawyerOrgProfile from '../screens/LawyerOrgProfileList';
 import SettingsScreen from '../screens/SettingsScreen';
 import InviteOrganizationScreen from '../screens/InviteOrganization';
-
 import LawyerDirectoryScreen from '../screens/LawyerNetworkScreen';
 import InviteAgencyScreen from '../screens/InviteAgencyScreen';
 import InviteLawyerScreen from '../screens/InviteLawyerScreen';
 import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
+import { Platform } from 'react-native';
 const Drawer = createDrawerNavigator();
 
 export const LawyerDrawerNavigator = () => {
@@ -37,7 +37,10 @@ export const LawyerDrawerNavigator = () => {
       <Drawer.Screen
         name="Lawyer Dashboard"
         component={LawyerDashboard}
-        options={{ headerShown: true }}
+        // options={{ headerShown: true }}
+        options={{
+          headerShown: Platform.OS === 'android',
+        }}
       />
 
       <Drawer.Screen

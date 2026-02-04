@@ -1,5 +1,7 @@
+// @ts-nocheck
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Image, Alert, useColorScheme, Pressable, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import Services from '../../../Services/services';
 import axios from 'axios';
@@ -7,6 +9,9 @@ import { API_URL } from '../../../Axios/axiosData';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import MasterDataIdViewModal from '../../../components/Modals/MasterDataIdViewModal';
+import { SafeAreaView } from 'react-native';
+import { COLORS } from '../../../constants/colors';
+
 type Organization = {
   id: string;
   user: number,
@@ -43,6 +48,8 @@ const AgencySupplierMasterdata = () => {
     website: '',
     logo: null
   });
+  console.log("form", formData);
+
   const [tableData, setTableData] = useState([]);
   const [message, setMessage] = useState('');
   const [imageUri, setImageUri] = useState(null);
@@ -53,7 +60,110 @@ const AgencySupplierMasterdata = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Organization | null>(null);
+
+
+
+  const isDark = useColorScheme() === 'dark';
+
+  const [countryModal, setCountryModal] = useState(false);
+  const [stateModal, setStateModal] = useState(false);
+
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+
+  const [countrySearch, setCountrySearch] = useState('');
+  const [loadingCountry, setLoadingCountry] = useState(false);
+
+
+
+  const COLORS = {
+    bg: isDark ? '#000000' : '#FFFFFF',
+    card: isDark ? '#e4e6efff' : '#FFFFFF',
+    border: isDark ? '#374151' : '#22252aff',
+    text: isDark ? '#F9FAFB' : '#111827',
+    placeholder: isDark ? '#9CA3AF' : '#000000ff',
+    primary: '#0E3386',
+  };
+  useEffect(() => {
+    loadCountries();
+  }, []);
+
+  const loadCountries = async () => {
+    console.log("loadCountries");
+
+    setLoadingCountry(true);
+    const res = await Services.getCountryList();
+    if (res.success) setCountries(res.data);
+    console.log("countries", res);
+
+    setLoadingCountry(false);
+  };
+  const openCountryModal = () => {
+    setShowForm(false);
+
+    setTimeout(() => {
+      setCountryModal(true);
+    }, 250);
+  };
+
+  const openStateModal = () => {
+    setShowForm(false);
+
+    setTimeout(() => {
+      setStateModal(true);
+    }, 250);
+  };
+
+  const handleCountrySearch = async (text: string) => {
+    setCountrySearch(text);
+
+    if (!text.trim()) {
+      loadCountries();
+      return;
+    }
+
+    const res = await Services.searchCountry(text);
+    if (res.success) setCountries(res.data);
+  };
+
+
+  const handleCountrySelect = async (item: any) => {
+    const countryName = item.name || item.country;
+
+    setFormData(prev => ({
+      ...prev,
+      country: countryName,
+      state: '',
+    }));
+
+    await loadStates(countryName);
+
+    setCountryModal(false);
+    setTimeout(() => setShowForm(true), 250);
+  };
+  const handleStateSelect = (item) => {
+    setFormData(prev => ({
+      ...prev,
+      state: item.name,   // ✅ string
+    }));
+
+    setStateModal(false);
+
+    setTimeout(() => {
+      setShowForm(true);
+    }, 250);
+  };
+
+
+  const loadStates = async (countryName: string) => {
+    const res = await Services.getCountryDetailsState(countryName);
+    console.log("states", res);
+
+    if (res?.success) setStates(res.data);
+  };
   const handleInputChange = (name, value) => {
+    console.log("name", name);
+
     setFormData({
       ...formData,
       [name]: value
@@ -225,7 +335,7 @@ const AgencySupplierMasterdata = () => {
   useEffect(() => {
     fetchMasterData();
   }, []);
-  const handleViewProfile = (id) => {
+  const handleViewProfile = (id: any) => {
     axios
       .get(`${API_URL}masterdata/master-data/${id}/`)
       .then((response) => {
@@ -254,6 +364,7 @@ const AgencySupplierMasterdata = () => {
         <TextInput
           style={styles.searchInput}
           placeholder="Search "
+          placeholderTextColor={'black'}
         />
         <View style={styles.filterContainer}>
           <TouchableOpacity style={styles.filterButton}>
@@ -290,7 +401,7 @@ const AgencySupplierMasterdata = () => {
           </View>
 
           {/* Table Rows */}
-          {tableData.map((item) => (
+          {tableData.map((item: any) => (
             <View key={item.id} style={styles.tableRow}>
               <Text style={[styles.cell, styles.idCell]}>{item.id}</Text>
               <Text style={[styles.cell, styles.resourceCell]}>{item.name}</Text>
@@ -304,17 +415,7 @@ const AgencySupplierMasterdata = () => {
                 <View style={styles.statusIndicator} />
                 <Text> {item.status}</Text>
               </View>
-              {/* <TouchableOpacity
-                                  style={[
-                                      styles.actionButton,
-                                      styles.connectButton,
-                                      (item?.is_connection || item?.connection_request === "PENDING") && styles.disabledButton
-                                  ]}
-                                  onPress={() => handleConnect(item)}
-                                  disabled={item?.is_connection || item?.connection_request === "PENDING"}
-                              >
-                                  <Text style={styles.buttonText}>Connect</Text>
-                              </TouchableOpacity> */}
+
               <TouchableOpacity style={[styles.cell, styles.connectCell]}
                 onPress={() => handleConnect(item)}>
                 <Text style={styles.connectText}>Connect</Text>
@@ -390,111 +491,290 @@ const AgencySupplierMasterdata = () => {
         visible={showForm}
         animationType="slide"
         transparent={false}
+        statusBarTranslucent={false}
         onRequestClose={() => setShowForm(false)}
       >
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Create Master Data</Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor={COLORS.primary}
+          />
 
-          <ScrollView>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.previewImage} />
-              ) : (
-                <Text>Upload Profile Picture</Text>
-              )}
-            </TouchableOpacity>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+          >
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Create Master Data</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Name*"
-              value={formData.name}
-              onChangeText={(text) => handleInputChange('name', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email*"
-              keyboardType="email-address"
-              value={formData.email}
-              onChangeText={(text) => handleInputChange('email', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Mobile"
-              keyboardType="phone-pad"
-              value={formData.mobile}
-              onChangeText={(text) => handleInputChange('mobile', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Address 1"
-              value={formData.address_1}
-              onChangeText={(text) => handleInputChange('address_1', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Address 2"
-              value={formData.address_2}
-              onChangeText={(text) => handleInputChange('address_2', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="City*"
-              value={formData.city}
-              onChangeText={(text) => handleInputChange('city', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Country*"
-              value={formData.country}
-              onChangeText={(text) => handleInputChange('country', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="State*"
-              value={formData.state}
-              onChangeText={(text) => handleInputChange('state', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="ZIP Code*"
-              keyboardType="numeric"
-              value={formData.zip_code}
-              onChangeText={(text) => handleInputChange('zip_code', text)}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Website"
-              keyboardType="url"
-              value={formData.website}
-              onChangeText={(text) => handleInputChange('website', text)}
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.closeButton]}
-                onPress={() => setShowForm(false)}
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 30 }}
               >
-                <Text style={styles.submitButtonText}>Close</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.submitButton]}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.submitButtonText}>Submit</Text>
-              </TouchableOpacity>
+                {/* IMAGE UPLOAD */}
+                <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                  {imageUri ? (
+                    <Image source={{ uri: imageUri }} style={styles.previewImage} />
+                  ) : (
+                    <Text>Upload Profile Picture</Text>
+                  )}
+                </TouchableOpacity>
+
+                {/* INPUTS */}
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="Name *"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={formData.name}
+                  onChangeText={text => handleInputChange('name', text)}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="Email *"
+                  placeholderTextColor={COLORS.placeholder}
+                  keyboardType="email-address"
+                  value={formData.email}
+                  onChangeText={text => handleInputChange('email', text)}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="Mobile"
+                  placeholderTextColor={COLORS.placeholder}
+                  keyboardType="phone-pad"
+                  value={formData.mobile}
+                  onChangeText={text => handleInputChange('mobile', text)}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="Address 1"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={formData.address_1}
+                  onChangeText={text => handleInputChange('address_1', text)}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="Address 2"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={formData.address_2}
+                  onChangeText={text => handleInputChange('address_2', text)}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="City *"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={formData.city}
+                  onChangeText={text => handleInputChange('city', text)}
+                />
+
+                {/* COUNTRY */}
+                <Pressable
+                  style={[styles.input, styles.themeInput, styles.centerInput]}
+                  onPress={openCountryModal}
+                >
+                  <Text
+                    style={{
+                      color: formData.country ? COLORS.text : COLORS.placeholder,
+                      fontSize: 16,
+                    }}
+                  >
+                    {formData.country || 'Select Country *'}
+                  </Text>
+                </Pressable>
+
+                {/* STATE */}
+                <Pressable
+                  disabled={!states.length}
+                  style={[
+                    styles.input,
+                    styles.themeInput,
+                    styles.centerInput,
+                    { opacity: states.length ? 1 : 0.5 },
+                  ]}
+                  onPress={openStateModal}
+                >
+                  <Text
+                    style={{
+                      color: formData.state ? COLORS.text : COLORS.placeholder,
+                      fontSize: 16,
+                    }}
+                  >
+                    {formData.state || 'Select State *'}
+                  </Text>
+                </Pressable>
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="ZIP Code *"
+                  keyboardType="numeric"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={formData.zip_code}
+                  onChangeText={text => handleInputChange('zip_code', text)}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.themeInput]}
+                  placeholder="Website"
+                  keyboardType="url"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={formData.website}
+                  onChangeText={text => handleInputChange('website', text)}
+                />
+
+                {/* ACTION BUTTONS */}
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.closeButton]}
+                    onPress={() => setShowForm(false)}
+                  >
+                    <Text style={styles.submitButtonText}>Close</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.submitButton]}
+                    onPress={handleSubmit}
+                  >
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
             </View>
-          </ScrollView>
-        </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
+
+
+      <Modal
+        visible={countryModal}
+        animationType="slide"
+        transparent={false}   // 🔴 REQUIRED for iOS
+        presentationStyle="fullScreen"
+        onRequestClose={() => setCountryModal(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.bg }}>
+
+          {/* Header */}
+          <View
+            style={[
+              styles.modalHeader,
+              { borderBottomColor: COLORS.border },
+            ]}
+          >
+            <Text style={{ fontSize: 18, fontWeight: '600', color: COLORS.text }}>
+              Select Country
+            </Text>
+
+            <Pressable onPress={() => setCountryModal(false)}>
+              <Text style={{ color: COLORS.primary, fontSize: 16 }}>
+                Close
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Search */}
+          <TextInput
+            style={[
+              styles.searchInput,
+              {
+                backgroundColor: COLORS.card,
+                borderColor: COLORS.border,
+                color: COLORS.text,
+              },
+            ]}
+            placeholder="Search country"
+            placeholderTextColor={COLORS.placeholder}
+            value={countrySearch}
+            onChangeText={handleCountrySearch}
+          />
+
+          {/* List */}
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 24 }}
+          >
+            {countries.map(item => (
+              <Pressable
+                key={item.id}
+                onPress={() => handleCountrySelect(item)}
+                style={[
+                  styles.listItem,
+                  {
+                    borderBottomColor: COLORS.border,
+
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: COLORS.text,   // 🔴 FIX ANDROID TEXT
+                    fontSize: 16,
+                  }}
+                >
+                  {item.name}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+        </SafeAreaView>
+      </Modal>
+
+      <Modal
+        visible={stateModal}
+        animationType="slide"
+        transparent={false}
+        presentationStyle="fullScreen"
+        onRequestClose={() => setStateModal(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.bg }}>
+
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: COLORS.text }]}>
+              Select State
+            </Text>
+
+            <Pressable onPress={() => setStateModal(false)}>
+              <Text style={{ color: COLORS.primary }}>Close</Text>
+            </Pressable>
+          </View>
+
+          {/* State List */}
+          <ScrollView keyboardShouldPersistTaps="handled">
+            {states.map((item, index) => (
+              <Pressable
+                key={index}
+                style={[
+                  styles.listItem,
+                  { borderBottomColor: COLORS.border },
+                ]}
+                onPress={() => {
+                  handleStateSelect((item)); // ✅ store name
+                  setStateModal(false);
+                }}
+              >
+                <Text
+                  style={{
+                    color: COLORS.text,
+                    fontSize: 16,
+                  }}
+                >
+                  {item.name}   {/* ✅ render string */}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+        </SafeAreaView>
+      </Modal>
+
+
     </View>
   );
 };
@@ -508,23 +788,23 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 10,
   },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    marginHorizontal: 10
-
+  themeInput: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    color: COLORS.text,
   },
+
+  centerInput: {
+    justifyContent: 'center',
+  },
+
   filterContainer: {
     flexDirection: 'row',
-    // justifyContent: 'space-between',
     marginBottom: 30,
   },
   filterButton: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#606060ff',
     borderRadius: 5,
     padding: 10,
     flex: 1,
@@ -636,13 +916,7 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'contain',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 15,
-    marginBottom: 15,
-  },
+
   dropdown: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -700,11 +974,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#191212ff',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     color: '#333',
+    marginBottom: 15
   },
   messageInput: {
     height: 100,
@@ -732,6 +1007,43 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
+  selectInput: {
+    justifyContent: 'center',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#535353ff',
+    borderRadius: 10,
+    padding: 14,
+    margin: 16,
+    fontSize: 16,
+  },
+  listItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+
+
+  listText: {
+    fontSize: 16,
+    color: "black"
+  },
+
+  closeText: {
+    color: '#2563EB',
+    fontWeight: '600',
+  },
+
 });
 
 export default AgencySupplierMasterdata;

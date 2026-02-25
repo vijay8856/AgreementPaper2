@@ -1,5 +1,6 @@
+// @ts-nocheck
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -13,27 +14,27 @@ import {
 } from 'react-native';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OrganizationProfileModal from '../components/Modals/OrganizationProfileModal';
 import Notifications from '../components/Modals/Notifications';
-import { DeviceEventEmitter } from "react-native";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {DeviceEventEmitter} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-const { width: screenWidth } = Dimensions.get('window');
+const {width: screenWidth} = Dimensions.get('window');
 type DashboardDetails = {
-  arr: { increment: number; total_arr: number };
-  sales: { increment: number; total_sales: number };
-  costs: { increment: number; total_costs: number };
-  timesheet: { increment: number; total_amount: number };
+  arr: {increment: number; total_arr: number};
+  sales: {increment: number; total_sales: number};
+  costs: {increment: number; total_costs: number};
+  timesheet: {increment: number; total_amount: number};
 };
 type SecRowDetails = {
-  msa: { approved: number; pending: number; completed: number };
-  sow: { approved: number; pending: number; completed: number };
-  timesheet: { pending: number; approved: number; rejected: number };
-  pending: { msa: number; sow: number; timesheet: number };
-  job: { active: number; applications: number };
+  msa: {approved: number; pending: number; completed: number};
+  sow: {approved: number; pending: number; completed: number};
+  timesheet: {pending: number; approved: number; rejected: number};
+  pending: {msa: number; sow: number; timesheet: number};
+  job: {active: number; applications: number};
   profile_completion: number;
 };
 
@@ -42,11 +43,18 @@ const AgencyDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [dashboardDetails, setDashboardDetails] = useState<DashboardDetails | null>(null);
-  const [secRowDetails, setSecRowDetails] = useState<SecRowDetails | null>(null);
+  const [dashboardDetails, setDashboardDetails] =
+    useState<DashboardDetails | null>(null);
+  const [secRowDetails, setSecRowDetails] = useState<SecRowDetails | null>(
+    null,
+  );
   const [hasPremiumAccess, setHasPremiumAccess] = useState(true);
   const [userData, setUserData] = useState<any>({});
-  const [graphData, setGraphData] = useState<{ labels: string[]; revenue: number[]; expense: number[] }>({
+  const [graphData, setGraphData] = useState<{
+    labels: string[];
+    revenue: number[];
+    expense: number[];
+  }>({
     labels: [],
     revenue: [],
     expense: [],
@@ -65,9 +73,6 @@ const AgencyDashboard = () => {
     loadAgencyType();
   }, []);
 
-
-
-
   useEffect(() => {
     const loadCompanyName = async () => {
       try {
@@ -75,10 +80,10 @@ const AgencyDashboard = () => {
         if (!storedCompany) return;
 
         const parsed = JSON.parse(storedCompany);
-        console.log("storeeedede", parsed);
+        console.log('storeeedede', parsed);
 
         const name = parsed?.profile?.company_name || null;
-        console.log("storeeedede2", name);
+        console.log('storeeedede2', name);
 
         setCompanyName(name);
       } catch (error) {
@@ -89,13 +94,10 @@ const AgencyDashboard = () => {
     loadCompanyName();
   }, []);
 
-
-
-
   useEffect(() => {
     const checkProfileStatus = async () => {
       const isActive = await AsyncStorage.getItem('isActive');
-      console.log("isActive", isActive);
+      console.log('isActive', isActive);
 
       if (isActive !== 'true') {
         setShowProfileModal(true);
@@ -123,7 +125,7 @@ const AgencyDashboard = () => {
           typeof item.revenue === 'number' &&
           isFinite(item.revenue) &&
           typeof item.expense === 'number' &&
-          isFinite(item.expense)
+          isFinite(item.expense),
       );
 
       const formattedLabels = filteredData.map((item: any) => {
@@ -147,26 +149,21 @@ const AgencyDashboard = () => {
     setLoading(false);
   };
 
-
-
   useEffect(() => {
     fetchGraphData();
   }, []);
-
-
 
   const fetchAgencyDashboard = async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
 
     const response = await Services.getAgencyDashboard();
-    console.log("getAgencyDashboard res", response);
+    console.log('getAgencyDashboard res', response);
 
     if (response.success) {
       {
         setDashboardDetails(response.data);
-
-      };
+      }
     } else {
       Toast.show({
         type: 'error',
@@ -176,8 +173,8 @@ const AgencyDashboard = () => {
       });
     }
     const secResponse = await Services.getAgencyDashboardSecRow();
-    console.log("secres",secResponse);
-    
+    console.log('secres', secResponse);
+
     if (secResponse.success) setSecRowDetails(secResponse.data.payload);
     else
       Toast.show({
@@ -192,8 +189,6 @@ const AgencyDashboard = () => {
   useEffect(() => {
     fetchAgencyDashboard();
   }, []);
-
-
 
   useFocusEffect(
     useCallback(() => {
@@ -215,15 +210,15 @@ const AgencyDashboard = () => {
       };
 
       loadData();
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener(
-      "COMPANY_UPDATED",
-      (newName) => {
+      'COMPANY_UPDATED',
+      newName => {
         setCompanyName(newName);
-      }
+      },
     );
     return () => subscription.remove();
   }, []);
@@ -246,17 +241,22 @@ const AgencyDashboard = () => {
         headerStatusBarHeight: Platform.OS === 'ios' ? insets.top : undefined,
 
         headerTitle: () => (
-          <View style={{ flexDirection: "column", justifyContent: 'center', height: 44 }}>
-            <Text style={{
-              color: "#fff",
-              fontSize: Platform.OS === 'ios' ? 12 : 18, // Dynamic font for iOS
-              fontWeight: "bold",
+          <View
+            style={{
+              flexDirection: 'column',
+              justifyContent: 'center',
+              height: 44,
             }}>
-              Agency{" "}
-
+            <Text
+              style={{
+                color: '#fff',
+                fontSize: Platform.OS === 'ios' ? 12 : 18, // Dynamic font for iOS
+                fontWeight: 'bold',
+              }}>
+              Agency{' '}
             </Text>
             {agencyType ? (
-              <Text style={{ color: "#fff", fontSize: 8.5, paddingTop: 5 }}>
+              <Text style={{color: '#fff', fontSize: 8.5, paddingTop: 5}}>
                 ({agencyType})
               </Text>
             ) : null}
@@ -265,30 +265,29 @@ const AgencyDashboard = () => {
                 style={{
                   color: '#E5E7EB',
                   fontSize: 10,
-                  paddingTop: 5
+                  paddingTop: 5,
                 }}
                 numberOfLines={1}
-                ellipsizeMode="tail"
-              >
+                ellipsizeMode="tail">
                 {companyName}
               </Text>
             ) : null}
-
           </View>
         ),
 
         headerRight: () => (
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginRight: 10,
-            height: 50
-          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginRight: 10,
+              height: 50,
+            }}>
             <View>
               <Notifications />
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
               {/* Conditional Premium/Upgrade Button */}
               {hasPremiumAccess ? (
                 <TouchableOpacity
@@ -302,10 +301,15 @@ const AgencyDashboard = () => {
                     paddingHorizontal: 10,
                     paddingVertical: 6,
                     borderRadius: 6,
-                  }}
-                >
+                  }}>
                   <Icon name="crown" size={14} color="#000" />
-                  <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold', marginLeft: 5 }}>
+                  <Text
+                    style={{
+                      color: '#000',
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      marginLeft: 5,
+                    }}>
                     Premium
                   </Text>
                 </TouchableOpacity>
@@ -319,20 +323,23 @@ const AgencyDashboard = () => {
                     paddingHorizontal: 10,
                     paddingVertical: 6,
                     borderRadius: 6,
-                  }}
-                >
-                  <Text style={{ color: '#000', fontSize: 12, fontWeight: 'bold' }}>
+                  }}>
+                  <Text
+                    style={{color: '#000', fontSize: 12, fontWeight: 'bold'}}>
                     Upgrade Plan
                   </Text>
                 </TouchableOpacity>
               )}
 
               {/* Profile Picture with Cache-Busting Timestamp */}
-              <TouchableOpacity onPress={() => navigation.navigate('MyProfile')}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyProfile')}>
                 {userData?.profile_pic ? (
                   <Image
                     source={{
-                      uri: `${userData.profile_pic}?timestamp=${new Date().getTime()}`,
+                      uri: `${
+                        userData.profile_pic
+                      }?timestamp=${new Date().getTime()}`,
                     }}
                     style={{
                       width: 30,
@@ -341,7 +348,9 @@ const AgencyDashboard = () => {
                       borderWidth: 1,
                       borderColor: '#fff',
                     }}
-                    onError={(e) => console.log('Profile pic error:', e.nativeEvent.error)}
+                    onError={e =>
+                      console.log('Profile pic error:', e.nativeEvent.error)
+                    }
                   />
                 ) : (
                   <Icon name="account-circle" size={28} color="#fff" />
@@ -365,7 +374,7 @@ const AgencyDashboard = () => {
     loadPremiumStatus();
   }, [navigation, userData, companyName, agencyType, insets.top]);
 
-  const MetricCard = ({ title, value, change, changeType, icon }: any) => (
+  const MetricCard = ({title, value, change, changeType, icon}: any) => (
     <View style={styles.metricCard}>
       <View style={styles.metricHeader}>
         <View style={styles.iconContainer}>
@@ -375,15 +384,22 @@ const AgencyDashboard = () => {
       </View>
       <Text style={styles.metricValue}>{value}</Text>
       <View style={styles.changeContainer}>
-        <Text style={[styles.changeText, { color: changeType === 'increase' ? '#10B981' : '#EF4444' }]}>
-          {changeType === 'increase' ? '+' : ''}{change}
+        <Text
+          style={[
+            styles.changeText,
+            {color: changeType === 'increase' ? '#10B981' : '#EF4444'},
+          ]}>
+          {changeType === 'increase' ? '+' : ''}
+          {change}
         </Text>
-        <Text style={styles.changeLabel}>{changeType === 'increase' ? 'Increased' : 'Decreased'}</Text>
+        <Text style={styles.changeLabel}>
+          {changeType === 'increase' ? 'Increased' : 'Decreased'}
+        </Text>
       </View>
     </View>
   );
 
-  const StatusCard = ({ title, sections }: any) => (
+  const StatusCard = ({title, sections}: any) => (
     <View style={styles.statusCard}>
       <View style={styles.statusHeader}>
         <Text style={styles.statusTitle}>{title}</Text>
@@ -393,73 +409,222 @@ const AgencyDashboard = () => {
         </View> */}
       </View>
       <View style={styles.statusSections}>
-        {sections.map((section: { value: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; label: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }, index: React.Key | null | undefined) => (
-          <View key={index} style={styles.statusSection}>
-            <Text style={styles.sectionValue}>{section.value}</Text>
-            <Text style={styles.sectionLabel}>{section.label}</Text>
-          </View>
-        ))}
+        {sections.map(
+          (
+            section: {
+              value:
+                | string
+                | number
+                | bigint
+                | boolean
+                | React.ReactElement<
+                    unknown,
+                    string | React.JSXElementConstructor<any>
+                  >
+                | Iterable<React.ReactNode>
+                | React.ReactPortal
+                | Promise<
+                    | string
+                    | number
+                    | bigint
+                    | boolean
+                    | React.ReactPortal
+                    | React.ReactElement<
+                        unknown,
+                        string | React.JSXElementConstructor<any>
+                      >
+                    | Iterable<React.ReactNode>
+                    | null
+                    | undefined
+                  >
+                | null
+                | undefined;
+              label:
+                | string
+                | number
+                | bigint
+                | boolean
+                | React.ReactElement<
+                    unknown,
+                    string | React.JSXElementConstructor<any>
+                  >
+                | Iterable<React.ReactNode>
+                | React.ReactPortal
+                | Promise<
+                    | string
+                    | number
+                    | bigint
+                    | boolean
+                    | React.ReactPortal
+                    | React.ReactElement<
+                        unknown,
+                        string | React.JSXElementConstructor<any>
+                      >
+                    | Iterable<React.ReactNode>
+                    | null
+                    | undefined
+                  >
+                | null
+                | undefined;
+            },
+            index: React.Key | null | undefined,
+          ) => (
+            <View key={index} style={styles.statusSection}>
+              <Text style={styles.sectionValue}>{section.value}</Text>
+              <Text style={styles.sectionLabel}>{section.label}</Text>
+            </View>
+          ),
+        )}
       </View>
     </View>
   );
 
-
   const allItems = [
-    { id: 1, icon: 'file-document-outline', label: 'AI-Full Review', screen: 'AIResFullReview', premium: false },
-    { id: 2, icon: 'chip', label: 'AI-Review', screen: 'AIReview', premium: false },
-    { id: 3, icon: 'account-tie', label: 'Organization Profile', screen: 'LawyerOrgProfile', premium: false },
-    { id: 4, icon: 'cog-outline', label: 'Settings', screen: 'Settings', premium: false },
-    { id: 5, icon: 'scale-balance', label: 'Lawyers', screen: 'LawyerNetwork', premium: false },
-    { id: 6, icon: 'briefcase-plus', label: 'Invite Organization', screen: 'InviteOrganization', premium: false },
-    { id: 7, icon: 'account-group', label: 'Invite Talent', screen: 'InviteResource', premium: false },
-    { id: 8, icon: 'gavel', label: 'Invite Lawyer', screen: 'InviteLawyer', premium: false },
-    { id: 9, icon: 'help-circle-outline', label: 'Help', screen: 'HelpScreen', premium: false },
-    { id: 10, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: false },
-    { id: 11, icon: 'pencil-outline', label: 'ESignature', screen: 'ESignature', premium: false },
-    { id: 12, icon: 'application-edit', label: 'MasterAgreement', screen: 'MasterAgreement', premium: false },
-    { id: 13, icon: 'animation', label: 'StatementOfWork', screen: 'StatementOfWork', premium: false },
-    { id: 14, icon: 'account-box-outline', label: 'Talent Profile', screen: 'TalentProfileList', premium: false },
-    { id: 15, icon: 'clipboard-text-outline', label: 'Job Post', screen: 'JobPostScreen', premium: false },
-    { id: 16, icon: 'clipboard-text-outline', label: 'Individual Profile', screen: 'AllResourcesScreen', premium: false },
-    { id: 17, icon: 'clipboard-text-outline', label: 'Invoice Screen', screen: 'InvoiceScreen', premium: false },
-     {
-      id: 18,
+    {
+      id: 1,
+      icon: 'file-document-outline',
+      label: 'AI-Full Review',
+      screen: 'AIResFullReview',
+      premium: false,
+    },
+    {
+      id: 2,
+      icon: 'chip',
+      label: 'AI-Review',
+      screen: 'AIReview',
+      premium: false,
+    },
+    {id: 3, icon: 'chip', label: 'AI-Draft', screen: 'AIDraft', premium: false},
+    {
+      id: 4,
+      icon: 'animation',
+      label: 'StatementOfWork',
+      screen: 'StatementOfWork',
+      premium: false,
+    },
+    {
+      id: 5,
+      icon: 'application-edit',
+      label: 'MasterAgreement',
+      screen: 'MasterAgreement',
+      premium: false,
+    },
+    {
+      id: 6,
+      icon: 'briefcase-plus',
+      label: 'Invite Organization',
+      screen: 'InviteOrganization',
+      premium: false,
+    },
+    {
+      id: 7,
+      icon: 'account-group',
+      label: 'Invite Talent',
+      screen: 'InviteResource',
+      premium: false,
+    },
+    {
+      id: 8,
+      icon: 'gavel',
+      label: 'Invite Lawyer',
+      screen: 'InviteLawyer',
+      premium: false,
+    },
+    {
+      id: 9,
+      icon: 'clipboard-text-outline',
+      label: 'Invoice Screen',
+      screen: 'InvoiceScreen',
+      premium: false,
+    },
+    {
+      id: 10,
+      icon: 'account-tie',
+      label: 'Organization Profile',
+      screen: 'LawyerOrgProfile',
+      premium: false,
+    },
+    {
+      id: 11,
+      icon: 'pencil-outline',
+      label: 'ESignature',
+      screen: 'ESignature',
+      premium: false,
+    },
+    {
+      id: 12,
+      icon: 'scale-balance',
+      label: 'Lawyers',
+      screen: 'LawyerNetwork',
+      premium: false,
+    },
+    {
+      id: 13,
       icon: 'chip',
       label: ' Posted Job',
       screen: 'PostedJobsScreen',
       premium: false,
     },
+    {
+      id: 14,
+      icon: 'clipboard-text-outline',
+      label: 'Job Post',
+      screen: 'JobPostScreen',
+      premium: false,
+    },
+    ,
+    {
+      id: 15,
+      icon: 'account-box-outline',
+      label: 'Talent Profile',
+      screen: 'TalentProfileList',
+      premium: false,
+    },
+    {
+      id: 16,
+      icon: 'clipboard-text-outline',
+      label: 'Individual Profile',
+      screen: 'AllResourcesScreen',
+      premium: false,
+    },
+    {
+      id: 17,
+      icon: 'help-circle-outline',
+      label: 'Help',
+      screen: 'HelpScreen',
+      premium: false,
+    },
+
+    {
+      id: 18,
+      icon: 'cog-outline',
+      label: 'Settings',
+      screen: 'Settings',
+      premium: false,
+    },
     // { id: 17, icon: 'clipboard-text-outline', label: 'Job List ', screen: 'LatestJobsScreen', premium: false },
   ];
   const RESTRICTED_SCREENS_BY_ROLE: Record<string, string[]> = {
-
-    RECRUITER: [
-
-      "AllResourcesScreen"
-    ],
+    RECRUITER: ['AllResourcesScreen'],
 
     REAL_ESTATE_AGENT: [
-
       'TalentProfileList',
       'LatestJobsScreen',
-      "AIDraft",
-      "MasterAgreement",
-      "StatementOfWork",
-      "InvoiceScreen"
+      'AIDraft',
+      'MasterAgreement',
+      'StatementOfWork',
+      'InvoiceScreen',
     ],
 
     GOODS_AND_SERVICE_SUPPLIER: [
-
       'InviteResource',
       'LatestJobsScreen',
-      "AllResourcesScreen"
-
+      'AllResourcesScreen',
     ],
   };
 
   const finalMenuItems = useMemo(() => {
     return allItems.filter(item => {
-      // 🚫 Role-based restrictions
       if (
         agencyType &&
         RESTRICTED_SCREENS_BY_ROLE[agencyType]?.includes(item.screen)
@@ -467,7 +632,6 @@ const AgencyDashboard = () => {
         return false;
       }
 
-      // 🚫 Premium restriction
       if (!hasPremiumAccess && item.premium) {
         return false;
       }
@@ -475,15 +639,13 @@ const AgencyDashboard = () => {
     });
   }, [agencyType, hasPremiumAccess]);
 
-
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <SafeAreaView style={styles.container} >
+    <View style={{flex: 1, backgroundColor: '#F9FAFB'}}>
+      <SafeAreaView style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Top Metrics */}
           <View style={styles.topMetrics}>
             <View style={styles.metricsRow}>
-
               <MetricCard
                 title="Total Sales"
                 value={dashboardDetails?.sales.total_sales ?? 0}
@@ -500,7 +662,6 @@ const AgencyDashboard = () => {
               />
             </View>
             <View style={styles.metricsRow}>
-
               <MetricCard
                 title="Total Timesheet"
                 value={dashboardDetails?.timesheet.total_amount ?? 0}
@@ -518,7 +679,6 @@ const AgencyDashboard = () => {
             </View>
           </View>
 
-
           {/* Grid Items Section */}
           <View style={styles.gridSection}>
             <View style={styles.gridContainer}>
@@ -526,93 +686,147 @@ const AgencyDashboard = () => {
                 <TouchableOpacity
                   key={item.id}
                   style={styles.gridItem}
-                  onPress={() => navigation.navigate(item.screen)}
-                >
+                  onPress={() => navigation.navigate(item.screen)}>
                   <Icon name={item.icon} size={26} color="#0E3386" />
                   <Text style={styles.gridItemText}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-
           </View>
 
           {secRowDetails && (
             <>
               <View style={styles.statusCardsContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('MasterAgreement' as never)}>
-
-
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('MasterAgreement' as never)
+                  }>
                   <StatusCard
                     title="Master Service Agreement"
                     sections={[
-                      { value: secRowDetails.msa.pending, label: 'Upcoming', change: 0 },
-                      { value: secRowDetails.msa.approved, label: 'In Progress', change: 0 },
-                      { value: secRowDetails.msa.completed, label: 'Completed', change: 0 },
+                      {
+                        value: secRowDetails.msa.pending,
+                        label: 'Upcoming',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.msa.approved,
+                        label: 'In Progress',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.msa.completed,
+                        label: 'Completed',
+                        change: 0,
+                      },
                     ]}
                   />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.statusCardsContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('StatementOfWork' as never)}>
-
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('StatementOfWork' as never)
+                  }>
                   <StatusCard
                     title="Statement of Work"
                     sections={[
-                      { value: secRowDetails.sow.pending, label: 'Upcoming', change: 0 },
-                      { value: secRowDetails.sow.approved, label: 'In Progress', change: 0 },
-                      { value: secRowDetails.sow.completed, label: 'Completed', change: 0 },
+                      {
+                        value: secRowDetails.sow.pending,
+                        label: 'Upcoming',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.sow.approved,
+                        label: 'In Progress',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.sow.completed,
+                        label: 'Completed',
+                        change: 0,
+                      },
                     ]}
                   />
                 </TouchableOpacity>
-
               </View>
 
               <View style={styles.statusCardsContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('TimeSheet' as never)}>
-
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('TimeSheet' as never)}>
                   <StatusCard
                     title="Time Sheet"
                     sections={[
-                      { value: secRowDetails.timesheet.pending, label: 'Upcoming', change: 0 },
-                      { value: secRowDetails.timesheet.approved, label: 'In Progress', change: 0 },
-                      { value: secRowDetails.timesheet.rejected, label: 'Rejected', change: 0 },
+                      {
+                        value: secRowDetails.timesheet.pending,
+                        label: 'Upcoming',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.timesheet.approved,
+                        label: 'In Progress',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.timesheet.rejected,
+                        label: 'Rejected',
+                        change: 0,
+                      },
                     ]}
                   />
                 </TouchableOpacity>
-
               </View>
 
               <View style={styles.statusCardsContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('ApprovalScreen' as never)}>
-
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('ApprovalScreen' as never)
+                  }>
                   <StatusCard
                     title="Pending Approval"
                     sections={[
-                      { value: secRowDetails.pending.msa, label: 'MSA', change: 0 },
-                      { value: secRowDetails.pending.sow, label: 'SOW', change: 0 },
-                      { value: secRowDetails.pending.timesheet, label: 'Timesheet', change: 0 },
+                      {
+                        value: secRowDetails.pending.msa,
+                        label: 'MSA',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.pending.sow,
+                        label: 'SOW',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.pending.timesheet,
+                        label: 'Timesheet',
+                        change: 0,
+                      },
                     ]}
                   />
                 </TouchableOpacity>
-
               </View>
 
               <View style={styles.statusCardsContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('JobPostScreen' as never)}>
-
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('JobPostScreen' as never)}>
                   <StatusCard
                     title="Job Posting"
                     sections={[
-                      { value: secRowDetails.job.active, label: 'Active Jobs', change: 0 },
-                      { value: secRowDetails.job.applications, label: 'Applications', change: 0 },
-                      { value: 0, label: 'Total Jobs', change: 0 },
+                      {
+                        value: secRowDetails.job.active,
+                        label: 'Active Jobs',
+                        change: 0,
+                      },
+                      {
+                        value: secRowDetails.job.applications,
+                        label: 'Applications',
+                        change: 0,
+                      },
+                      {value: 0, label: 'Total Jobs', change: 0},
                     ]}
                   />
                 </TouchableOpacity>
-
               </View>
-
             </>
           )}
           <OrganizationProfileModal
@@ -659,7 +873,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0E3386',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-
   },
   headerTitle: {
     fontSize: 20,
@@ -691,16 +904,16 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#dfdedeff',
     padding: 16,
     borderRadius: 12,
     marginRight: 8,
     shadowColor: '#000',
     shadowOffset: {
-      width: 0,
-      height: 1,
+      width: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 1,
   },
@@ -760,8 +973,8 @@ const styles = StyleSheet.create({
 
     // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 1, height: 2 },
-    shadowOpacity: 0.50,
+    shadowOffset: {width: 1, height: 2},
+    shadowOpacity: 0.5,
     shadowRadius: 8,
 
     // Android shadow

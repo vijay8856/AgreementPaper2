@@ -7,6 +7,8 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Linking,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
@@ -239,6 +241,30 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
             {profile.total_experience || "0"} years
           </Text>
         </View>
+    {/* CV */}
+       <View style={styles.section}>
+  <Text style={styles.sectionTitle}>Uploaded CV</Text>
+
+  {profile?.cv ? (
+    <Text
+      style={[styles.item, styles.link]}
+      onPress={async () => {
+        const url = profile.cv;
+
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          Alert.alert("Error", "Unable to open CV link");
+        }
+      }}
+    >
+      View CV
+    </Text>
+  ) : (
+    <Text style={styles.item}>No Uploaded CV</Text>
+  )}
+</View>
 
         {/* RATING */}
         <View style={styles.section}>

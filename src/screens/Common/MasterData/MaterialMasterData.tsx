@@ -580,23 +580,96 @@ const initialData = {
  STATIC DROPDOWNS
 ====================== */
 
-const baseUnitOptions = [
-  { value: 'EA', label: 'Each (EA)' },
-  { value: 'PC', label: 'Piece (PC)' },
-  { value: 'KG', label: 'Kilogram (KG)' },
-  { value: 'L', label: 'Liter (L)' },
-];
 
-const weightUnits = [
-  { value: 'kg', label: 'Kilogram (kg)' },
-  { value: 'g', label: 'Gram (g)' },
-  { value: 'lb', label: 'Pound (lb)' },
-];
+
+ const baseUnitOptions = [
+   { value: "EA", label: "Each (EA)" },
+   { value: "PC", label: "Piece (PC)" },
+   { value: "DZ", label: "Dozen (DZ)" },
+   { value: "PK", label: "Pack (PK)" },
+   { value: "SET", label: "Set (SET)" },
+   { value: "LOT", label: "Lot (LOT)" },
+   { value: "BAG", label: "Bag (BAG)" },
+   { value: "BOX", label: "Box (BOX)" },
+   { value: "ROL", label: "Roll (ROL)" },
+   { value: "PAL", label: "Pallet (PAL)" },
+   { value: "KG", label: "Kilogram (KG)" },
+   { value: "G", label: "Gram (G)" },
+   { value: "MG", label: "Milligram (MG)" },
+   { value: "TON", label: "Metric Ton (TON)" },
+   { value: "LB", label: "Pound (LB)" },
+   { value: "OZ", label: "Ounce (OZ)" },
+   { value: "CWT", label: "Hundredweight (CWT)" },
+   { value: "T", label: "Long Ton (T)" },
+   { value: "M", label: "Meter (M)" },
+   { value: "CM", label: "Centimeter (CM)" },
+   { value: "MM", label: "Millimeter (MM)" },
+   { value: "IN", label: "Inch (IN)" },
+   { value: "FT", label: "Foot (FT)" },
+   { value: "YD", label: "Yard (YD)" },
+   { value: "KM", label: "Kilometer (KM)" },
+   { value: "MI", label: "Mile (MI)" },
+   { value: "L", label: "Liter (L)" },
+   { value: "ML", label: "Milliliter (ML)" },
+   { value: "M3", label: "Cubic Meter (M3)" },
+   { value: "CC", label: "Cubic Centimeter (CC)" },
+   { value: "GAL", label: "Gallon (GAL)" },
+   { value: "QT", label: "Quart (QT)" },
+   { value: "PT", label: "Pint (PT)" },
+   { value: "FL OZ", label: "Fluid Ounce (FL OZ)" },
+   { value: "KWH", label: "Kilowatt Hour (KWH)" },
+   { value: "J", label: "Joule (J)" },
+   { value: "BTU", label: "British Thermal Unit (BTU)" },
+   { value: "CAL", label: "Calorie (CAL)" },
+   { value: "HR", label: "Hour (HR)" },
+   { value: "MIN", label: "Minute (MIN)" },
+   { value: "SEC", label: "Second (SEC)" },
+   { value: "DAY", label: "Day (DAY)" },
+   { value: "WK", label: "Week (WK)" },
+   { value: "MO", label: "Month (MO)" },
+   { value: "YR", label: "Year (YR)" },
+   { value: "PR", label: "Pair (PR)" },
+   { value: "BATCH", label: "Batch (BATCH)" },
+   { value: "SHT", label: "Sheet (SHT)" },
+   { value: "CAN", label: "Can (CAN)" },
+   { value: "TUB", label: "Tub (TUB)" },
+ ];
+
+ const weightUnits = [
+   { label: "Carat (ct)", value: "ct" },
+   { label: "Gram (g)", value: "g" },
+   { label: "Kilogram (kg)", value: "kg" },
+   { label: "Milligram (mg)", value: "mg" },
+   { label: "Metric Ton (t)", value: "t" },
+   { label: "Pound (lb)", value: "lb" },
+   { label: "Ounce (oz)", value: "oz" },
+   { label: "Stone (st)", value: "st" },
+   { label: "Ton (US) (ton)", value: "us_ton" },
+   { label: "Ton (UK) (ton)", value: "uk_ton" },
+ ];
 
 const volumeUnits = [
-  { value: 'L', label: 'Liter (L)' },
-  { value: 'm3', label: 'Cubic Meter (m³)' },
-];
+  { label: "Milliliter (mL)", value: "mL" },
+  { label: "Liter (L)", value: "L" },
+  { label: "Cubic Centimeter (cm³)", value: "cm3" },
+  { label: "Cubic Meter (m³)", value: "m3" },
+  { label: "Cubic Inch (in³)", value: "in3" },
+  { label: "Cubic Foot (ft³)", value: "ft3" },
+  { label: "Cubic Yard (yd³)", value: "yd3" },
+  { label: "Gallon (US) (gal)", value: "us_gal" },
+  { label: "Gallon (UK) (gal)", value: "uk_gal" },
+  { label: "Pint (US) (pt)", value: "us_pt" },
+  { label: "Pint (UK) (pt)", value: "uk_pt" },
+  { label: "Fluid Ounce (US) (fl oz)", value: "us_fl_oz" },
+  { label: "Fluid Ounce (UK) (fl oz)", value: "uk_fl_oz" },
+  { label: "Barrel (bbl)", value: "bbl" },
+  { label: "Teaspoon (tsp)", value: "tsp" },
+  { label: "Tablespoon (tbsp)", value: "tbsp" },
+  { label: "Cup (cup)", value: "cup" },
+  { label: "Quart (US) (qt)", value: "us_qt" },
+  { label: "Quart (UK) (qt)", value: "uk_qt" },
+ ];
+
 
 /* ======================
  DROPDOWN COMPONENT
@@ -609,6 +682,7 @@ const Dropdown = ({ label, value, data, onSelect }:any) => {
     data.find(i => i.value === value || i.id === value)?.label ||
     data.find(i => i.id === value)?.name ||
     `Select ${label}`;
+console.log("data",data);
 
   return (
     <View style={{ marginBottom: 16 }}>
@@ -670,7 +744,7 @@ const MaterialMasterData = () => {
     }
     setLoadingList(false);
   };
-console.log("materials",materials);
+console.log("locations",locations);
 
   /* ======================
    LOAD DROPDOWNS
@@ -797,6 +871,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Description *"
+              placeholderTextColor={'black'}
+
               value={form.description}
               onChangeText={v => setForm({ ...form, description: v })}
             />
@@ -818,6 +894,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Old Material Number"
+              placeholderTextColor={'black'}
+
               value={form.old_material_number}
               onChangeText={v =>
                 setForm({ ...form, old_material_number: v })
@@ -834,6 +912,7 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Ext. Material Group"
+              placeholderTextColor={'black'}
               value={form.ext_material_group}
               onChangeText={v =>
                 setForm({ ...form, ext_material_group: v })
@@ -843,6 +922,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Gross Weight"
+              placeholderTextColor={'black'}
+
               value={form.gross_weight}
               onChangeText={v => setForm({ ...form, gross_weight: v })}
             />
@@ -850,6 +931,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Net Weight"
+              placeholderTextColor={'black'}
+
               value={form.net_weight}
               onChangeText={v => setForm({ ...form, net_weight: v })}
             />
@@ -864,6 +947,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Volume"
+              placeholderTextColor={'black'}
+
               value={form.volume}
               onChangeText={v => setForm({ ...form, volume: v })}
             />
@@ -871,6 +956,7 @@ console.log("materials",materials);
             <Dropdown
               label="Volume Unit"
               value={form.volume_unit}
+
               data={volumeUnits}
               onSelect={v => setForm({ ...form, volume_unit: v })}
             />
@@ -878,6 +964,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Dimensions"
+              placeholderTextColor={'black'}
+
               value={form.dimensions}
               onChangeText={v => setForm({ ...form, dimensions: v })}
             />
@@ -885,6 +973,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="EAN"
+              placeholderTextColor={'black'}
+
               value={form.ean}
               onChangeText={v => setForm({ ...form, ean: v })}
             />
@@ -892,6 +982,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="EAN Category"
+              placeholderTextColor={'black'}
+
               value={form.ean_category}
               onChangeText={v => setForm({ ...form, ean_category: v })}
             />
@@ -906,6 +998,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Underdelivery Tolerance (%)"
+              placeholderTextColor={'black'}
+
               value={form.underdel_tolerance}
               onChangeText={v =>
                 setForm({ ...form, underdel_tolerance: v })
@@ -915,6 +1009,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Overdelivery Tolerance (%)"
+              placeholderTextColor={'black'}
+
               value={form.overdel_tolerance}
               onChangeText={v =>
                 setForm({ ...form, overdel_tolerance: v })
@@ -924,6 +1020,8 @@ console.log("materials",materials);
             <TextInput
               style={styles.input}
               placeholder="Min Delivery Qty (%)"
+              placeholderTextColor={'black'}
+
               value={form.min_del_qty}
               onChangeText={v => setForm({ ...form, min_del_qty: v })}
             />

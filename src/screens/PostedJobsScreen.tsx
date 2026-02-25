@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Services from '../Services/services';
 import {useNavigation} from '@react-navigation/native';
+import {Share, Linking} from 'react-native';
 
 const PostedJobsScreen = () => {
   const navigation = useNavigation<any>();
@@ -35,6 +36,27 @@ const PostedJobsScreen = () => {
   useEffect(() => {
     fetchJobs();
   }, []);
+  const handleShare = async job => {
+    const jobUrl = `https://play.google.com/store/apps/details?id=com.agreementpaperapp2`;
+
+    const message = `
+🚀 New Job Posted on Agreement Paper
+
+📌 ${job.title}
+💰 ${job.currency_code} ${job.pay_rate}
+📍 ${job.company_city}, ${job.company_country_name}
+
+Apply Now:
+${jobUrl}
+
+📲 Download App:
+https://play.google.com/store/apps/details?id=com.agreementpaper
+  `;
+
+    Linking.openURL(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${jobUrl}`,
+    );
+  };
 
   const handleDelete = (jobId: number) => {
     Alert.alert('Delete Job', 'Are you sure you want to delete this job?', [
@@ -47,11 +69,11 @@ const PostedJobsScreen = () => {
             id: jobId,
             is_active: false,
           });
-            console.log("delete",res);
+          console.log('delete', res);
 
           if (res.success) {
-            console.log("delete",res);
-            
+            console.log('delete', res);
+
             Alert.alert('Success', 'Job deleted successfully');
             fetchJobs();
           } else {
@@ -116,6 +138,11 @@ const PostedJobsScreen = () => {
             onPress={() => handleDelete(item.id)}>
             <Text style={styles.btnText}>Delete</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shareBtn}
+            onPress={() => handleShare(item)}>
+            <Text style={styles.btnText}>Share</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -154,6 +181,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#F4F6FA',
   },
+
   loader: {
     flex: 1,
     justifyContent: 'center',
@@ -251,7 +279,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 8,
+    marginRight: 10,
+
   },
+    shareBtn: {
+      backgroundColor: '#0E3386',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+
   btnText: {
     color: '#fff',
     fontSize: 14,

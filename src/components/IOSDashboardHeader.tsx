@@ -18,7 +18,6 @@ const IOSDashboardHeader = ({
   onUpgradePress,
 }:any) => {
   const insets = useSafeAreaInsets();
-console.log("cmony",companyName);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>

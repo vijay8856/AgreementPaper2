@@ -174,14 +174,20 @@ if (!agencyType) {
           <FormField
             label="First Name *"
             value={firstName}
-            onChangeText={setFirstName}
+             onChangeText={(text:any) => {
+                const filtered = text.replace(/[^A-Za-z\s]/g, '');
+                setFirstName(filtered);
+              }}
             placeholder="Enter first name"
           />
 
           <FormField
             label="Last Name *"
             value={lastName}
-            onChangeText={setLastName}
+             onChangeText={(text:any)=> {
+                const filtered = text.replace(/[^A-Za-z\s]/g, '');
+                setLastName(filtered);
+              }}
             placeholder="Enter last name"
           />
 

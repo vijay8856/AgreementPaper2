@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -78,8 +80,7 @@ const OrganisationDashboard = () => {
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [dashboardDetails, setDashboardDetails] =
-    useState<DashboardDetails | null>(null);
+  const [dashboardDetails, setDashboardDetails] = useState<DashboardDetails | null>(null);
   const [hasPremiumAccess, setHasPremiumAccess] = useState(true);
   const [userData, setUserData] = useState<any>({});
   const [members, setMembers] = useState([]);
@@ -550,7 +551,7 @@ const OrganisationDashboard = () => {
       id: 9,
       icon: 'clipboard-text-outline',
       label: 'Talent Profile',
-      screen: 'AllResourcesScreen',
+      screen: 'TalentProfileList',
       premium: false,
     },
     {
@@ -1125,7 +1126,6 @@ const styles = StyleSheet.create({
     // Android shadow
     elevation: 10,
   },
-
   statusHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

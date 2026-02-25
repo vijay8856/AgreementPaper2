@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -14,15 +14,19 @@ import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 
 const SettingsScreen = () => {
-  const [activeTab, setActiveTab] = useState<'permission' | 'email' | 'addQuestion'>('permission');
-  const [isPermissionMode, setIsPermissionMode] = useState<'privacy' | 'password'>('privacy');
+  const [activeTab, setActiveTab] = useState<
+    'permission' | 'email' | 'addQuestion'
+  >('permission');
+  const [isPermissionMode, setIsPermissionMode] = useState<
+    'privacy' | 'password'
+  >('privacy');
   const [emailPrivacySettings, setEmailPrivacySettings] = useState({
     sendMSA: true,
     sendSOW: true,
     sendInvoice: true,
     sendAgencyProfile: true,
     sendResourceProfile: true,
-    emailContent: "Enter email content here",
+    emailContent: 'Enter email content here',
   });
 
   const [password, setPassword] = useState({
@@ -42,78 +46,86 @@ const SettingsScreen = () => {
     shareRate: false,
   });
 
-  const [newQuestion, setNewQuestion] = useState({
-    sectionName: '',
-    uniqueKey: '',
-    question: '',
-  });
+  // const [newQuestion, setNewQuestion] = useState({
+  //   sectionName: '',
+  //   uniqueKey: '',
+  //   question: '',
+  // });
 
-const togglePrivacy = (setting: keyof typeof privacySettings) => {
-  // Optimistically update UI
-  const newSettings = {
-    ...privacySettings,
-    [setting]: !privacySettings[setting]
+  const togglePrivacy = (setting: keyof typeof privacySettings) => {
+    // Optimistically update UI
+    const newSettings = {
+      ...privacySettings,
+      [setting]: !privacySettings[setting],
+    };
+
+    setPrivacySettings(newSettings);
+
+    // Send update to server
+    updatePrivacySettings();
   };
-  
-  setPrivacySettings(newSettings);
-  
-  // Send update to server
-  updatePrivacySettings();
-};
   // Handle email privacy settings
   const toggleEmailSetting = (setting: keyof typeof emailPrivacySettings) => {
     if (setting === 'emailContent') return;
 
     setEmailPrivacySettings(prev => ({
       ...prev,
-      [setting]: !prev[setting]
+      [setting]: !prev[setting],
     }));
   };
 
-const updatePrivacySettings = async () => {
-  try {
-    // Create FormData object
-    const formData = new FormData();
-    
-    // Map component state to API fields
-    formData.append('show_contact_number', privacySettings.showContact.toString());
-    formData.append('show_email', privacySettings.showEmail.toString());
-    formData.append('show_address', privacySettings.showAddress.toString());
-    formData.append('show_city', "true"); // Default to true if not in UI
-    formData.append('show_rate', privacySettings.shareRate.toString());
-    formData.append('show_cv', privacySettings.shareCV.toString());
-    formData.append('show_experience', privacySettings.showExperience.toString());
-    formData.append('show_linkedin_url', privacySettings.showLinkedIn.toString());
+  const updatePrivacySettings = async () => {
+    try {
+      // Create FormData object
+      const formData = new FormData();
 
-    // Call the update service
-    const response = await Services.updatePrivacySettings(formData);
-    console.log("updatePrivacySettings",formData);
-    console.log("updatePrivacySettings response",response);
-    
-    if (response.success) {
-      Toast.show({
-        type: 'success',
-        text1: 'Privacy settings updated',
-        position: 'top',
-      });
-    } else {
+      // Map component state to API fields
+      formData.append(
+        'show_contact_number',
+        privacySettings.showContact.toString(),
+      );
+      formData.append('show_email', privacySettings.showEmail.toString());
+      formData.append('show_address', privacySettings.showAddress.toString());
+      formData.append('show_city', 'true'); // Default to true if not in UI
+      formData.append('show_rate', privacySettings.shareRate.toString());
+      formData.append('show_cv', privacySettings.shareCV.toString());
+      formData.append(
+        'show_experience',
+        privacySettings.showExperience.toString(),
+      );
+      formData.append(
+        'show_linkedin_url',
+        privacySettings.showLinkedIn.toString(),
+      );
+
+      // Call the update service
+      const response = await Services.updatePrivacySettings(formData);
+      console.log('updatePrivacySettings', formData);
+      console.log('updatePrivacySettings response', response);
+
+      if (response.success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Privacy settings updated',
+          position: 'top',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Update failed',
+          text2: response.error || 'Please try again',
+          position: 'top',
+        });
+      }
+    } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Update failed',
-        text2: response.error || 'Please try again',
+        text2: 'An unexpected error occurred',
         position: 'top',
       });
     }
-  } catch (error) {
-    Toast.show({
-      type: 'error',
-      text1: 'Update failed',
-      text2: 'An unexpected error occurred',
-      position: 'top',
-    });
-  }
-};
-
+  };
 
   const PrivacySettings = async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -145,54 +157,56 @@ const updatePrivacySettings = async () => {
     setRefreshing(false);
   };
   useEffect(() => {
-
     PrivacySettings();
   }, []);
 
-
   return (
     <View style={styles.container}>
-      
       {/* Header */}
-   {Platform.OS !== 'ios' && (
-  <LinearGradient
-    colors={['#0E3386', '#1A3B8B']}
-    style={styles.header}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 0 }}
-  >
-    <Text style={styles.headerTitle}>Manage settings</Text>
-  </LinearGradient>
-)}
+      {Platform.OS !== 'ios' && (
+        <LinearGradient
+          colors={['#0E3386', '#1A3B8B']}
+          style={styles.header}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}>
+          <Text style={styles.headerTitle}>Manage settings</Text>
+        </LinearGradient>
+      )}
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'permission' && styles.activeTab]}
-          onPress={() => setActiveTab('permission')}
-        >
-          <Text style={[styles.tabText, activeTab === 'permission' && styles.activeTabText]}>
+          onPress={() => setActiveTab('permission')}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'permission' && styles.activeTabText,
+            ]}>
             Permission
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === 'email' && styles.activeTab]}
-          onPress={() => setActiveTab('email')}
-        >
-          <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>
+          onPress={() => setActiveTab('email')}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'email' && styles.activeTabText,
+            ]}>
             Email Privacy
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.tab, activeTab === 'addQuestion' && styles.activeTab]}
           onPress={() => setActiveTab('addQuestion')}
         >
           <Text style={[styles.tabText, activeTab === 'addQuestion' && styles.activeTabText]}>
             Add AI Question
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Content Area */}
@@ -200,9 +214,11 @@ const updatePrivacySettings = async () => {
         {activeTab === 'permission' && (
           <PermissionSection
             isPasswordMode={isPermissionMode === 'password'}
-            toggleMode={() => setIsPermissionMode(
-              isPermissionMode === 'privacy' ? 'password' : 'privacy'
-            )}
+            toggleMode={() =>
+              setIsPermissionMode(
+                isPermissionMode === 'privacy' ? 'password' : 'privacy',
+              )
+            }
             privacySettings={privacySettings}
             togglePrivacy={togglePrivacy}
             password={password}
@@ -214,29 +230,27 @@ const updatePrivacySettings = async () => {
           <EmailPrivacySection
             settings={emailPrivacySettings}
             toggleSetting={toggleEmailSetting}
-            setEmailContent={(text: string) => setEmailPrivacySettings(prev => ({
-              ...prev,
-              emailContent: text
-            }))}
+            setEmailContent={(text: string) =>
+              setEmailPrivacySettings(prev => ({
+                ...prev,
+                emailContent: text,
+              }))
+            }
           />
         )}
 
-        {activeTab === 'addQuestion' && (
+        {/* {activeTab === 'addQuestion' && (
           <AddQuestionSection
             question={newQuestion}
             setQuestion={setNewQuestion}
           />
-        )}
+        )} */}
       </ScrollView>
     </View>
   );
 };
 
-
-const PermissionSection = ({
-  privacySettings,
-  togglePrivacy,
-}: any) => (
+const PermissionSection = ({privacySettings, togglePrivacy}: any) => (
   <View style={styles.sectionCard}>
     <Text style={styles.sectionTitle}>Permissions / Data Privacy</Text>
 
@@ -266,12 +280,15 @@ const PermissionSection = ({
       value={privacySettings.showLinkedIn}
       onToggle={() => togglePrivacy('showLinkedIn')}
     />
- 
   </View>
 );
 
 // Email Privacy Section Component
-const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }: any) => (
+const EmailPrivacySection = ({
+  settings,
+  toggleSetting,
+  setEmailContent,
+}: any) => (
   <View style={styles.sectionCard}>
     <Text style={styles.sectionTitle}>Email Privacy Settings</Text>
 
@@ -311,90 +328,87 @@ const EmailPrivacySection = ({ settings, toggleSetting, setEmailContent }: any) 
       placeholder="Enter email content here"
     />
 
-     <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={toggleSetting}
-        >
-          <Text style={styles.primaryButtonText}>Continue</Text>
-        </TouchableOpacity>
-  </View>
-);
-
-// Add Question Section Component
-const AddQuestionSection = ({ question, setQuestion }: any) => (
-  <View style={styles.sectionCard}>
-    <Text style={styles.sectionTitle}>Add New Question</Text>
-
-    <QuestionCategory title="Legal & Compliance">
-      <BulletPoint text="Governing Law – Which jurisdictions laws will apply?" />
-      <BulletPoint text="Regulatory Requirements – Any industry-specific regulations that must be addressed?" />
-      <BulletPoint text="Dispute Resolution – Should disputes be settled through arbitration, mediation, or courts?" />
-    </QuestionCategory>
-
-    <QuestionCategory title="Parties involved">
-      <BulletPoint text="Party Type – Is the recipient an individual, small business, or enterprise?" />
-      <BulletPoint text="Contract Duration – Is it a fixed-term, auto-renewal, or indefinite contract?" />
-      <BulletPoint text="Termination Conditions – Under what conditions can either party terminate the contract?" />
-    </QuestionCategory>
-
-    <QuestionCategory title="Financial Terms">
-      <BulletPoint text="Payment Terms – What are the payment milestones, methods, and currency?" />
-      <BulletPoint text="Tax Implications – Who is responsible for local/international taxes?" />
-      <BulletPoint text="Penalties & Late Fees – Are there any penalties for late payments or non-compliance?" />
-    </QuestionCategory>
-
-    <QuestionCategory title="Scope & Obligations">
-      <BulletPoint text="Scope of Work/Services – What specific deliverables or services are covered?" />
-      <BulletPoint text="Confidentiality Requirements – Should an NDA or confidentiality clause be included?" />
-      <BulletPoint text="Intellectual Property (IP) Ownership – Who owns the IP of work produced?" />
-      <BulletPoint text="Liability & Indemnity – Who is responsible for damages, breaches, or legal disputes?" />
-    </QuestionCategory>
-
-    <QuestionCategory title="Execution & Signatures">
-      <BulletPoint text="Signatory Authority – Who has the legal authority to sign on behalf of each party?" />
-      <BulletPoint text="Signature Structure – Will it be signed digitally (HINA Index IT Act) or physically?" />
-    </QuestionCategory>
-
-    <View style={styles.formGroup}>
-      <Text style={styles.inputLabel}>Enter Section Name</Text>
-      <TextInput
-        style={styles.input}
-        value={question.sectionName}
-        onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, sectionName: text }))}
-        placeholder="Section name"
-      />
-    </View>
-
-    <View style={styles.formGroup}>
-      <Text style={styles.inputLabel}>Enter Unique Key</Text>
-      <TextInput
-        style={styles.input}
-        value={question.uniqueKey}
-        onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, uniqueKey: text }))}
-        placeholder="Unique key identifier"
-      />
-    </View>
-
-    <View style={styles.formGroup}>
-      <Text style={styles.inputLabel}>Enter Question</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        multiline
-        numberOfLines={3}
-        value={question.question}
-        onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, question: text }))}
-        placeholder="Enter your question here"
-      />
-    </View>
-
-    <TouchableOpacity style={styles.addButton}>
-      <Text style={styles.addButtonText}>Add More Question</Text>
+    <TouchableOpacity style={styles.primaryButton} onPress={toggleSetting}>
+      <Text style={styles.primaryButtonText}>Continue</Text>
     </TouchableOpacity>
   </View>
 );
 
+// Add Question Section Component
+// const AddQuestionSection = ({ question, setQuestion }: any) => (
+//   <View style={styles.sectionCard}>
+//     <Text style={styles.sectionTitle}>Add New Question</Text>
+
+//     <QuestionCategory title="Legal & Compliance">
+//       <BulletPoint text="Governing Law – Which jurisdictions laws will apply?" />
+//       <BulletPoint text="Regulatory Requirements – Any industry-specific regulations that must be addressed?" />
+//       <BulletPoint text="Dispute Resolution – Should disputes be settled through arbitration, mediation, or courts?" />
+//     </QuestionCategory>
+
+//     <QuestionCategory title="Parties involved">
+//       <BulletPoint text="Party Type – Is the recipient an individual, small business, or enterprise?" />
+//       <BulletPoint text="Contract Duration – Is it a fixed-term, auto-renewal, or indefinite contract?" />
+//       <BulletPoint text="Termination Conditions – Under what conditions can either party terminate the contract?" />
+//     </QuestionCategory>
+
+//     <QuestionCategory title="Financial Terms">
+//       <BulletPoint text="Payment Terms – What are the payment milestones, methods, and currency?" />
+//       <BulletPoint text="Tax Implications – Who is responsible for local/international taxes?" />
+//       <BulletPoint text="Penalties & Late Fees – Are there any penalties for late payments or non-compliance?" />
+//     </QuestionCategory>
+
+//     <QuestionCategory title="Scope & Obligations">
+//       <BulletPoint text="Scope of Work/Services – What specific deliverables or services are covered?" />
+//       <BulletPoint text="Confidentiality Requirements – Should an NDA or confidentiality clause be included?" />
+//       <BulletPoint text="Intellectual Property (IP) Ownership – Who owns the IP of work produced?" />
+//       <BulletPoint text="Liability & Indemnity – Who is responsible for damages, breaches, or legal disputes?" />
+//     </QuestionCategory>
+
+//     <QuestionCategory title="Execution & Signatures">
+//       <BulletPoint text="Signatory Authority – Who has the legal authority to sign on behalf of each party?" />
+//       <BulletPoint text="Signature Structure – Will it be signed digitally (HINA Index IT Act) or physically?" />
+//     </QuestionCategory>
+
+//     <View style={styles.formGroup}>
+//       <Text style={styles.inputLabel}>Enter Section Name</Text>
+//       <TextInput
+//         style={styles.input}
+//         value={question.sectionName}
+//         onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, sectionName: text }))}
+//         placeholder="Section name"
+//       />
+//     </View>
+
+//     <View style={styles.formGroup}>
+//       <Text style={styles.inputLabel}>Enter Unique Key</Text>
+//       <TextInput
+//         style={styles.input}
+//         value={question.uniqueKey}
+//         onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, uniqueKey: text }))}
+//         placeholder="Unique key identifier"
+//       />
+//     </View>
+
+//     <View style={styles.formGroup}>
+//       <Text style={styles.inputLabel}>Enter Question</Text>
+//       <TextInput
+//         style={[styles.input, styles.textArea]}
+//         multiline
+//         numberOfLines={3}
+//         value={question.question}
+//         onChangeText={(text) => setQuestion((prev: any) => ({ ...prev, question: text }))}
+//         placeholder="Enter your question here"
+//       />
+//     </View>
+
+//     <TouchableOpacity style={styles.addButton}>
+//       <Text style={styles.addButtonText}>Add More Question</Text>
+//     </TouchableOpacity>
+//   </View>
+// );
+
 // Reusable Components
-const PermissionRow = ({ label, value, onToggle }: any) => (
+const PermissionRow = ({label, value, onToggle}: any) => (
   <View style={styles.permissionRow}>
     <Text style={styles.permissionLabel}>{label}</Text>
     <View style={styles.toggleContainer}>
@@ -402,54 +416,52 @@ const PermissionRow = ({ label, value, onToggle }: any) => (
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: '#767577', true: '#0E3386' }}
+        trackColor={{false: '#767577', true: '#0E3386'}}
         thumbColor={value ? '#f5f5f5' : '#f4f3f4'}
       />
     </View>
   </View>
 );
 
-const EmailSettingRow = ({ label, value, onToggle }: any) => (
+const EmailSettingRow = ({label, value, onToggle}: any) => (
   <View style={styles.emailSettingRow}>
     <Text style={styles.emailSettingLabel}>{label}</Text>
     <Switch
       value={value}
       onValueChange={onToggle}
-      trackColor={{ false: '#767577', true: '#0E3386' }}
+      trackColor={{false: '#767577', true: '#0E3386'}}
       thumbColor={value ? '#f5f5f5' : '#f4f3f4'}
     />
   </View>
 );
 
-const PasswordField = ({ label, value, onChangeText }: any) => (
-  <View style={styles.formGroup}>
-    <Text style={styles.inputLabel}>{label}</Text>
-    <TextInput
-      style={styles.input}
-      value={value}
-      onChangeText={onChangeText}
-      secureTextEntry
-      placeholder="Enter password"
-    />
-  </View>
-);
+// const PasswordField = ({label, value, onChangeText}: any) => (
+//   <View style={styles.formGroup}>
+//     <Text style={styles.inputLabel}>{label}</Text>
+//     <TextInput
+//       style={styles.input}
+//       value={value}
+//       onChangeText={onChangeText}
+//       secureTextEntry
+//       placeholder="Enter password"
+//     />
+//   </View>
+// );
 
-const QuestionCategory = ({ title, children }: any) => (
-  <View style={styles.questionCategory}>
-    <Text style={styles.categoryTitle}>{title}</Text>
-    <View style={styles.divider} />
-    <View style={styles.bulletList}>
-      {children}
-    </View>
-  </View>
-);
+// const QuestionCategory = ({title, children}: any) => (
+//   <View style={styles.questionCategory}>
+//     <Text style={styles.categoryTitle}>{title}</Text>
+//     <View style={styles.divider} />
+//     <View style={styles.bulletList}>{children}</View>
+//   </View>
+// );
 
-const BulletPoint = ({ text }: any) => (
-  <View style={styles.bulletPoint}>
-    <Text style={styles.bullet}>•</Text>
-    <Text style={styles.bulletText}>{text}</Text>
-  </View>
-);
+// const BulletPoint = ({text}: any) => (
+//   <View style={styles.bulletPoint}>
+//     <Text style={styles.bullet}>•</Text>
+//     <Text style={styles.bulletText}>{text}</Text>
+//   </View>
+// );
 
 // Styles
 const styles = StyleSheet.create({
@@ -457,13 +469,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F7FC',
   },
-    primaryButton: {
+  primaryButton: {
     backgroundColor: '#0E3386',
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 15
+    marginBottom: 15,
   },
 
   primaryButtonText: {
@@ -515,7 +527,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,

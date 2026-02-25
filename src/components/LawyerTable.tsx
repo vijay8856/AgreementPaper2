@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -12,15 +12,17 @@ import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 
 const LawyerTable: React.FC = () => {
-  const [lawyers, setLawyers] = useState<Array<{
-    id: number;
-    name: string;
-    email: string;
-    company_name: string;
-    country: string;
-    is_active: boolean;
-  }>>([]);
-  
+  const [lawyers, setLawyers] = useState<
+    Array<{
+      id: number;
+      name: string;
+      email: string;
+      company_name: string;
+      country: string;
+      is_active: boolean;
+    }>
+  >([]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -29,8 +31,11 @@ const LawyerTable: React.FC = () => {
     else setRefreshing(true);
 
     try {
-      const response = await Services.getLawyerNetworkList({ limit: 150, offset: 0 });
-console.log("lawyer",response);
+      const response = await Services.getLawyerNetworkList({
+        limit: 150,
+        offset: 0,
+      });
+      console.log('lawyer', response);
 
       if (response.success) {
         setLawyers(response.data);
@@ -78,15 +83,19 @@ console.log("lawyer",response);
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
-      showsVerticalScrollIndicator={false}
-    >
+      showsVerticalScrollIndicator={false}>
       {lawyers.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No lawyers found</Text>
         </View>
       ) : (
-        lawyers.map((lawyer) => (
-          <LawyerCard key={lawyer.id} lawyerData={lawyer} />
+        lawyers.map((lawyer, index) => (
+          <LawyerCard
+            key={lawyer.id}
+            lawyerData={lawyer}
+            index={index}
+            totalCount={lawyers.length}
+          />
         ))
       )}
     </ScrollView>

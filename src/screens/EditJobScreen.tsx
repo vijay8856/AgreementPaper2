@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -26,10 +27,7 @@ const EditJobScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const {jobId} = route.params;
-  console.log('joid', jobId);
-
   const [loading, setLoading] = useState(true);
-
   const [skills, setSkills] = useState<DropdownItem[]>([]);
   const [languages, setLanguages] = useState<DropdownItem[]>([]);
   const [currencies, setCurrencies] = useState<DropdownItem[]>([]);
@@ -66,6 +64,8 @@ const EditJobScreen = () => {
   }, []);
 
   const loadInitialData = async () => {
+    setLoading(true);
+
     try {
       const [skillRes, langRes, currencyRes, countryRes, jobRes] =
         await Promise.all([
@@ -76,13 +76,60 @@ const EditJobScreen = () => {
           Services.getPostedJob({limit: 1, offset: 0, id: jobId}),
         ]);
 
-      if (skillRes.success) setSkills(skillRes.data || []);
-      if (langRes.success) setLanguages(langRes.data || []);
-      if (currencyRes.success) setCurrencies(currencyRes.data || []);
-      if (countryRes.success) setCountries(countryRes.data || []);
+      // ✅ Skills
+      if (skillRes.success) {
+        setSkills(skillRes.data || []);
+      }
 
+      // ✅ Languages (English on top)
+      if (langRes.success) {
+        const languageList = langRes.data || [];
+
+        const sortedLanguages = [
+          ...languageList.filter(l => l.name?.toLowerCase() === 'english'),
+          ...languageList.filter(l => l.name?.toLowerCase() !== 'english'),
+        ];
+
+        setLanguages(sortedLanguages);
+      }
+
+      // ✅ Currencies (INR India + AUD Australia on top)
+      if (currencyRes.success) {
+        const list = currencyRes.data || [];
+
+        const finalCurrencies = [
+          ...list.filter(
+            i =>
+              (i.currency === 'INR' &&
+                i.country_name?.toLowerCase() === 'india') ||
+              (i.currency === 'AUD' &&
+                i.country_name?.toLowerCase() === 'australia'),
+          ),
+          ...list.filter(i => !['INR', 'AUD'].includes(i.currency)),
+        ];
+
+        setCurrencies(finalCurrencies);
+      }
+
+      // ✅ Countries (India & Australia on top)
+      if (countryRes.success) {
+        const countryList = countryRes.data || [];
+
+        const priorityCountries = ['India', 'Australia'];
+
+        const sortedCountries = [
+          ...countryList.filter(c => priorityCountries.includes(c.name)),
+          ...countryList.filter(c => !priorityCountries.includes(c.name)),
+        ];
+
+        setCountries(sortedCountries);
+      }
+
+      // ✅ Prefill Job
       const job = jobRes?.data?.results?.[0];
-      if (job) prefillJob(job);
+      if (job) {
+        prefillJob(job);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -177,7 +224,6 @@ const EditJobScreen = () => {
       job_location_type:
         jobLocation.charAt(0) + jobLocation.slice(1).toLowerCase(),
     };
-    console.log('payload', payload);
 
     try {
       const res = await Services.updatePostedJob(payload);
@@ -185,8 +231,6 @@ const EditJobScreen = () => {
         alert('✅ Job updated successfully');
         navigation.goBack();
       } else {
-        console.log('err', res.error);
-
         alert(res.error || 'Failed to update job');
       }
     } catch {
@@ -208,7 +252,7 @@ const EditJobScreen = () => {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
+        style={{flex: 1, marginBottom: 30}}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}>
@@ -310,6 +354,7 @@ const EditJobScreen = () => {
               </View>
             </View>
           </View>
+
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Screening Questions</Text>
             <View style={styles.cardDivider} />
@@ -342,6 +387,7 @@ const EditJobScreen = () => {
               <Text style={styles.addQuestionText}>+ Add Question</Text>
             </TouchableOpacity>
           </View>
+
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Company & Location</Text>
             <View style={styles.cardDivider} />
@@ -386,6 +432,7 @@ const EditJobScreen = () => {
               </View>
             </View>
           </View>
+
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Work Arrangement</Text>
             <View style={styles.segment}>
@@ -431,6 +478,8 @@ const EditJobScreen = () => {
               ))}
             </View>
           </View>
+
+          <View style={{height: 120}} />
         </ScrollView>
 
         <View style={styles.footer}>

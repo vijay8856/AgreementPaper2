@@ -10,11 +10,11 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app uses the camera to scan and capture agreement documents.
-This app uses the camera to scan and capture agreement documents.
-This app uses the camera to scan and capture agreement documents.
-This app uses the camera to scan and capture agreement documents.
-This app uses the camera to scan and capture agreement documents.
-This app uses the camera to scan and capture agreement documents.
+            This app uses the camera to scan and capture agreement documents.
+            This app uses the camera to scan and capture agreement documents.
+            This app uses the camera to scan and capture agreement documents.
+            This app uses the camera to scan and capture agreement documents.
+            This app uses the camera to scan and capture agreement documents.
 </string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to the photo library to upload and attach agreement documents.

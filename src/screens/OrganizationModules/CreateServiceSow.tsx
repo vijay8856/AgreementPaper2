@@ -117,6 +117,12 @@ const CreateServiceSow: React.FC = () => {
     tax_group: [],
     sow_type: [],
   });
+
+  const [sowTypeModal, setSowTypeModal] = useState(false);
+const [milestoneCurrencyModal, setMilestoneCurrencyModal] = useState(false);
+const [milestoneTaxGroupModal, setMilestoneTaxGroupModal] = useState(false);
+
+
   const materialOptions = [
     'Aluminum',
     'Brass',
@@ -783,42 +789,65 @@ const CreateServiceSow: React.FC = () => {
       </View>
 
       <Text style={styles.label}>Sow Type *</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={sowType}
-          onValueChange={value => setSowType(value)}>
-          {sowFileds?.sow_type?.map((item: any) => (
-            <Picker.Item key={item.id} label={item.name} value={item.id} />
-          ))}
-        </Picker>
-      </View>
+<TouchableOpacity
+  style={styles.pickerContainer}
+  onPress={() => setSowTypeModal(true)}
+>
+  <Text>
+    {sowFileds?.sow_type?.find((i: any) => i.id === sowType)?.name || "Select Sow Type"}
+  </Text>
+</TouchableOpacity>
+<SelectPickerModal
+  visible={sowTypeModal}
+  title="Select Sow Type"
+  data={sowFileds?.sow_type || []}
+  selectedValue={sowType}
+  onSelect={(item: any) => setSowType(item.id)}
+  onClose={() => setSowTypeModal(false)}
+/>
 
+        
       <Text style={styles.label}>Currency *</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={data.currency}
-          onValueChange={value => updateFormData(index, 'currency', value)}>
-          <Picker.Item label="Select Currency" value="" />
-          {currencies.map((item: any) => (
-            <Picker.Item
-              key={item.id}
-              label={`${item.currency} - ${item.country_name}`}
-              value={item.id}
-            />
-          ))}
-        </Picker>
-      </View>
+    <TouchableOpacity
+  style={styles.pickerContainer}
+  onPress={() => setMilestoneCurrencyModal(true)}
+>
+  <Text>
+    {currencies.find((i: any) => i.id === data.currency)
+      ? `${currencies.find((i: any) => i.id === data.currency)?.currency} - ${currencies.find((i: any) => i.id === data.currency)?.country_name}`
+      : "Select Currency"}
+  </Text>
+</TouchableOpacity>
+<SelectPickerModal
+  visible={milestoneCurrencyModal}
+  title="Select Currency"
+  data={currencies}
+  selectedValue={data.currency}
+  onSelect={(item: any) =>
+    updateFormData(index, "currency", item.id)
+  }
+  onClose={() => setMilestoneCurrencyModal(false)}
+/>
+
 
       <Text style={styles.label}>Tax Group *</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={taxGroup}
-          onValueChange={value => setTaxGroup(value)}>
-          {sowFileds?.tax_group?.map((item: any) => (
-            <Picker.Item key={item.id} label={item.name} value={item.id} />
-          ))}
-        </Picker>
-      </View>
+     <TouchableOpacity
+  style={styles.pickerContainer}
+  onPress={() => setMilestoneTaxGroupModal(true)}
+>
+  <Text>
+    {sowFileds?.tax_group?.find((i: any) => i.id === taxGroup)?.name || "Select Tax Group"}
+  </Text>
+</TouchableOpacity>
+<SelectPickerModal
+  visible={milestoneTaxGroupModal}
+  title="Select Tax Group"
+  data={sowFileds?.tax_group || []}
+  selectedValue={taxGroup}
+  onSelect={(item: any) => setTaxGroup(item.id)}
+  onClose={() => setMilestoneTaxGroupModal(false)}
+/>
+
 
       <Text style={styles.label}>Rate *</Text>
       <TextInput
@@ -1339,7 +1368,7 @@ const styles = StyleSheet.create({
 
   selectButton: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#848282ff',
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#f8f8f8',
@@ -1469,7 +1498,7 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#7e7e7eff',
     borderRadius: 6,
     padding: 12,
     marginBottom: 16,
@@ -1604,10 +1633,11 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#626262ff',
     borderRadius: 6,
     marginBottom: 8,
     overflow: 'hidden',
+    padding:10
   },
 
   SelectResource: {

@@ -37,59 +37,7 @@ const SelectPickerModal = ({
   };
 
   return (
-    // <Modal
-    //   visible={visible}
-    //   transparent
-    //   animationType="slide"
-    //   presentationStyle="overFullScreen"
-    //   onRequestClose={onClose}
-    // >
-    //   <View style={styles.overlay}>
-    //   <SafeAreaView style={styles.sheet}>
-        
-    //       {/* Header */}
-    //       <View style={styles.header}>
-    //         <Text style={styles.title}>{title}</Text>
-    //         <TouchableOpacity onPress={onClose}>
-    //           <Text style={styles.done}>
-    //             {Platform.OS === 'ios' ? 'Done' : 'Close'}
-    //           </Text>
-    //         </TouchableOpacity>
-    //       </View>
 
-    //       {/* Options */}
-    //       <FlatList
-    //         data={data}
-    //         keyExtractor={(item) => String(item.id)}
-    //         keyboardShouldPersistTaps="handled"
-    //         renderItem={({ item }) => {
-    //           const selected = selectedValue === item.id;
-
-    //           return (
-    //             <TouchableOpacity
-    //               activeOpacity={0.7}
-    //               style={[styles.item, selected && styles.selected]}
-    //               onPress={() => {
-    //                 onSelect(item);
-    //                 onClose();
-    //               }}
-    //             >
-    //               <Text
-    //                 style={[
-    //                   styles.itemText,
-    //                   selected && styles.selectedText,
-    //                 ]}
-    //               >
-    //                 {getLabel(item)}
-    //               </Text>
-    //             </TouchableOpacity>
-    //           );
-    //         }}
-    //       />
-    
-    //   </SafeAreaView>
-    //       </View>
-    // </Modal>
 <Modal
   visible={visible}
   transparent
@@ -151,27 +99,7 @@ const SelectPickerModal = ({
 
 export default SelectPickerModal;
 const styles = StyleSheet.create({
-//   overlay: {
-//     flex: 1,
-//     justifyContent: 'flex-end',
-//     backgroundColor: 'rgba(0,0,0,0.45)',
-//   },
 
-//  sheet: {
-//   backgroundColor: '#FFFFFF',
-//   maxHeight: '70%',
-//   borderTopLeftRadius: 20,
-//   borderTopRightRadius: 20,
-
-//   // ❌ REMOVE THIS (causes extra gap)
-//   // paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-
-//   shadowColor: '#000',
-//   shadowOffset: { width: 0, height: -3 },
-//   shadowOpacity: 0.15,
-//   shadowRadius: 6,
-//   elevation: 10,
-// },
 overlay: {
   ...StyleSheet.absoluteFillObject,
   backgroundColor: 'rgba(0,0,0,0.45)',

@@ -42,6 +42,18 @@
     <!-- <data android:scheme="agreementpaper" android:host="login" /> -->
       <data android:scheme="com.googleusercontent.apps.601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com" />
   </intent-filter>
+
+  <intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+
+    <data
+        android:scheme="https"
+        android:host="agreementpaper.com"
+        android:pathPrefix="/job/" />
+</intent-filter>
+
 </activity>
 
     </application>

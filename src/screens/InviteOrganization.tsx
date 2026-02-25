@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
-  SafeAreaView
+  SafeAreaView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Services from '../Services/services';
@@ -26,9 +26,20 @@ const InviteOrganizationScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userType, setUserType] = useState('')
+  const [userType, setUserType] = useState('');
 
+  const isValidName = (name: string) => {
+    return /^[A-Za-z\s]+$/.test(name);
+  };
 
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isValidPassword = (password: string) => {
+    // Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+  };
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -37,45 +48,79 @@ const InviteOrganizationScreen = () => {
         if (keys.length > 0) {
           const result = await AsyncStorage.multiGet(keys);
 
-          const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
-            if (value !== null) {
-              try {
-                acc[key] = JSON.parse(value);
-              } catch {
-                acc[key] = value;
+          const dataObj = result.reduce<Record<string, any>>(
+            (acc, [key, value]) => {
+              if (value !== null) {
+                try {
+                  acc[key] = JSON.parse(value);
+                } catch {
+                  acc[key] = value;
+                }
               }
-            }
-            return acc;
-          }, {});
+              return acc;
+            },
+            {},
+          );
 
           // 🔑 user_type lives inside the parsed userData object
           const typeFromStorage =
             dataObj.userData?.user_type || // preferred location
-            dataObj.userType;              // or the separate key if it exists
+            dataObj.userType; // or the separate key if it exists
 
           if (typeFromStorage) {
             setUserType(typeFromStorage);
           }
 
-          console.log("User type is:", typeFromStorage);
+          console.log('User type is:', typeFromStorage);
         }
       } catch (error) {
-        console.error("Error fetching all AsyncStorage data:", error);
+        console.error('Error fetching all AsyncStorage data:', error);
       }
     };
 
     fetchAllData();
   }, []);
 
-
   const handleSubmit = async () => {
+    console.log('happy ');
+
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Please fill all fields' });
+      Toast.show({type: 'error', text1: 'Please fill all fields'});
+      return;
+    }
+
+    if (!isValidName(firstName)) {
+      Toast.show({
+        type: 'error',
+        text1: 'First name should contain only letters',
+      });
+      return;
+    }
+
+    if (!isValidName(lastName)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Last name should contain only letters',
+      });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Toast.show({type: 'error', text1: 'Please enter a valid email address'});
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      Toast.show({
+        type: 'error',
+        text1:
+          'Password must be 8+ characters with uppercase, lowercase & number',
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Passwords do not match' });
+      Toast.show({type: 'error', text1: 'Passwords do not match'});
       return;
     }
 
@@ -84,19 +129,21 @@ const InviteOrganizationScreen = () => {
       last_name: lastName,
       email: email,
       password: password,
-      user_type: "ORGANISATION_USER",
+      user_type: 'ORGANISATION_USER',
       is_authorized: isTagged,
     };
-    console.log("pay", payload);
+    console.log('pay', payload);
 
     try {
       setLoading(true);
       const res = await Services.inviteUsers(payload);
 
-
       setLoading(false);
       if (res.success) {
-        Toast.show({ type: 'success', text1: 'Organization invited successfully' });
+        Toast.show({
+          type: 'success',
+          text1: 'Organization invited successfully',
+        });
         setFirstName('');
         setLastName('');
         setEmail('');
@@ -104,38 +151,34 @@ const InviteOrganizationScreen = () => {
         setConfirmPassword('');
         setIsTagged(false);
       } else {
-        Toast.show({ type: 'error', text1: res?.error?.message || 'Invite failed' });
-        Toast.show({ type: 'error', text1: res?.error?.email || 'Invite failed' });
-
+        Toast.show({
+          type: 'error',
+          text1: res?.error?.message || 'Invite failed',
+        });
+        Toast.show({
+          type: 'error',
+          text1: res?.error?.email || 'Invite failed',
+        });
       }
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Something went wrong' });
+      Toast.show({type: 'error', text1: 'Something went wrong'});
     }
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: '#F9FAFB' },
-      ]}
-    >
-      <View style={{ flex: 1 }}>
+    <SafeAreaView style={[styles.container, {backgroundColor: '#F9FAFB'}]}>
+      <View style={{flex: 1}}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-        >
+          keyboardShouldPersistTaps="handled">
           {/* Header (Hidden on iOS) */}
           {Platform.OS !== 'ios' && (
             <LinearGradient
               colors={['#0E3386', '#1A3B8B']}
               style={styles.header}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.headerTitle}>
-                Invite New Organization
-              </Text>
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}>
+              <Text style={styles.headerTitle}>Invite New Organization</Text>
             </LinearGradient>
           )}
 
@@ -144,14 +187,20 @@ const InviteOrganizationScreen = () => {
             <FormField
               label="First Name *"
               value={firstName}
-              onChangeText={setFirstName}
+              onChangeText={(text:any)=> {
+                const filtered = text.replace(/[^A-Za-z\s]/g, '');
+                setFirstName(filtered);
+              }}
               placeholder="Enter first name"
             />
 
             <FormField
               label="Last Name *"
               value={lastName}
-              onChangeText={setLastName}
+              onChangeText={(text:any) => {
+                const filtered = text.replace(/[^A-Za-z\s]/g, '');
+                setLastName(filtered);
+              }}
               placeholder="Enter last name"
             />
 
@@ -188,12 +237,8 @@ const InviteOrganizationScreen = () => {
                 Tag this Organization to my team
               </Text>
               <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  isTagged && styles.toggleActive,
-                ]}
-                onPress={() => setIsTagged(!isTagged)}
-              >
+                style={[styles.toggleButton, isTagged && styles.toggleActive]}
+                onPress={() => setIsTagged(!isTagged)}>
                 <View
                   style={[
                     styles.toggleCircle,
@@ -210,14 +255,11 @@ const InviteOrganizationScreen = () => {
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
-            disabled={loading}
-          >
+            disabled={loading}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitButtonText}>
-                Invite Organization
-              </Text>
+              <Text style={styles.submitButtonText}>Invite Organization</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -232,7 +274,7 @@ const FormField = ({
   onChangeText,
   placeholder,
   secureTextEntry = false,
-  keyboardType = 'default'
+  keyboardType = 'default',
 }: any) => (
   <View style={styles.formField}>
     <Text style={styles.fieldLabel}>{label}</Text>
@@ -265,7 +307,7 @@ const PasswordField = ({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={"black"}
+        placeholderTextColor={'black'}
         secureTextEntry={secureTextEntry}
         autoCapitalize="none"
       />
@@ -308,8 +350,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.40,
+    shadowOffset: {width: 2, height: 4},
+    shadowOpacity: 0.4,
     shadowRadius: 8,
     borderWidth: 2,
     borderColor: '#0E3386',
@@ -362,10 +404,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'black'
+    borderColor: 'black',
   },
   toggleCircleActive: {
-    transform: [{ translateX: 22 }],
+    transform: [{translateX: 22}],
   },
   submitButton: {
     backgroundColor: '#0E3386',
@@ -409,7 +451,6 @@ const styles = StyleSheet.create({
   eyeButton: {
     paddingLeft: 8,
   },
-
 });
 
 export default InviteOrganizationScreen;

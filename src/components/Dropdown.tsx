@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import {Picker} from '@react-native-picker/picker';
 
 const Dropdown = ({
   label,
@@ -32,18 +32,14 @@ const Dropdown = ({
             enabled={!disabled}
             selectedValue={value}
             onValueChange={onChange}
-             style={styles.picker}
-          >
-            <Picker.Item label="Select..." value="" 
-            
-            color='black'/>
+            style={styles.picker}>
+            <Picker.Item label="Select..." value="" color="black" />
             {items.map((item: any, idx: number) => (
               <Picker.Item
                 key={idx}
                 label={item[labelKey]}
                 value={item[valueKey]}
-
-                  color="#e5e5e5ff"
+                color="#e1dfdfff"
               />
             ))}
           </Picker>
@@ -60,8 +56,7 @@ const Dropdown = ({
       <TouchableOpacity
         style={[styles.inputBox, disabled && styles.disabled]}
         onPress={() => !disabled && setVisible(true)}
-        activeOpacity={0.7}
-      >
+        activeOpacity={0.7}>
         <Text style={[styles.valueText, !value && styles.placeholder]}>
           {items.find((i: any) => i[valueKey] === value)?.[labelKey] ||
             'Select...'}
@@ -72,8 +67,7 @@ const Dropdown = ({
         <TouchableOpacity
           style={styles.overlay}
           activeOpacity={1}
-          onPress={() => setVisible(false)}
-        >
+          onPress={() => setVisible(false)}>
           <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>{label}</Text>
 
@@ -81,17 +75,14 @@ const Dropdown = ({
               data={items}
               keyExtractor={(_, i) => i.toString()}
               showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
+              renderItem={({item}) => (
                 <TouchableOpacity
                   style={styles.option}
                   onPress={() => {
                     onChange(item[valueKey]);
                     setVisible(false);
-                  }}
-                >
-                  <Text style={styles.optionText}>
-                    {item[labelKey]}
-                  </Text>
+                  }}>
+                  <Text style={styles.optionText}>{item[labelKey]}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -107,7 +98,7 @@ export default Dropdown;
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
-  field: { marginBottom: 18 },
+  field: {marginBottom: 18},
 
   label: {
     fontSize: 14,
@@ -115,9 +106,9 @@ const styles = StyleSheet.create({
     color: '#d6dbe3ff',
     marginBottom: 8,
   },
-picker:{
-color:'black'
-},
+  picker: {
+    color: 'black',
+  },
   pickerBox: {
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
@@ -174,7 +165,7 @@ color:'black'
   },
 
   optionText: {
-    fontSize: 16,
-    color: '#1E293B',
+    fontSize: 18,
+    color: '#000000ff',
   },
 });

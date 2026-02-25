@@ -134,7 +134,7 @@ export default function FindSuppliers() {
         <TouchableOpacity
           style={styles.detailsBtn}
           onPress={() =>
-            navigation.navigate("SupplierDetails", { slug: item.slug })
+            navigation.navigate("SupplierDetails", { slug: item.slug, item: item, id:item.user })
           }
         >
           <Text style={styles.detailsText}>Details →</Text>
@@ -145,12 +145,14 @@ export default function FindSuppliers() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Find Trusted Suppliers</Text>
+      <Text style={styles.title}>Find Trusted Suppliers / Agency</Text>
 
       <TextInput
         value={query}
         onChangeText={onChangeText}
         placeholder="Type or select a country"
+        placeholderTextColor={'black'}
+
         style={styles.input}
         onFocus={() => setShowDropdown(true)}
       />
@@ -167,7 +169,7 @@ export default function FindSuppliers() {
       )}
 
       <TouchableOpacity style={styles.searchBtn} onPress={fetchSuppliers}>
-        <Text style={styles.searchText}>🔍 Find Suppliers</Text>
+        <Text style={styles.searchText}>🔍 Find Suppliers / Agency</Text>
       </TouchableOpacity>
 
       {loading && <ActivityIndicator size="large" />}
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#535252ff",
   },
 
   dropdown: {
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#0056d2",
+    backgroundColor: "#0E3386",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
   detail: { fontSize: 14, marginTop: 4, color: "#444" },
 
   detailsBtn: {
-    backgroundColor: "#0056d2",
+    backgroundColor: "#0E3386",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,

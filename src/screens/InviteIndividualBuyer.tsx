@@ -25,6 +25,19 @@ const InviteIndividualBuyer = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState('');
 
+  const isValidName = (name: string) => {
+    return /^[A-Za-z\s]+$/.test(name);
+  };
+
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isValidPassword = (password: string) => {
+    // Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+  };
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -65,9 +78,38 @@ const InviteIndividualBuyer = () => {
   }, []);
 
   const handleSubmit = async () => {
-    // Simple validation (you can expand this)
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Toast.show({type: 'error', text1: 'Please fill all fields'});
+      return;
+    }
+
+    if (!isValidName(firstName)) {
+      Toast.show({
+        type: 'error',
+        text1: 'First name should contain only letters',
+      });
+      return;
+    }
+
+    if (!isValidName(lastName)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Last name should contain only letters',
+      });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Toast.show({type: 'error', text1: 'Please enter a valid email address'});
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      Toast.show({
+        type: 'error',
+        text1:
+          'Password must be 8+ characters with uppercase, lowercase & number',
+      });
       return;
     }
 
@@ -130,7 +172,10 @@ const InviteIndividualBuyer = () => {
           <FormField
             label="First Name *"
             value={firstName}
-            onChangeText={setFirstName}
+            onChangeText={(text: any) => {
+              const filtered = text.replace(/[^A-Za-z\s]/g, '');
+              setFirstName(filtered);
+            }}
             placeholder="Enter first name"
             placeholderTextColor={'Black'}
           />
@@ -138,7 +183,10 @@ const InviteIndividualBuyer = () => {
           <FormField
             label="Last Name *"
             value={lastName}
-            onChangeText={setLastName}
+            onChangeText={(text: any) => {
+              const filtered = text.replace(/[^A-Za-z\s]/g, '');
+              setLastName(filtered);
+            }}
             placeholder="Enter last name"
             placeholderTextColor={'Black'}
           />

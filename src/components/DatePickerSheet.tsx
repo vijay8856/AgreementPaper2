@@ -57,18 +57,17 @@ const DatePickerSheet = ({visible, date, onChange, onClose}: Props) => {
         </View>
 
         {/* Date Picker */}
-       <View style={{ backgroundColor: '#fff' }}>
-  <DateTimePicker
-    value={date}
-    mode="date"
-    display="spinner"
-    onChange={onChange}
-    style={styles.picker}
-    textColor="black"
-    themeVariant="light"
-  />
-</View>
-
+        <View style={{backgroundColor: '#fff'}}>
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="spinner"
+            onChange={onChange}
+            style={styles.picker}
+            textColor="black"
+            themeVariant="light"
+          />
+        </View>
       </SafeAreaView>
     </Modal>
   );

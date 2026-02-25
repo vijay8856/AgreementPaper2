@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,26 +11,33 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import { RouteProp, useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/NavigationManager';
+import {RouteProp, useNavigation} from '@react-navigation/native';
+import {RootStackParamList} from '../navigation/NavigationManager';
 import Toast from 'react-native-toast-message';
 import Services from '../Services/services';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import RenderHTML from "react-native-render-html";
-type ContractPreviewScreenRouteProp = RouteProp<RootStackParamList, 'ContractPreviewScreen'>;
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import RenderHTML from 'react-native-render-html';
+type ContractPreviewScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'ContractPreviewScreen'
+>;
 
 type Props = {
   route: ContractPreviewScreenRouteProp;
 };
 
 GoogleSignin.configure({
-  webClientId: "601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com",
+  webClientId:
+    '601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com',
   offlineAccess: true,
-  scopes: ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive.file'],
+  scopes: [
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/drive.file',
+  ],
 });
 const formatBlocksToHtml = (blocks: any[]) => {
   if (!Array.isArray(blocks) || blocks.length === 0) {
-    return "<div><p>No content</p></div>";
+    return '<div><p>No content</p></div>';
   }
 
   const style = `
@@ -59,9 +66,9 @@ const formatBlocksToHtml = (blocks: any[]) => {
 
   const flushList = () => {
     if (pendingList.length) {
-      htmlParts.push("<ul>");
+      htmlParts.push('<ul>');
       pendingList.forEach(li => htmlParts.push(`<li>${li}</li>`));
-      htmlParts.push("</ul>");
+      htmlParts.push('</ul>');
       pendingList = [];
     }
   };
@@ -79,10 +86,16 @@ const formatBlocksToHtml = (blocks: any[]) => {
         htmlParts.push('<div class="signature-row">');
         // render exactly two columns if two available, else single column takes full width
         if (pair.length === 2) {
-          htmlParts.push(`<div class="signature-item"><div class="signature-label">For the Seller:</div><div>${pair[0]}</div><div class="signature-box"></div></div>`);
-          htmlParts.push(`<div class="signature-item"><div class="signature-label">For the Buyer:</div><div>${pair[1]}</div><div class="signature-box"></div></div>`);
+          htmlParts.push(
+            `<div class="signature-item"><div class="signature-label">For the Seller:</div><div>${pair[0]}</div><div class="signature-box"></div></div>`,
+          );
+          htmlParts.push(
+            `<div class="signature-item"><div class="signature-label">For the Buyer:</div><div>${pair[1]}</div><div class="signature-box"></div></div>`,
+          );
         } else {
-          htmlParts.push(`<div class="signature-item"><div>${pair[0]}</div><div class="signature-box"></div></div>`);
+          htmlParts.push(
+            `<div class="signature-item"><div>${pair[0]}</div><div class="signature-box"></div></div>`,
+          );
         }
         htmlParts.push('</div>');
       });
@@ -96,13 +109,13 @@ const formatBlocksToHtml = (blocks: any[]) => {
   // iterate
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i];
-    const t = (b?.type || "p").toLowerCase();
-    const c = String(b?.content ?? "").trim();
+    const t = (b?.type || 'p').toLowerCase();
+    const c = String(b?.content ?? '').trim();
 
     // If content is empty skip
     if (!c) continue;
 
-    if (t === "li") {
+    if (t === 'li') {
       // collect into pendingList
       pendingList.push(c);
       continue; // continue collecting
@@ -111,10 +124,10 @@ const formatBlocksToHtml = (blocks: any[]) => {
     // non-li: flush any pending lists
     flushList();
 
-    if (t === "signature") {
+    if (t === 'signature') {
       pendingSignatures.push(c);
       const next = blocks[i + 1];
-      if (!next || (next.type || "").toLowerCase() !== "signature") {
+      if (!next || (next.type || '').toLowerCase() !== 'signature') {
         flushSignatures();
       }
       continue;
@@ -124,9 +137,9 @@ const formatBlocksToHtml = (blocks: any[]) => {
 
     if (/^h[1-6]$/.test(t)) {
       // For h2/h3 we want nicer section style
-      if (t === "h2") {
+      if (t === 'h2') {
         htmlParts.push(`<h2>${c}</h2>`);
-      } else if (t === "h3") {
+      } else if (t === 'h3') {
         htmlParts.push(`<h3>${c}</h3>`);
       } else {
         htmlParts.push(`<${t}>${c}</${t}>`);
@@ -134,13 +147,13 @@ const formatBlocksToHtml = (blocks: any[]) => {
       continue;
     }
 
-    if (t === "p") {
+    if (t === 'p') {
       htmlParts.push(`<p>${c}</p>`);
       continue;
     }
 
-    if (t === "hr") {
-      htmlParts.push("<hr/>");
+    if (t === 'hr') {
+      htmlParts.push('<hr/>');
       continue;
     }
 
@@ -153,20 +166,18 @@ const formatBlocksToHtml = (blocks: any[]) => {
   flushSignatures();
 
   // join
-  const body = `<div class="container">${htmlParts.join("\n")}</div>`;
+  const body = `<div class="container">${htmlParts.join('\n')}</div>`;
 
   return `<!doctype html><html><head>${style}</head><body>${body}</body></html>`;
 };
 
-
-const ContractPreviewScreen = ({ route }: Props) => {
+const ContractPreviewScreen = ({route}: Props) => {
   const navigation = useNavigation();
-  const { blocks: incomingBlocks } = route.params || {};
+  const {blocks: incomingBlocks} = route.params || {};
 
-  const { width } = useWindowDimensions();
+  const {width} = useWindowDimensions();
   const [blocks, setBlocks] = useState<Block[]>([]);
-  const [html, setHtml] = useState("");
-
+  const [html, setHtml] = useState('');
 
   const [templateName, setTemplateName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -175,10 +186,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [savedTemplateId, setSavedTemplateId] = useState<number | null>(null);
-  const [finalHtmlPreview, setFinalHtmlPreview] = useState("");
-
-
-
+  const [finalHtmlPreview, setFinalHtmlPreview] = useState('');
 
   const updateBlock = (index: number, text: string) => {
     const updated = [...blocks];
@@ -187,7 +195,6 @@ const ContractPreviewScreen = ({ route }: Props) => {
 
     setHtml(formatBlocksToHtml(updated));
   };
-
 
   useEffect(() => {
     if (Array.isArray(incomingBlocks)) {
@@ -198,10 +205,9 @@ const ContractPreviewScreen = ({ route }: Props) => {
     }
   }, [incomingBlocks]);
 
-
   const handleSave = async () => {
     if (!templateName.trim()) {
-      Toast.show({ type: 'error', text1: 'Please enter template name!' });
+      Toast.show({type: 'error', text1: 'Please enter template name!'});
       return;
     }
 
@@ -219,7 +225,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
       const response = await Services.saveDraftTemplate(payload);
 
       if (response.success) {
-        Toast.show({ type: 'success', text1: 'Template saved successfully!' });
+        Toast.show({type: 'success', text1: 'Template saved successfully!'});
 
         const templateId = response.data?.data?.id;
         if (templateId) {
@@ -286,7 +292,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
 
       Toast.show({
         type: 'success',
-        text1: 'Google account connected successfully!'
+        text1: 'Google account connected successfully!',
       });
 
       return userInfo;
@@ -296,12 +302,12 @@ const ContractPreviewScreen = ({ route }: Props) => {
       if (error.code === 'SIGN_IN_CANCELLED') {
         Toast.show({
           type: 'info',
-          text1: 'Google Sign-In was cancelled'
+          text1: 'Google Sign-In was cancelled',
         });
       } else {
         Toast.show({
           type: 'error',
-          text1: 'Failed to connect Google account'
+          text1: 'Failed to connect Google account',
         });
       }
       throw error;
@@ -325,7 +331,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
       const userInfo = await handleGoogleSignIn();
       const tokens = await GoogleSignin.getTokens();
       const accessToken = tokens.accessToken;
-      console.log("accessToken", accessToken);
+      console.log('accessToken', accessToken);
 
       // Check if the downloadGoogleDoc method exists
       if (!Services.downloadGoogleDoc) {
@@ -335,10 +341,13 @@ const ContractPreviewScreen = ({ route }: Props) => {
       // Download Google Doc
       console.log('Calling downloadGoogleDoc with:', {
         templateId: savedTemplateId,
-        accessToken: accessToken.substring(0, 20) + '...'
+        accessToken: accessToken.substring(0, 20) + '...',
       });
 
-      const gdocResponse = await Services.downloadGoogleDoc(savedTemplateId, accessToken);
+      const gdocResponse = await Services.downloadGoogleDoc(
+        savedTemplateId,
+        accessToken,
+      );
 
       console.log('Google Docs response:', gdocResponse);
 
@@ -358,7 +367,6 @@ const ContractPreviewScreen = ({ route }: Props) => {
       } else {
         throw new Error('No Google Doc URL returned from server');
       }
-
     } catch (error: any) {
       console.error('Google Docs download error:', error);
 
@@ -381,17 +389,39 @@ const ContractPreviewScreen = ({ route }: Props) => {
     let reconstructedHtml = '';
     blocks.forEach(block => {
       switch (block.type) {
-        case 'h1': reconstructedHtml += `<h1>${block.content}</h1>\n`; break;
-        case 'h2': reconstructedHtml += `<h2>${block.content}</h2>\n`; break;
-        case 'h3': reconstructedHtml += `<h3>${block.content}</h3>\n`; break;
-        case 'h4': reconstructedHtml += `<h4>${block.content}</h4>\n`; break;
-        case 'h5': reconstructedHtml += `<h5>${block.content}</h5>\n`; break;
-        case 'h6': reconstructedHtml += `<h6>${block.content}</h6>\n`; break;
-        case 'p': reconstructedHtml += `<p>${block.content}</p>\n`; break;
-        case 'li': reconstructedHtml += `<li>${block.content}</li>\n`; break;
-        case 'signature': reconstructedHtml += `<p class="signature">${block.content}</p>\n`; break;
-        case 'hr': reconstructedHtml += `<hr />\n`; break;
-        default: reconstructedHtml += `<p>${block.content}</p>\n`; break;
+        case 'h1':
+          reconstructedHtml += `<h1>${block.content}</h1>\n`;
+          break;
+        case 'h2':
+          reconstructedHtml += `<h2>${block.content}</h2>\n`;
+          break;
+        case 'h3':
+          reconstructedHtml += `<h3>${block.content}</h3>\n`;
+          break;
+        case 'h4':
+          reconstructedHtml += `<h4>${block.content}</h4>\n`;
+          break;
+        case 'h5':
+          reconstructedHtml += `<h5>${block.content}</h5>\n`;
+          break;
+        case 'h6':
+          reconstructedHtml += `<h6>${block.content}</h6>\n`;
+          break;
+        case 'p':
+          reconstructedHtml += `<p>${block.content}</p>\n`;
+          break;
+        case 'li':
+          reconstructedHtml += `<li>${block.content}</li>\n`;
+          break;
+        case 'signature':
+          reconstructedHtml += `<p class="signature">${block.content}</p>\n`;
+          break;
+        case 'hr':
+          reconstructedHtml += `<hr />\n`;
+          break;
+        default:
+          reconstructedHtml += `<p>${block.content}</p>\n`;
+          break;
       }
     });
     return reconstructedHtml;
@@ -438,7 +468,10 @@ const ContractPreviewScreen = ({ route }: Props) => {
           value={templateName}
           onChangeText={setTemplateName}
         />
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={loading}>
           <Text style={styles.saveButtonText}>
             {loading ? 'Saving...' : 'Save'}
           </Text>
@@ -452,7 +485,7 @@ const ContractPreviewScreen = ({ route }: Props) => {
             multiline
             style={styles[b.type] || styles.p}
             value={b.content}
-            onChangeText={(text) => updateBlock(i, text)}
+            onChangeText={text => updateBlock(i, text)}
           />
         ))}
       </ScrollView>
@@ -460,26 +493,28 @@ const ContractPreviewScreen = ({ route }: Props) => {
         visible={isModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
+        onRequestClose={() => setIsModalVisible(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContainer}>
-
             <Text style={styles.modalTitle}>Template Saved!</Text>
-            <Text style={styles.modalSubtitle}>Preview of formatted template</Text>
+            <Text style={styles.modalSubtitle}>
+              Preview of formatted template
+            </Text>
 
             {/* HTML PREVIEW */}
-            <ScrollView style={{ maxHeight: 250, width: '100%' }}>
+            <ScrollView style={{maxHeight: 250, width: '100%'}}>
               <RenderHTML
                 contentWidth={width - 60}
-                source={{ html: finalHtmlPreview }}
+                source={{html: finalHtmlPreview}}
               />
             </ScrollView>
             <TouchableOpacity
               onPress={handleDownloadPdf}
-              style={[styles.modalDownloadButton, !pdfUrl && styles.disabledButton]}
-              disabled={!pdfUrl}
-            >
+              style={[
+                styles.modalDownloadButton,
+                !pdfUrl && styles.disabledButton,
+              ]}
+              disabled={!pdfUrl}>
               <Text style={styles.downloadText}>
                 {pdfUrl ? 'Download PDF' : 'Preparing PDF...'}
               </Text>
@@ -487,9 +522,11 @@ const ContractPreviewScreen = ({ route }: Props) => {
 
             <TouchableOpacity
               onPress={handleDownloadDocx}
-              style={[styles.modalDownloadButton, !docxUrl && styles.disabledButton]}
-              disabled={!docxUrl}
-            >
+              style={[
+                styles.modalDownloadButton,
+                !docxUrl && styles.disabledButton,
+              ]}
+              disabled={!docxUrl}>
               <Text style={styles.downloadText}>
                 {docxUrl ? 'Download DOCX' : 'Preparing DOCX...'}
               </Text>
@@ -497,12 +534,13 @@ const ContractPreviewScreen = ({ route }: Props) => {
 
             <TouchableOpacity
               onPress={handleDownloadGoogleDoc}
-              style={[styles.modalDownloadButton, styles.googleButton, !savedTemplateId && styles.disabledButton]}
-              disabled={!savedTemplateId}
-            >
-              <Text style={styles.downloadText}>
-                Save as Google Doc
-              </Text>
+              style={[
+                styles.modalDownloadButton,
+                styles.googleButton,
+                !savedTemplateId && styles.disabledButton,
+              ]}
+              disabled={!savedTemplateId}>
+              <Text style={styles.downloadText}>Save as Google Doc</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -510,11 +548,9 @@ const ContractPreviewScreen = ({ route }: Props) => {
                 setIsModalVisible(false);
                 navigation.goBack();
               }}
-              style={styles.closeButton}
-            >
+              style={styles.closeButton}>
               <Text style={styles.closeModal}>Close</Text>
             </TouchableOpacity>
-
           </View>
         </View>
       </Modal>

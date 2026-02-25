@@ -3468,6 +3468,8 @@ const Services = {
 
       return {success: true, data: response.data};
     } catch (error) {
+      console.log('error', error);
+
       return {
         success: false,
         error: error.response?.data || error.message,
@@ -3628,12 +3630,12 @@ const Services = {
 
     try {
       const response = await axiosInstance.patch(
-        API_ENDPOINTS.JOBPOST,
+         `${API_ENDPOINTS.JOBPOST}${data?.id}/`,
         data,
         headers,
       );
-      console.log('getjobPost', response);
-      console.log('getjobPost', response.data.message);
+      console.log('updatePostedJob', response);
+      console.log('updatePostedJob', response.data.message);
 
       return {
         success: true,

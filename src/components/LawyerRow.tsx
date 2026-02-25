@@ -1,6 +1,5 @@
-
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -12,26 +11,31 @@ import {
   Linking,
   TextInput,
   Alert,
-  Platform
+  Platform,
 } from 'react-native';
-import { API_URL, AUTH_MULTYPART_HEADERS } from '../Axios/axiosData';
+import {API_URL, AUTH_MULTYPART_HEADERS} from '../Axios/axiosData';
 import Toast from 'react-native-toast-message';
 import Services from '../Services/services';
-import { ActivityIndicator } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {ActivityIndicator} from 'react-native-paper';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 // import Icon from 'react-native-vector-icons/FontAwesome5';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+type Lawyer = {
+  id: number;
+  name: string;
+  email: string;
+  company_name: string;
+  country: string;
+  is_active: boolean;
+  user_id: number;
+  connection_request: string;
+  is_favorite: boolean;
+};
 type LawyerCardProps = {
-  lawyerData: {
-    id: number;
-    name: string;
-    email: string;
-    company_name: string;
-    country: string;
-    is_active: boolean;
-    user_id?: number;
-  };
+  lawyerData: Lawyer; // single card data
+  index: number; // 0-based index
+  totalCount: number;
 };
 
 type Organization = {
@@ -54,20 +58,27 @@ type Organization = {
   about_company: string;
   company_website: string;
   is_connection: boolean;
+  user_id: number;
 };
 
-const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
+const LawyerCard: React.FC<LawyerCardProps> = ({
+  lawyerData,
+  index,
+  totalCount,
+}) => {
   const [profile, setProfile] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<Organization | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Organization | null>(
+    null,
+  );
   const [connectModalVisible, setConnectModalVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [isFavorite, setIsFavorite] = useState<boolean>(lawyerData?.is_favorite || false);
-
-  console.log("selectedSupplier", selectedSupplier);
+  const [isFavorite, setIsFavorite] = useState<boolean>(
+    lawyerData?.is_favorite || false,
+  );
 
   const handleViewProfile = async (id: number) => {
     try {
@@ -77,11 +88,11 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
         setProfile(res.data.data);
         setShowProfileModal(true);
       } else {
-        Toast.show({ type: 'error', text1: 'Unable to load profile' });
+        Toast.show({type: 'error', text1: 'Unable to load profile'});
       }
     } catch (err) {
       console.error('View profile error', err);
-      Toast.show({ type: 'error', text1: 'Something went wrong' });
+      Toast.show({type: 'error', text1: 'Something went wrong'});
     } finally {
       setLoadingProfile(false);
     }
@@ -107,7 +118,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
 
     try {
       const response = await Services.sendConnectionSupplier(payload);
-      console.log("uuuu", response);
+      console.log('uuuu', response);
 
       if (response.success === true) {
         setConnectModalVisible(false);
@@ -154,14 +165,14 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
       setIsFavorite(nextValue);
 
       if (nextValue) {
-        await Services.addFavorites({ target_id: user_id });
+        await Services.addFavorites({target_id: user_id});
         Toast.show({
           type: 'success',
           text1: 'Added to favorites',
           position: 'top',
         });
       } else {
-        await Services.addFavorites({ target_id: user_id });
+        await Services.addFavorites({target_id: user_id});
         // If you have a remove API, call it here
         Toast.show({
           type: 'info',
@@ -186,7 +197,10 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
         {/* Card Header */}
         <View style={styles.cardHeader}>
           <View style={styles.avatarContainer}>
-            <Image source={require('../assets/images/user.png')} style={styles.avatar} />
+            <Image
+              source={require('../assets/images/user.png')}
+              style={styles.avatar}
+            />
             <View style={styles.nameContainer}>
               <Text style={styles.name}>{lawyerData.name}</Text>
               <Text style={styles.company}>{lawyerData.company_name}</Text>
@@ -194,23 +208,23 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
           </View>
           <TouchableOpacity
             onPress={() => toggleFavorite(lawyerData?.user_id)}
-            style={styles.favoriteButton}
-          >
+            style={styles.favoriteButton}>
             <Icon
               name="heart"
               size={20}
-              color={isFavorite ? "#fbbf24" : "#CCCCCC"}
+              color={isFavorite ? '#fbbf24' : '#CCCCCC'}
               solid={isFavorite}
             />
           </TouchableOpacity>
-
         </View>
 
         {/* Card Body */}
         <View style={styles.cardBody}>
           <View style={styles.infoRow}>
             <Icon name="email-outline" size={14} color="#666" />
-            <Text style={styles.infoText} numberOfLines={1}>{lawyerData.email}</Text>
+            <Text style={styles.infoText} numberOfLines={1}>
+              {lawyerData.email}
+            </Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -219,10 +233,23 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
           </View>
 
           <View style={styles.infoRow}>
-            <Icon name="checkbox-blank-circle" size={14} color={lawyerData.is_active ? "green" : "red"} />
-            <Text style={[styles.statusText, { color: lawyerData.is_active ? 'green' : 'red' }]}>
+            <Icon
+              name="checkbox-blank-circle"
+              size={14}
+              color={lawyerData.is_active ? 'green' : 'red'}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                {color: lawyerData.is_active ? 'green' : 'red'},
+              ]}>
               {lawyerData.is_active ? 'Available' : 'Busy'}
             </Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>
+                {index + 1}/{totalCount}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -241,16 +268,14 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
             <Text style={styles.connectButtonText}>
               {lawyerData?.connection_request
                 ? lawyerData.connection_request // Show PENDING / COMPLETED / etc.
-                : 'Connect'} {/* Show "Connect" if connection_request is null */}
+                : 'Connect'}{' '}
+              {/* Show "Connect" if connection_request is null */}
             </Text>
           </TouchableOpacity>
 
-
-
           <TouchableOpacity
             style={[styles.actionButton, styles.viewButton]}
-            onPress={() => handleViewProfile(lawyerData.id)}
-          >
+            onPress={() => handleViewProfile(lawyerData.id)}>
             <Icon name="eye-outline" size={14} color="#FFF" />
             <Text style={styles.actionButtonText}>View Profile</Text>
           </TouchableOpacity>
@@ -262,29 +287,22 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
         visible={showProfileModal}
         animationType="slide"
         transparent
-        onRequestClose={() => setShowProfileModal(false)}
-      >
+        onRequestClose={() => setShowProfileModal(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <LinearGradient
               colors={['#072188', '#4a8ce2']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.modalHeader}
-            >
-               <SafeAreaView style={styles.headerSafeArea}>
-
-
-
-              <Text style={styles.modalTitle}>Profile Details</Text>
-              <TouchableOpacity
-                onPress={() => setShowProfileModal(false)}
-                style={styles.closeButton}
-              >
-                <Icon name="close-circle" size={24} color="#0E3386" />
-              </TouchableOpacity>
-               </SafeAreaView>
-
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+              style={styles.modalHeader}>
+              <SafeAreaView style={styles.headerSafeArea}>
+                <Text style={styles.modalTitle}>Profile Details</Text>
+                <TouchableOpacity
+                  onPress={() => setShowProfileModal(false)}
+                  style={styles.closeButton}>
+                  <Icon name="close-circle" size={24} color="#0E3386" />
+                </TouchableOpacity>
+              </SafeAreaView>
             </LinearGradient>
 
             {loadingProfile ? (
@@ -299,7 +317,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
                   <View style={styles.logoContainer}>
                     {profile?.logo ? (
                       <Image
-                        source={{ uri: profile.logo }}
+                        source={{uri: profile.logo}}
                         style={styles.companyLogo}
                         resizeMode="contain"
                       />
@@ -316,7 +334,8 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
                       <View style={[styles.badge, styles.locationBadge]}>
                         <Icon name="map-marker" size={14} color="white" />
                         <Text style={styles.badgeText}>
-                          {profile?.country_name || 'N/A'} ({profile?.state_name || 'N/A'})
+                          {profile?.country_name || 'N/A'} (
+                          {profile?.state_name || 'N/A'})
                         </Text>
                       </View>
                       <View style={[styles.badge, styles.currencyBadge]}>
@@ -340,17 +359,24 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
                         <View style={styles.contactItem}>
                           <Icon name="phone" size={14} color="#072188" />
                           <Text style={styles.contactText}>
-                            {profile?.user_detail?.contact_number || 'Not provided'}
+                            {profile?.user_detail?.contact_number ||
+                              'Not provided'}
                           </Text>
                         </View>
                         <View style={styles.contactItem}>
-                          <Icon name="email-outline" size={14} color="#072188" />
+                          <Icon
+                            name="email-outline"
+                            size={14}
+                            color="#072188"
+                          />
                           <TouchableOpacity
                             onPress={() =>
-                              Linking.openURL(`mailto:${profile?.user_detail?.email}`)
-                            }
-                          >
-                            <Text style={[styles.contactText, styles.emailText]}>
+                              Linking.openURL(
+                                `mailto:${profile?.user_detail?.email}`,
+                              )
+                            }>
+                            <Text
+                              style={[styles.contactText, styles.emailText]}>
                               {profile?.user_detail?.email || 'Not provided'}
                             </Text>
                           </TouchableOpacity>
@@ -378,9 +404,12 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
                             <TouchableOpacity
                               onPress={() =>
                                 Linking.openURL(profile.company_website)
-                              }
-                            >
-                              <Text style={[styles.addressText, styles.websiteText]}>
+                              }>
+                              <Text
+                                style={[
+                                  styles.addressText,
+                                  styles.websiteText,
+                                ]}>
                                 Visit Website
                               </Text>
                             </TouchableOpacity>
@@ -392,7 +421,9 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
                 </View>
 
                 <View style={styles.additionalDetails}>
-                  <Text style={styles.sectionTitle}>Additional Information</Text>
+                  <Text style={styles.sectionTitle}>
+                    Additional Information
+                  </Text>
                   <View style={styles.detailsGrid}>
                     <View style={styles.detailItem}>
                       <Text style={styles.detailLabel}>About Company:</Text>
@@ -414,8 +445,7 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
             <View style={styles.modalFooter}>
               <TouchableOpacity
                 style={styles.closeModalButton}
-                onPress={() => setShowProfileModal(false)}
-              >
+                onPress={() => setShowProfileModal(false)}>
                 <Icon name="check" size={16} color="#FFF" />
                 <Text style={styles.closeModalButtonText}>Close</Text>
               </TouchableOpacity>
@@ -429,16 +459,21 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
         visible={connectModalVisible}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setConnectModalVisible(false)}
-      >
+        onRequestClose={() => setConnectModalVisible(false)}>
         <View style={styles.modalContainer2}>
           <View style={styles.modalContent}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
-              <Text style={styles.modalTitle}>Connect with {lawyerData.company_name}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 10,
+              }}>
+              <Text style={styles.modalTitle}>
+                Connect with {lawyerData.company_name}
+              </Text>
               <TouchableOpacity
                 style={styles.closeButton}
-                onPress={() => setConnectModalVisible(false)}
-              >
+                onPress={() => setConnectModalVisible(false)}>
                 <Icon name="close-circle" size={24} color="#0E3386" />
               </TouchableOpacity>
             </View>
@@ -458,8 +493,12 @@ const LawyerCard: React.FC<LawyerCardProps> = ({ lawyerData }) => {
                   />
                 </View>
 
-                <TouchableOpacity style={styles.connectActionButton} onPress={handleSendConnection}>
-                  <Text style={styles.connectActionButtonText}>Send Connection Request</Text>
+                <TouchableOpacity
+                  style={styles.connectActionButton}
+                  onPress={handleSendConnection}>
+                  <Text style={styles.connectActionButtonText}>
+                    Send Connection Request
+                  </Text>
                 </TouchableOpacity>
 
                 <View style={styles.contactInfo}>
@@ -496,6 +535,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F0F0F0',
   },
+  countBadge: {
+    position: 'absolute',
+    right: 10,
+    backgroundColor: '#0E3386', // dark slate
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 10,
+  },
+
+  countBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
   connectButtonText: {
     fontSize: 11,
     color: 'white',
@@ -617,7 +672,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 10
+    marginBottom: 10,
   },
   closeButton: {
     position: 'absolute',
@@ -647,7 +702,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -757,6 +812,9 @@ const styles = StyleSheet.create({
   },
   additionalDetails: {
     marginBottom: 20,
+  },
+  disabledButton: {
+    backgroundColor: '#7d7a7aff',
   },
   sectionTitle: {
     color: '#072188',

@@ -75,7 +75,7 @@ const LoginScreen: React.FC = () => {
   useEffect(() => {
     GoogleSignin.configure({
       iosClientId:
-        '601221483061-6hdifq4bhgd5ua13lbj7kq8ebufmrm.apps.googleusercontent.com',
+        '601221483061-6hdifq4bhgd5nvua13lbj7kq8ebufmrm.apps.googleusercontent.com',
       webClientId:
         '601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com',
 

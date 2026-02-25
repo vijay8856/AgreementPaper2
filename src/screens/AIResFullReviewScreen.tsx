@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
@@ -27,6 +29,8 @@ import FormattedTextComp from '../components/FormatedAIResponse';
 import {Switch} from 'react-native-gesture-handler';
 import {Easing} from 'react-native';
 import LottieView from 'lottie-react-native';
+import QuestionModal from '../components/Modals/QuestionModal';
+import {options} from 'axios';
 
 const screenWidth = Dimensions.get('window').width;
 const AI_THINKING_QUOTES = [
@@ -97,12 +101,18 @@ const AIResFullReviewScreen = () => {
   const [firstQuerySent, setFirstQuerySent] = useState(false);
   const [hasImages, setHasImages] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const progressAnimRef = useRef<Animated.Value | null>(null);
   const [progressAnim, setProgressAnim] = useState<Animated.Value>(
     () => new Animated.Value(0),
   );
   const [progressValue, setProgressValue] = useState(0);
+  const [selectedQuestions, setSelectedQuestions] = useState<any[]>([]);
+  const [questionAnswers, setQuestionAnswers] = useState<Record<string, any>>(
+    {},
+  );
+  const [openDropdownKey, setOpenDropdownKey] = useState<string | null>(null);
 
   const widthAnim = useRef(new Animated.Value(120)).current; // start with button width ~120
   const opacityMap = useRef<{[key: string]: Animated.Value}>({}).current;
@@ -581,6 +591,13 @@ const AIResFullReviewScreen = () => {
         name: selectedFile.name,
         type: selectedFile.type || 'application/pdf',
       } as any);
+      Object.entries(questionAnswers).forEach(([key, value]) => {
+        if (value && value !== '') {
+          formData.append(key, value);
+        }
+      });
+
+      console.log('daata ', formData);
 
       const response = hasImages
         ? await Services.aiGeminai(formData)
@@ -690,8 +707,6 @@ const AIResFullReviewScreen = () => {
     return AI_THINKING_QUOTES[Math.min(index, AI_THINKING_QUOTES.length - 1)];
   };
 
-
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -731,7 +746,138 @@ const AIResFullReviewScreen = () => {
             onPress={() => openPicker('country')}
           />
 
-          <View style={styles.addButtonQues}></View>
+          <View style={styles.addButtonQues}>
+            {selectedQuestions.map((question, index) => (
+              <View key={question.key} style={{marginBottom: 15}}>
+                <View style={{flexDirection: 'row', marginBottom: 8}}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: '#333',
+                      width: 18,
+                    }}>
+                    {index + 4}.
+                  </Text>
+
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: '#333',
+                      flex: 1,
+                      lineHeight: 20,
+                    }}>
+                    {question.label}
+                  </Text>
+                </View>
+
+                {question.type === 'text' && (
+                  <TextInput
+                    placeholder="Enter answer"
+                    placeholderTextColor={'black'}
+                    value={questionAnswers[question.key] || ''}
+                    onChangeText={text =>
+                      setQuestionAnswers(prev => ({
+                        ...prev,
+                        [question.key]: text,
+                      }))
+                    }
+                    style={{
+                      borderWidth: 1,
+                      borderRadius: 8,
+                      padding: 10,
+                      marginTop: 8,
+                      marginHorizontal: 10,
+                    }}
+                  />
+                )}
+
+                {question.type === 'dropdown' && (
+                  <View style={{marginTop: 8}}>
+                    {/* Selected Field */}
+                    <TouchableOpacity
+                      style={styles.dropdownField}
+                      onPress={() =>
+                        setOpenDropdownKey(
+                          openDropdownKey === question.key
+                            ? null
+                            : question.key,
+                        )
+                      }>
+                      <Text
+                        style={{
+                          color: questionAnswers[question.key]
+                            ? '#000'
+                            : '#3d3c3cff',
+                          fontSize: 11,
+                        }}>
+                        {questionAnswers[question.key] || 'Select an option'}
+                      </Text>
+
+                      <Icon
+                        name={
+                          openDropdownKey === question.key
+                            ? 'arrow-drop-up'
+                            : 'arrow-drop-down'
+                        }
+                        size={26}
+                        color="#666"
+                      />
+                    </TouchableOpacity>
+
+                    {/* Options List */}
+                    {openDropdownKey === question.key && (
+                      <View style={styles.dropdownOptions}>
+                        {question.options?.map(option => (
+                          <TouchableOpacity
+                            key={option}
+                            style={[
+                              styles.dropdownItem,
+                              questionAnswers[question.key] === option &&
+                                styles.dropdownItemSelected,
+                            ]}
+                            onPress={() => {
+                              setQuestionAnswers(prev => ({
+                                ...prev,
+                                [question.key]: option,
+                              }));
+                              setOpenDropdownKey(null);
+                            }}>
+                            <Text
+                              style={{
+                                color:
+                                  questionAnswers[question.key] === option
+                                    ? '#0E3386'
+                                    : '#333',
+                                fontWeight:
+                                  questionAnswers[question.key] === option
+                                    ? '600'
+                                    : '400',
+                              }}>
+                              {option}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            ))}
+
+            <View style={styles.addButton}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(true)}
+                style={{
+                  backgroundColor: '#0E3386',
+                  padding: 10,
+                  borderRadius: 8,
+                }}>
+                <Text style={{color: '#fff'}}>Add More Questions</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
           <View style={styles.toggleContainer}>
             <Text style={styles.toggleLabel}>
               Does your contract PDF contain images?
@@ -984,6 +1130,12 @@ const AIResFullReviewScreen = () => {
           </View>
         </View>
       </Modal>
+
+      <QuestionModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSave={questions => setSelectedQuestions(questions)}
+      />
     </View>
   );
 };
@@ -1190,8 +1342,19 @@ const styles = StyleSheet.create({
   },
   addButtonQues: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
+  },
+  addButton: {
+    flexDirection: 'row',
+    backgroundColor: '#0E3386',
+    borderRadius: 10,
+    padding: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    maxWidth: 170,
+    marginBottom: 10,
   },
   sectionTitleButton: {
     fontSize: 10,
@@ -1462,6 +1625,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#6B7280',
+  },
+  dropdownField: {
+    borderWidth: 1,
+    borderColor: '#dcdcdc',
+    borderRadius: 10,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingLeft: 13,
+  },
+
+  dropdownOptions: {
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#f0f0f0',
+  },
+
+  dropdownItemSelected: {
+    backgroundColor: '#f0f5ff',
   },
 });
 

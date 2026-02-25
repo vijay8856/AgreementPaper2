@@ -11,7 +11,7 @@ import {
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { Modal } from "react-native";
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Toast from "react-native-toast-message";
 import Services from '../Services/services';
 const BASE_URL = "https://api.agreementpaper.com";
@@ -234,6 +234,7 @@ const maskEmail = (email?: string) => {
         value={query}
         onChangeText={onChangeText}
         placeholder="Select country (type to search)"
+        placeholderTextColor={'black'}
         style={styles.input}
         onFocus={() => setShowDropdown(true)}
       />
@@ -296,7 +297,7 @@ const maskEmail = (email?: string) => {
               style={styles.closeButton}
               onPress={handleCloseConnectModal}
             >
-              <Icon name="times" size={24} color="#666" />
+              <Icon name="close" size={24} color="#666" />
             </TouchableOpacity>
 
             {selectedIndividual && (
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#525050ff",
   },
 
   dropdown: {
@@ -407,7 +408,7 @@ rightContent: {
 },
 
 detailsBtn: {
-  backgroundColor: "#0056d2",
+  backgroundColor: "#0E3386",
   paddingHorizontal: 10,
   paddingVertical: 5,
   borderRadius: 20,
@@ -425,7 +426,7 @@ detail:{
   company: { color: "#555", marginBottom: 4 },
 
   viewBtn: {
-    backgroundColor: "#0056d2",
+    backgroundColor: "#0E3386",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,

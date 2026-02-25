@@ -2,10 +2,8 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import HelpScreen from '../screens/HelpScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import TalentDashboard from '../screens/TalentDashboard';
-import SupplierAgencyScreen from '../screens/SupplierAgencyScreen';
 import TopOrganisation from '../screens/OrganizationModules/TopOrganization'
 import LatestJobsScreen from '../screens/LatestJobsScreen';
-import JobDetailScreen from '../screens/JobDetailScreen';
 import MasterAgreement from '../screens/OrganizationModules/MasterAgreement';
 import StatementOfWork from '../screens/OrganizationModules/StatementOfWork';
 import ViewTalentProfileScreen from '../screens/ViewTalentProfileScreen';
@@ -83,17 +81,7 @@ export const TalentDrawerNavigator = () => {
                     }}
                   />
                   
-            <Drawer.Screen
-                name="JobDetailScreen"
-                component={JobDetailScreen}
-                options={{
-                    title: 'Job Detail',
-                    headerShown: true,
-                    headerStyle: { backgroundColor: '#0E3386' },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: { fontWeight: 'bold' },
-                }}
-            />
+         
             <Drawer.Screen
                 name="ViewTalentProfileScreen"
                 component={ViewTalentProfileScreen}
@@ -116,17 +104,7 @@ export const TalentDrawerNavigator = () => {
                       headerTitleStyle: { fontWeight: 'bold' },
                     }}
                   />
-            <Drawer.Screen
-                name="SupplierAgencyScreen"
-                component={SupplierAgencyScreen}
-                options={{
-                    title: 'Supplier / Agency',
-                    headerShown: true,
-                    headerStyle: { backgroundColor: '#0E3386' },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: { fontWeight: 'bold' },
-                }}
-            />
+            
             <Drawer.Screen
                 name="Settings"
                 component={SettingsScreen}

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -94,9 +96,55 @@ const JobPostScreen = () => {
       ]);
 
       if (skillRes.success) setSkills(skillRes.data || []);
-      if (langRes.success) setLanguages(langRes.data || []);
-      if (currencyRes.success) setCurrencies(currencyRes.data || []);
-      if (countryRes.success) setCountries(countryRes.data || []);
+
+    if (langRes.success) {
+  const languageList = langRes.data || [];
+
+  const sortedLanguages = [
+    ...languageList.filter(
+      (l) => l.name?.toLowerCase() === "english"
+    ),
+    ...languageList.filter(
+      (l) => l.name?.toLowerCase() !== "english"
+    ),
+  ];
+
+  setLanguages(sortedLanguages);
+}
+
+if (currencyRes.success) {
+  const list = currencyRes.data || [];
+
+  const finalCurrencies = [
+    ...list.filter(
+      i =>
+        (i.currency === "INR" && i.country_name?.toLowerCase() === "india") ||
+        (i.currency === "AUD" && i.country_name?.toLowerCase() === "australia")
+    ),
+    ...list.filter(
+      i => !["INR", "AUD"].includes(i.currency)
+    ),
+  ];
+
+  setCurrencies(finalCurrencies);
+}
+
+
+console.log("sorted currencies",currencies);
+
+  if (countryRes.success) {
+  const countryList = countryRes.data || [];
+
+  const priorityCountries = ["India", "Australia"];
+
+  const sortedCountries = [
+    ...countryList.filter((c) => priorityCountries.includes(c.name)),
+    ...countryList.filter((c) => !priorityCountries.includes(c.name)),
+  ];
+
+  setCountries(sortedCountries);
+}
+
     } catch (e) {
       console.error(e);
     } finally {
@@ -207,7 +255,7 @@ const JobPostScreen = () => {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
+        style={{flex: 1 ,marginBottom:30}}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}>
@@ -306,8 +354,8 @@ const JobPostScreen = () => {
               </View>
               <View style={{flex: 1, marginLeft: 8}}>
                 <Input
-                  label="Pay Rate"
-                  placeholder="Amount"
+                  label="Pay Rate / Per Day "
+                  placeholder="Amt as PerDay"
                   keyboardType="numeric"
                   value={form.payRate}
                   onChangeText={v => setForm({...form, payRate: v})}

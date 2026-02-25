@@ -13,14 +13,14 @@ import ApprovalScreen from '../screens/OrganizationModules/ApprovalScreen';
 import JobPostScreen from '../screens/JobPostScreen';
 import TalentProfileList from '../screens/TalentProfileList';
 import {Platform} from 'react-native';
-
-// Import other screens you want in the drawer
+import AgencyCustomDrawer from './AgencyCustomDrawer';
 
 const Drawer = createDrawerNavigator();
 
 export const AgencyDrawerNavigator = () => {
   return (
     <Drawer.Navigator
+      drawerContent={props => <AgencyCustomDrawer {...props} />}
       screenOptions={{
         drawerStyle: {
           backgroundColor: '#fff',

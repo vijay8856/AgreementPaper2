@@ -160,6 +160,18 @@ function App(): React.JSX.Element {
 
 //   initCrisp();
 // }, []);
+const linking = {
+  prefixes: [
+    'https://agreementpaper.com',
+    'agreementpaper://',
+  ],
+  config: {
+    screens: {
+      LatestJobsScreen: 'job/:id',
+    },
+  },
+};
+
 
 MaterialCommunityIcons.loadFont();
   return (
@@ -177,13 +189,14 @@ MaterialCommunityIcons.loadFont();
                     publishableKey={REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE}
                     merchantIdentifier="merchant.com.yourapp.identifier"
                     urlScheme="your-url-scheme">
-                    <NavigationContainer>
+                    <NavigationContainer linking={linking}>
                       <NavigationManager />
                 <UpdateChecker />
                       
                       <AppLoader />
-                      <Toast />
                     </NavigationContainer>
+                      <Toast />
+
                   </StripeProvider>
                 </IAPProvider>
               )}

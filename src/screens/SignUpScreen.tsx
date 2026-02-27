@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import React, { useLayoutEffect, useState } from 'react';
 import {

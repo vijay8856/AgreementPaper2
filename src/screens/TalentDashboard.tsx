@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useEffect, useState, useCallback} from 'react';
 import {

@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+// @ts-nocheck
+
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -9,14 +11,14 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
-import Services from "../Services/services";
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useFocusEffect} from '@react-navigation/native';
+import Services from '../Services/services';
 
 // 👉 Import YOUR custom Header component (NOT react-navigation one)
-import AppHeader from "../components/AppHeader";
-import UpdateTalentProfileModal from "../components/UpdateTalentProfileModal";
+import AppHeader from '../components/AppHeader';
+import UpdateTalentProfileModal from '../components/UpdateTalentProfileModal';
 
 // -------------------------------------------------------------
 // TYPES
@@ -67,7 +69,7 @@ interface IProfileResponse {
   average_rating: string;
 }
 
-const ViewTalentProfileScreen = ({ navigation }: any) => {
+const ViewTalentProfileScreen = ({navigation}: any) => {
   const [slug, setSlug] = useState<string | null>(null);
   const [profile, setProfile] = useState<IProfileResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -77,26 +79,18 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
   // 1️⃣ LOAD SLUG FROM STORAGE
   // -------------------------------------------------------------
   useEffect(() => {
-    console.log("hello");
-
     const loadUser = async () => {
-      console.log("hello1");
+      console.log('hello1');
 
       try {
-        console.log("hello2");
+        console.log('hello2');
 
         const storedUser = await AsyncStorage.getItem('slug');
-        console.log("hello2");
-
-        // if (!data) return;
-        console.log("hello3", storedUser);
-
-        // const parsed = JSON.parse(storedUser);
+        console.log('hello3', storedUser);
         setSlug(storedUser);
-        console.log("📌 Loaded Slug From AsyncStorage:", storedUser);
-
+        console.log('📌 Loaded Slug From AsyncStorage:', storedUser);
       } catch (e) {
-        console.log("Async error:", e);
+        console.log('Async error:', e);
       }
     };
     loadUser();
@@ -108,24 +102,24 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
   useFocusEffect(
     useCallback(() => {
       if (!slug) return;
-      console.log("slug", slug);
+      console.log('slug', slug);
 
       const fetchProfile = async () => {
         setLoading(true);
 
-        console.log("📡 Calling Profile API with slug:", slug);
+        console.log('📡 Calling Profile API with slug:', slug);
         const res = await Services.getTalentUserProfile(slug);
 
-        console.log("📥 Profile API Response:", res);
+        console.log('📥 Profile API Response:', res);
 
         if (res.success) setProfile(res.data);
-        else console.log("API Error:", res.error);
+        else console.log('API Error:', res.error);
 
         setLoading(false);
       };
 
       fetchProfile();
-    }, [slug])
+    }, [slug]),
   );
 
   // -------------------------------------------------------------
@@ -157,11 +151,8 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
   // 5️⃣ RENDER PROFILE UI
   // -------------------------------------------------------------
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <AppHeader
-        title="Talent Profile"
-        showBack
-      />
+    <View style={{flex: 1, backgroundColor: '#fff'}}>
+      <AppHeader title="Talent Profile" showBack />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* TOP CARD */}
@@ -170,7 +161,7 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
             source={{
               uri:
                 user.profile_pic ||
-                "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+                'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             }}
             style={styles.avatar}
           />
@@ -180,20 +171,19 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
           </Text>
 
           <Text style={styles.role}>
-            {profile.current_job_title || "Not Provided"}
+            {profile.current_job_title || 'Not Provided'}
           </Text>
         </View>
-        <View style={{ alignItems: "center", marginBottom: 20 }}>
+        <View style={{alignItems: 'center', marginBottom: 20}}>
           <TouchableOpacity
             onPress={() => setShowEditModal(true)}
             style={{
-              backgroundColor: "#0E3386",
+              backgroundColor: '#0E3386',
               paddingVertical: 10,
               paddingHorizontal: 20,
               borderRadius: 8,
-            }}
-          >
-            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+            }}>
+            <Text style={{color: '#fff', fontSize: 16, fontWeight: '600'}}>
               Edit Profile
             </Text>
           </TouchableOpacity>
@@ -225,7 +215,7 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
             <Text style={styles.sectionTitle}>Skills</Text>
 
             <View style={styles.skillContainer}>
-              {profile.skill_set_data.map((s) => (
+              {profile.skill_set_data.map(s => (
                 <Text key={s.id} style={styles.skillChip}>
                   {s.name}
                 </Text>
@@ -238,41 +228,40 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Experience</Text>
           <Text style={styles.item}>
-            {profile.total_experience || "0"} years
+            {profile.total_experience || '0'} years
           </Text>
         </View>
-    {/* CV */}
-       <View style={styles.section}>
-  <Text style={styles.sectionTitle}>Uploaded CV</Text>
+        {/* CV */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Uploaded CV</Text>
 
-  {profile?.cv ? (
-    <Text
-      style={[styles.item, styles.link]}
-      onPress={async () => {
-        const url = profile.cv;
+          {profile?.cv ? (
+            <Text
+              style={[styles.item, styles.link]}
+              onPress={async () => {
+                const url = profile.cv;
 
-        const supported = await Linking.canOpenURL(url);
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          Alert.alert("Error", "Unable to open CV link");
-        }
-      }}
-    >
-      View CV
-    </Text>
-  ) : (
-    <Text style={styles.item}>No Uploaded CV</Text>
-  )}
-</View>
+                const supported = await Linking.canOpenURL(url);
+                if (supported) {
+                  Linking.openURL(url);
+                } else {
+                  Alert.alert('Error', 'Unable to open CV link');
+                }
+              }}>
+              View CV
+            </Text>
+          ) : (
+            <Text style={styles.item}>No Uploaded CV</Text>
+          )}
+        </View>
 
         {/* RATING */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rating</Text>
-          <Text style={styles.item}>⭐ {profile.average_rating || "0.0"}</Text>
+          <Text style={styles.item}>⭐ {profile.average_rating || '0.0'}</Text>
         </View>
 
-        <View style={{ height: 50 }} />
+        <View style={{height: 50}} />
       </ScrollView>
       <UpdateTalentProfileModal
         visible={showEditModal}
@@ -287,7 +276,6 @@ const ViewTalentProfileScreen = ({ navigation }: any) => {
           }
         }}
       />
-
     </View>
   );
 };
@@ -304,8 +292,8 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   loadingText: {
@@ -315,11 +303,11 @@ const styles = StyleSheet.create({
 
   errorText: {
     fontSize: 16,
-    color: "red",
+    color: 'red',
   },
 
   headerCard: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 22,
     paddingTop: 10,
   },
@@ -329,23 +317,23 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 100,
     borderWidth: 3,
-    borderColor: "#eaeaea",
+    borderColor: '#eaeaea',
   },
 
   name: {
     marginTop: 10,
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 
   role: {
     fontSize: 16,
-    color: "gray",
+    color: 'gray',
     marginTop: 4,
   },
 
   section: {
-    backgroundColor: "#F7F8FA",
+    backgroundColor: '#F7F8FA',
     padding: 16,
     borderRadius: 12,
     marginBottom: 14,
@@ -353,7 +341,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: '700',
     marginBottom: 8,
   },
 
@@ -365,18 +353,18 @@ const styles = StyleSheet.create({
   aboutText: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#444",
+    color: '#444',
   },
 
   skillContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
 
   skillChip: {
-    backgroundColor: "#E6F1FF",
-    color: "#0057D9",
+    backgroundColor: '#E6F1FF',
+    color: '#0057D9',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,

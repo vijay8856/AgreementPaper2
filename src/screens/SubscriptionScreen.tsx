@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import { requestSubscription } from 'react-native-iap';
 

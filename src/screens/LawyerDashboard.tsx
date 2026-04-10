@@ -162,7 +162,6 @@ const LawyerDashboard = () => {
                 }}>
                 <Text style={{ fontSize: 12, fontWeight: 'bold' }}>
                   {'Upgrade Plan'}
-                  {/* {storedValue ? 'Premium' : 'Upgrade Plan'} */}
 
                 </Text>
               </TouchableOpacity>

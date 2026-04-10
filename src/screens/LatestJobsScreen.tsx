@@ -239,11 +239,17 @@ const LatestJobsScreen = ({navigation}: any) => {
       <View style={styles.rowBetween}>
         <Text style={styles.title}>{item.title}</Text>
 
-        {item.pay_rate ? (
-          <Text style={styles.salary}>
-            {item.currency_code} {item.pay_rate}/day
-          </Text>
-        ) : null}
+      {item.show_job_pay_rate === true ? (
+  <Text style={styles.salary}>
+    {item.currency_code} *****/day
+  </Text>
+) : (
+  item.pay_rate ? (
+    <Text style={styles.salary}>
+      {item.currency_code} {item.pay_rate}/day
+    </Text>
+  ) : null
+)}
       </View>
 
       {/* Job Type */}

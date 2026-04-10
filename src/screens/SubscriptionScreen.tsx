@@ -279,46 +279,7 @@ export default function SubscriptionScreen() {
     );
   }
 
-  // Benefit list (same for all plans)
-  // Benefit lists based on plan type
-  // const benefitLists: any = {
-  //   agreement_subscription_2: [
-  //     'Essential eSign and contracting for business users and freelancers',
-  //     'Everything included in the Personal Plan',
-  //     'Unlimited document and contract creation',
-  //     'Unlimited eSignatures',
-  //     'Unlimited team collaboration',
-  //     'Comprehensive audit trails',
-  //     'Priority email support',
-  //   ],
 
-  //   base_plan_yearly: [
-  //     'For growing businesses to automate their eSign/contracting workflow.',
-  //     'Everything in Pro',
-  //     'Role based user management',
-  //     'Workflows for internal approvals',
-  //     'Advance document/eSign controls',
-  //     'Customizable alerts/notifications',
-  //     'Business template library',
-  //     'Unlimited Custom templates',
-  //     'Business Integrations',
-  //     'Advance platform controls',
-  //     'Custom branding',
-  //     'Priority support',
-  //   ],
-
-  //   agreement_subscription_1: [
-  //     'For advanced automation, security, custom terms and compliance.',
-  //     'Everything in team',
-  //     'Advance user management',
-  //     'Advance eSign settings',
-  //     'Premium integrations',
-  //     'Customizable platform security',
-  //     'Custom success manager',
-  //     'Uptime SLAs with service credit',
-  //     'Custom contract terms',
-  //   ],
-  // };
   const benefitLists: any = {
     agreement_subscription_2: [
       'AI Assisted Contract Review',
@@ -493,7 +454,6 @@ export default function SubscriptionScreen() {
 
 
 
-                {/* Benefits */}
                 {/* Benefits */}
                 <View style={{ marginTop: 10 }}>
                   {(benefitLists[planId] || []).map((item: string, index: number) => (

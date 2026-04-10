@@ -48,7 +48,6 @@ const AgencySupplierMasterdata = () => {
     website: '',
     logo: null
   });
-  console.log("form", formData);
 
   const [tableData, setTableData] = useState([]);
   const [message, setMessage] = useState('');

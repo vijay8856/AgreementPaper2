@@ -114,6 +114,7 @@ export const API_ENDPOINTS = {
     SOWTYPE:'/settings/sow-type/',
     EXPENSESCATEGORY:'/settings/expense-category/',
     INCOMETAXSLABS:'/settings/tax-slabs/',
-    MATERIALMASTERDATA:"/masterdata/material-master-data/"
+    MATERIALMASTERDATA:"/masterdata/material-master-data/",
+    APPLELOGIN:'dj-rest-auth/apple/start/'
 
 };

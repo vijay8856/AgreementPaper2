@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import React, { useLayoutEffect, useState } from 'react';
+import React, {useLayoutEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -16,13 +16,14 @@ import {
   Alert,
 } from 'react-native';
 import Services from '../Services/services';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
+import {RootStackParamList} from '../navigation/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { CommonActions } from '@react-navigation/native';
-import { useEffect } from 'react';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {CommonActions} from '@react-navigation/native';
+import {useEffect} from 'react';
+import appleAuth from '@invertase/react-native-apple-authentication';
 // import { GOOGLE_CLIENT_ID } from '@env';
 import {
   validateSignupForm,
@@ -30,28 +31,28 @@ import {
   validateName,
   validatePassword,
   validateConfirmPassword,
-  validateSignupType
+  validateSignupType,
 } from '../utils/validations';
-import { useColorScheme } from 'react-native';
+import {useColorScheme} from 'react-native';
+import axios from 'axios';
 const SIGNUP_TYPES = [
-  { label: 'Individual Buyer', value: 'INDIVIDUAL_USER' },
-  { label: 'Supplier & Agency Network', value: 'AGENCY_USER' },
-  { label: 'Talent', value: 'RESOURCE_USER' },
-  { label: 'Lawyer Network', value: 'LAWYER_USER' },
-  { label: 'Enterprise', value: 'ORGANISATION_USER' },
+  {label: 'Individual Buyer', value: 'INDIVIDUAL_USER'},
+  {label: 'Supplier & Agency Network', value: 'AGENCY_USER'},
+  {label: 'Talent', value: 'RESOURCE_USER'},
+  {label: 'Lawyer Network', value: 'LAWYER_USER'},
+  {label: 'Enterprise', value: 'ORGANISATION_USER'},
 ];
 const AGENCY_ROLES = [
-  { label: 'Recruiter', value: 'RECRUITER' },
-  { label: 'Real Estate Agent', value: 'REAL_ESTATE_AGENT' },
-  { label: 'Goods & Services Supplier', value: 'GOODS_AND_SERVICE_SUPPLIER' },
+  {label: 'Recruiter', value: 'RECRUITER'},
+  {label: 'Real Estate Agent', value: 'REAL_ESTATE_AGENT'},
+  {label: 'Goods & Services Supplier', value: 'GOODS_AND_SERVICE_SUPPLIER'},
 ];
 
 const AGENCY_ROLE_KEY = 'AGENCY_ROLE';
 
 const SignUpScreen: React.FC = () => {
-
-
-  const GOOGLE_CLIENT_ID = "601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com"
+  const GOOGLE_CLIENT_ID =
+    '601221483061-eadrdpe1opnslp4sug89v8mpugebj68f.apps.googleusercontent.com';
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [agencyRole, setAgencyRole] = useState<string>('');
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
@@ -64,19 +65,23 @@ const SignUpScreen: React.FC = () => {
   const [error, setError] = useState('');
   const [showPassword1, setShowPassword1] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
-  const [referralCode, setreferralCode] = useState('')
+  const [referralCode, setreferralCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [touched, setTouched] = useState<{[key: string]: boolean}>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [selectedTypeInfo, setSelectedTypeInfo] = useState<{ label: string, value: string } | null>(null);
-  const [selectedAgencyRole, setSelectedAgencyRole] = useState<string | null>(null);
+  const [selectedTypeInfo, setSelectedTypeInfo] = useState<{
+    label: string;
+    value: string;
+  } | null>(null);
+  const [selectedAgencyRole, setSelectedAgencyRole] = useState<string | null>(
+    null,
+  );
 
-  console.log("selectedAgencyRole", selectedAgencyRole);
+  console.log('selectedAgencyRole', selectedAgencyRole);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-
 
   const themeColors = {
     placeholder: isDark ? '#9CA3AF' : '#6B7280',
@@ -89,8 +94,6 @@ const SignUpScreen: React.FC = () => {
     selectedBg: isDark ? '#1E3A8A' : '#E6EBFF',
     selectedText: isDark ? '#BFDBFE' : '#00007B',
   };
-
-
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -118,7 +121,6 @@ const SignUpScreen: React.FC = () => {
     setSelectedAgencyRole(value);
   };
 
-
   const validateField = (fieldName: string, value: string) => {
     let fieldErrors: string[] = [];
 
@@ -145,13 +147,13 @@ const SignUpScreen: React.FC = () => {
 
     setErrors(prev => ({
       ...prev,
-      [fieldName]: fieldErrors[0] || ''
+      [fieldName]: fieldErrors[0] || '',
     }));
   };
 
   // Handle blur event
   const handleBlur = (fieldName: string) => {
-    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    setTouched(prev => ({...prev, [fieldName]: true}));
 
     switch (fieldName) {
       case 'firstName':
@@ -171,9 +173,6 @@ const SignUpScreen: React.FC = () => {
         break;
     }
   };
-
-
-
 
   const handleSignUp = async () => {
     if (!signupType) {
@@ -203,16 +202,19 @@ const SignUpScreen: React.FC = () => {
       return;
     }
 
-
     if (!validation.isValid) {
       // Convert array of errors to object format
-      const errorObj: { [key: string]: string } = {};
+      const errorObj: {[key: string]: string} = {};
       validation.errors.forEach(error => {
         if (error.includes('First name')) errorObj.firstName = error;
         else if (error.includes('Last name')) errorObj.lastName = error;
         else if (error.includes('email')) errorObj.email = error;
         else if (error.includes('Password')) errorObj.password1 = error;
-        else if (error.includes('Confirm password') || error.includes('Passwords do not match')) errorObj.password2 = error;
+        else if (
+          error.includes('Confirm password') ||
+          error.includes('Passwords do not match')
+        )
+          errorObj.password2 = error;
         else if (error.includes('signup type')) errorObj.signupType = error;
       });
       setErrors(errorObj);
@@ -226,13 +228,13 @@ const SignUpScreen: React.FC = () => {
       password2: password2,
       user_type: signupType,
       agency_role: signupType === 'AGENCY_USER' ? agencyRole : undefined,
-      agency_type: signupType === 'AGENCY_USER' ? selectedAgencyRole : undefined,
+      agency_type:
+        signupType === 'AGENCY_USER' ? selectedAgencyRole : undefined,
     };
-
 
     try {
       const result = await Services.signUp(payload);
-      console.log("re", result);
+      console.log('re', result);
 
       if (result.success) {
         await AsyncStorage.setItem(
@@ -240,15 +242,15 @@ const SignUpScreen: React.FC = () => {
           JSON.stringify({
             email,
             user_type: signupType,
-          })
+          }),
         );
-        console.log("result.success", result.success);
+        console.log('result.success', result.success);
 
         navigation.navigate('VerifyEmail');
-
-
       } else {
-        setError(result.error?.message || 'Registration failed. Please try again.');
+        setError(
+          result.error?.message || 'Registration failed. Please try again.',
+        );
       }
     } catch (e) {
       setError('Something went wrong. Please try again later.');
@@ -280,8 +282,11 @@ const SignUpScreen: React.FC = () => {
         }
 
         // 🔹 Direct signup with Google (skip sendAccessToken)
-        const tokenResult = await Services.googleSignup(accessToken, signupType);
-        console.log("googleSignup result", tokenResult);
+        const tokenResult = await Services.googleSignup(
+          accessToken,
+          signupType,
+        );
+        console.log('googleSignup result', tokenResult);
 
         if (!tokenResult.success) {
           setLoading(false);
@@ -296,7 +301,7 @@ const SignUpScreen: React.FC = () => {
 
         // Save user data
         const user = tokenResult?.data?.user;
-        console.log("useruser", user);
+        console.log('useruser', user);
 
         await AsyncStorage.setItem('first_Name', user?.first_name || '');
         await AsyncStorage.setItem('last_Name', user?.last_name || '');
@@ -305,28 +310,31 @@ const SignUpScreen: React.FC = () => {
         await AsyncStorage.setItem('Token', tokenResult.data?.key || '');
         await AsyncStorage.setItem('hasLoggedIn', 'true');
         await AsyncStorage.setItem('userType', user?.user_type);
-        Toast.show({ type: 'success', text1: 'Signup successful!', position: 'top' });
+        Toast.show({
+          type: 'success',
+          text1: 'Signup successful!',
+          position: 'top',
+        });
 
         setTimeout(() => {
           setLoading(false);
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: 'AuthLoading' }],
-            })
+              routes: [{name: 'AuthLoading'}],
+            }),
           );
         }, 1000);
       }
-
     } catch (err: any) {
       setLoading(false);
 
       // Print the entire object so you can see all fields
-      console.log("Google Signup full error:", JSON.stringify(err, null, 2));
+      console.log('Google Signup full error:', JSON.stringify(err, null, 2));
 
       // Extract known properties if available
-      console.log("Error code:", err.code);
-      console.log("Error message:", err.message);
+      console.log('Error code:', err.code);
+      console.log('Error message:', err.message);
 
       Toast.show({
         type: 'error',
@@ -352,8 +360,7 @@ const SignUpScreen: React.FC = () => {
       <TouchableOpacity
         style={styles.socialButton}
         onPress={() => handleLogin('google')}
-        disabled={loading}
-      >
+        disabled={loading}>
         <Image
           source={require('../assets/images/search.png')}
           style={styles.socialIcon}
@@ -361,90 +368,91 @@ const SignUpScreen: React.FC = () => {
         <Text style={styles.socialText}> Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.socialButton}
-        onPress={handleLinkedinLogin}
-      >
+      <TouchableOpacity
+        style={styles.socialButton}
+        onPress={handleLinkedinLogin}>
         <Image
           source={require('../assets/images/linkedin.png')}
           style={styles.socialIcon}
         />
-        <Text style={styles.socialText}>LinkedIn  </Text>
+        <Text style={styles.socialText}>LinkedIn </Text>
       </TouchableOpacity>
     </View>
-
   );
 
   const getSignupTypeDescription = (type: string) => {
     switch (type) {
       case 'INDIVIDUAL_USER':
         return {
-          title: "Individual Buyer",
-          description: "Shop for services and manage your purchases with ease.",
+          title: 'Individual Buyer',
+          description: 'Shop for services and manage your purchases with ease.',
           bullets: [
-            " Review high value contracts Real Estate Contracts and Employment Contracts",
-            "Avoid Contract frauds.",
-            "Review past agreements anytime.",
-            "Fast, secure, and mobile-friendly experience.",
-            "Support for digital signatures and secure storage."
-          ]
+            ' Review high value contracts Real Estate Contracts and Employment Contracts',
+            'Avoid Contract frauds.',
+            'Review past agreements anytime.',
+            'Fast, secure, and mobile-friendly experience.',
+            'Support for digital signatures and secure storage.',
+          ],
         };
       case 'AGENCY_USER':
         return {
-          title: "Supplier & Agency Network",
-          description: "Showcase your services and connect with buyers.",
+          title: 'Supplier & Agency Network',
+          description: 'Showcase your services and connect with buyers.',
           bullets: [
-            " Submit proposals, quotes, or documents securely.",
-            " Review, draft contract and reduce contract signing by 70%. ",
-            " Unlimited E signatures",
-            " Track agreement status and respond to enterprise requests quickly.",
-            " Access shared resources and contract history.",
-            " Find Talent for Sourcing",
-            " Streamlined communication with buyers and legal teams.",
-          ]
+            ' Submit proposals, quotes, or documents securely.',
+            ' Review, draft contract and reduce contract signing by 70%. ',
+            ' Unlimited E signatures',
+            ' Track agreement status and respond to enterprise requests quickly.',
+            ' Access shared resources and contract history.',
+            ' Find Talent for Sourcing',
+            ' Streamlined communication with buyers and legal teams.',
+          ],
         };
       case 'RESOURCE_USER':
         return {
-          title: "Talent",
-          description: "Showcase your skills and find opportunities that match your expertise.",
+          title: 'Talent',
+          description:
+            'Showcase your skills and find opportunities that match your expertise.',
           bullets: [
-            "Create a professional profile to showcase your skills",
-            "Build an impressive portfolio of your work",
-            "Find opportunities that match your expertise",
-            "Connect with potential clients and employers",
-            "Manage your projects and collaborations in one place"
-          ]
+            'Create a professional profile to showcase your skills',
+            'Build an impressive portfolio of your work',
+            'Find opportunities that match your expertise',
+            'Connect with potential clients and employers',
+            'Manage your projects and collaborations in one place',
+          ],
         };
       case 'LAWYER_USER':
         return {
-          title: "Lawyer Network",
-          description: "Offer legal services and consult with clients.",
+          title: 'Lawyer Network',
+          description: 'Offer legal services and consult with clients.',
           bullets: [
-            "Review, draft contract and reduce contract signing by 70%.",
-            "Unlimited E signatures",
-            "Generate legal templates tailored for multiple industries. ",
-            "Collaborate with clients or enterprises on secure agreements.",
-            "Track your workload and manage deliverables.",
-            "Get notified of contract updates or required actions.",
-          ]
+            'Review, draft contract and reduce contract signing by 70%.',
+            'Unlimited E signatures',
+            'Generate legal templates tailored for multiple industries. ',
+            'Collaborate with clients or enterprises on secure agreements.',
+            'Track your workload and manage deliverables.',
+            'Get notified of contract updates or required actions.',
+          ],
         };
       case 'ORGANISATION_USER':
         return {
-          title: "Enterprise",
-          description: "Manage agreements for your organization with full control and visibility.",
+          title: 'Enterprise',
+          description:
+            'Manage agreements for your organization with full control and visibility.',
           bullets: [
-            "Centralized dashboard for all contracts and purchase orders",
-            "Review, draft contracts and reduce contract signing by 70%",
-            "Unlimited E-signatures for your organization",
-            "Manage supplier relationships and approvals in one place",
-            "Advanced analytics and compliance tracking",
-            "Role-based access for teams and departments"
-          ]
+            'Centralized dashboard for all contracts and purchase orders',
+            'Review, draft contracts and reduce contract signing by 70%',
+            'Unlimited E-signatures for your organization',
+            'Manage supplier relationships and approvals in one place',
+            'Advanced analytics and compliance tracking',
+            'Role-based access for teams and departments',
+          ],
         };
       default:
         return {
-          title: "",
-          description: "",
-          bullets: []
+          title: '',
+          description: '',
+          bullets: [],
         };
     }
   };
@@ -486,27 +494,430 @@ const SignUpScreen: React.FC = () => {
       setSelectedTypeInfo(null);
     }
   };
+
+  const handleAppleLogin = async () => {
+    try {
+      setLoading(true);
+
+      // 🔐 Step 1: Apple Login
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      });
+
+      console.log('Apple Response', appleAuthRequestResponse);
+
+      const {authorizationCode} = appleAuthRequestResponse;
+
+      if (!authorizationCode) {
+        Toast.show({
+          type: 'error',
+          text1: 'Apple Signup Failed',
+          text2: 'No authorization code returned',
+          position: 'top',
+        });
+        return;
+      }
+
+      // 🌐 Step 2: Backend API
+      const url =
+        'https://api.agreementpaper.com/accounts/dj-rest-auth/apple/mobile/';
+
+      const payload = {
+        authorization_code: authorizationCode,
+        auth_type: 'signup',
+        user_type: signupType,
+        agency_type: signupType === 'AGENCY_USER' ? selectedAgencyRole : null,
+      };
+
+      console.log('Apple payload', payload);
+
+      const response = await axios.post(url, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Apple signup result', response.data);
+
+      const result = response?.data;
+
+      if (!result || !result?.payload) {
+        Toast.show({
+          type: 'error',
+          text1: 'Apple Signup Failed',
+          text2: 'Invalid server response',
+          position: 'top',
+        });
+        return;
+      }
+
+      // ✅ FIX: correct user mapping
+      const user = result.payload;
+
+      // 🛡️ Safe values (no undefined)
+      const firstName = user?.first_name ?? '';
+      const lastName = user?.last_name ?? '';
+      const email = user?.email ?? '';
+      const profilePic = user?.profile?.logo ?? '';
+      const token = result?.key ?? '';
+      const userType = user?.user_type ?? '';
+
+      // 💾 Step 3: Store in AsyncStorage (SAFE)
+      await AsyncStorage.multiSet([
+        ['first_Name', firstName],
+        ['last_Name', lastName],
+        ['email', email],
+        ['profilePic', profilePic],
+        ['Token', token],
+        ['hasLoggedIn', 'true'],
+        ['userType', userType],
+      ]);
+
+      // 🎉 Success
+      Toast.show({
+        type: 'success',
+        text1: 'Signup successful!',
+        position: 'top',
+      });
+
+      // 🔄 Reset Navigation
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'AuthLoading'}],
+        }),
+      );
+    } catch (error) {
+      console.log('Apple login error', error?.response || error);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Apple Signup Error',
+        text2:
+          error?.response?.data?.error ||
+          error?.response?.data?.detail ||
+          error?.message ||
+          'Something went wrong',
+        position: 'top',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  // const handleAppleLogin = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const appleAuthRequestResponse = await appleAuth.performRequest({
+  //       requestedOperation: appleAuth.Operation.LOGIN,
+  //       requestedScopes: [
+  //         appleAuth.Scope.EMAIL,
+  //         appleAuth.Scope.FULL_NAME,
+  //       ],
+  //     });
+
+  //     console.log("Apple Response", appleAuthRequestResponse);
+
+  //     const { authorizationCode } = appleAuthRequestResponse;
+  // console.log("authorizationCode",authorizationCode);
+
+  //     if (!authorizationCode) {
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Apple Signup Failed",
+  //         text2: "No authorization code returned",
+  //         position: "top",
+  //       });
+  //       setLoading(false);
+  //       return;
+  //     }
+
+  //     const url =
+  //       "https://pointed-julissa-racemic.ngrok-free.dev/accounts/dj-rest-auth/apple/mobile/";
+
+  //     const payload = {
+  //       authorization_code: authorizationCode,
+  //       auth_type: "signup", // backend requirement
+  //       user_type: signupType,
+  //       agency_type:
+  //         signupType === "AGENCY_USER" ? selectedAgencyRole : null,
+  //     };
+
+  //     console.log("Apple payload", payload);
+
+  //     const response = await axios.post(url, payload, {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     console.log("Apple signup result", response.data);
+
+  //     const result = response.data;
+
+  //     if (!result) {
+  //       setLoading(false);
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Apple Signup Failed",
+  //         text2: "Server error",
+  //         position: "top",
+  //       });
+  //       return;
+  //     }
+
+  //     const user = result?.user;
+
+  //     await AsyncStorage.setItem("first_Name", user?.first_name || "");
+  //     await AsyncStorage.setItem("last_Name", user?.last_name || "");
+  //     await AsyncStorage.setItem("email", user?.email || "");
+  //     await AsyncStorage.setItem("profilePic", user?.profile?.logo || "");
+  //     await AsyncStorage.setItem("Token", result?.key || "");
+  //     await AsyncStorage.setItem("hasLoggedIn", "true");
+  //     await AsyncStorage.setItem("userType", user?.user_type);
+
+  //     Toast.show({
+  //       type: "success",
+  //       text1: "Signup successful!",
+  //       position: "top",
+  //     });
+
+  //     navigation.dispatch(
+  //       CommonActions.reset({
+  //         index: 0,
+  //         routes: [{ name: "AuthLoading" }],
+  //       })
+  //     );
+
+  //   } catch (error) {
+  //     console.log("Apple login error", error?.response || error);
+
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Apple Signup Error",
+  //       text2:
+  //         error?.response?.data?.detail ||
+  //         error?.message ||
+  //         "Something went wrong",
+  //       position: "top",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const handleAppleLogin = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const appleAuthRequestResponse = await appleAuth.performRequest({
+  //       requestedOperation: appleAuth.Operation.LOGIN,
+  //       requestedScopes: [
+  //         appleAuth.Scope.EMAIL,
+  //         appleAuth.Scope.FULL_NAME,
+  //       ],
+  //     });
+
+  //     console.log("Apple Response", appleAuthRequestResponse);
+
+  //     const { identityToken } = appleAuthRequestResponse;
+
+  //     if (!identityToken) {
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Apple Signup Failed",
+  //         text2: "No identity token returned",
+  //         position: "top",
+  //       });
+  //       setLoading(false);
+  //       return;
+  //     }
+
+  //     const url = `https://pointed-julissa-racemic.ngrok-free.dev/accounts/dj-rest-auth/apple/signup/start/?user_type=${signupType}`;
+
+  //     console.log("Apple request URL", url);
+
+  //     const response = await axios.get(url, {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     console.log("Apple signup result", response.data);
+
+  //     const result = response.data;
+
+  //     if (!result) {
+  //       setLoading(false);
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Apple Signup Failed",
+  //         text2: "Server error",
+  //         position: "top",
+  //       });
+  //       return;
+  //     }
+
+  //     const user = result?.user;
+
+  //     await AsyncStorage.setItem("first_Name", user?.first_name || "");
+  //     await AsyncStorage.setItem("last_Name", user?.last_name || "");
+  //     await AsyncStorage.setItem("email", user?.email || "");
+  //     await AsyncStorage.setItem("profilePic", user?.profile?.logo || "");
+  //     await AsyncStorage.setItem("Token", result?.key || "");
+  //     await AsyncStorage.setItem("hasLoggedIn", "true");
+  //     await AsyncStorage.setItem("userType", user?.user_type);
+
+  //     Toast.show({
+  //       type: "success",
+  //       text1: "Signup successful!",
+  //       position: "top",
+  //     });
+
+  //     navigation.dispatch(
+  //       CommonActions.reset({
+  //         index: 0,
+  //         routes: [{ name: "AuthLoading" }],
+  //       })
+  //     );
+
+  //   } catch (error) {
+  //     console.log("Apple login error", error?.response || error);
+
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Apple Signup Error",
+  //       text2:
+  //         error?.response?.data?.detail ||
+  //         error?.message ||
+  //         "Something went wrong",
+  //       position: "top",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  // const handleAppleLogin = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const appleAuthRequestResponse = await appleAuth.performRequest({
+  //       requestedOperation: appleAuth.Operation.LOGIN,
+  //       requestedScopes: [
+  //         appleAuth.Scope.EMAIL,
+  //         appleAuth.Scope.FULL_NAME,
+  //       ],
+  //     });
+
+  //     console.log("Apple Response", appleAuthRequestResponse);
+
+  //     const { identityToken } = appleAuthRequestResponse;
+
+  //     if (!identityToken) {
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Apple Signup Failed",
+  //         text2: "No identity token returned",
+  //         position: "top",
+  //       });
+  //       setLoading(false);
+  //       return;
+  //     }
+
+  //     // payload sent to backend
+  //     const payload = {
+  //       // token: identityToken,
+  //       user_type: signupType,
+  //       // agency_type:
+  //       //   signupType === "AGENCY_USER" ? selectedAgencyRole : undefined,
+  //     };
+
+  //     console.log("Apple payload", payload);
+
+  //     // API call directly
+  //     const response = await axios.get(
+  //       "https://pointed-julissa-racemic.ngrok-free.dev/accounts/dj-rest-auth/apple/signup/start/",
+  //       payload,
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     console.log("Apple signup result", response.data);
+
+  //     const result = response.data;
+
+  //     if (!result) {
+  //       setLoading(false);
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Apple Signup Failed",
+  //         text2: "Server error",
+  //         position: "top",
+  //       });
+  //       return;
+  //     }
+
+  //     const user = result?.user;
+
+  //     await AsyncStorage.setItem("first_Name", user?.first_name || "");
+  //     await AsyncStorage.setItem("last_Name", user?.last_name || "");
+  //     await AsyncStorage.setItem("email", user?.email || "");
+  //     await AsyncStorage.setItem("profilePic", user?.profile?.logo || "");
+  //     await AsyncStorage.setItem("Token", result?.key || "");
+  //     await AsyncStorage.setItem("hasLoggedIn", "true");
+  //     await AsyncStorage.setItem("userType", user?.user_type);
+
+  //     Toast.show({
+  //       type: "success",
+  //       text1: "Signup successful!",
+  //       position: "top",
+  //     });
+
+  //     navigation.dispatch(
+  //       CommonActions.reset({
+  //         index: 0,
+  //         routes: [{ name: "AuthLoading" }],
+  //       })
+  //     );
+
+  //   } catch (error) {
+  //     console.log("Apple login error", error?.response || error);
+
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Apple Signup Error",
+  //       text2:
+  //         error?.response?.data?.detail ||
+  //         error?.message ||
+  //         "Something went wrong",
+  //       position: "top",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{flex: 1}}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
+          contentContainerStyle={{flexGrow: 1}}
+          keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
-            <View style={[{ padding: 0 }, styles.SignupIconContainer]} >
-
+            <View style={[{padding: 0}, styles.SignupIconContainer]}>
               <Image
                 source={
                   !signupType
                     ? require('../assets/images/SuppliersAgency.png')
                     : showConfirmation && selectedTypeInfo
-                      ? getSignupTypeImage(selectedTypeInfo.value)
-                      : getSignupTypeImage(signupType)
+                    ? getSignupTypeImage(selectedTypeInfo.value)
+                    : getSignupTypeImage(signupType)
                 }
                 style={styles.SignupIcon}
               />
@@ -516,12 +927,11 @@ const SignUpScreen: React.FC = () => {
             {!signupType && !showConfirmation ? (
               <View>
                 <Text style={styles.header}>Select Signup Type</Text>
-                {SIGNUP_TYPES.map((type) => (
+                {SIGNUP_TYPES.map(type => (
                   <TouchableOpacity
                     key={type.value}
                     style={styles.typeButton}
-                    onPress={() => handleTypeSelection(type.value)}
-                  >
+                    onPress={() => handleTypeSelection(type.value)}>
                     <Text style={styles.typeButtonText}>{type.label}</Text>
                   </TouchableOpacity>
                 ))}
@@ -531,7 +941,9 @@ const SignUpScreen: React.FC = () => {
               </View>
             ) : showConfirmation && selectedTypeInfo ? (
               <View style={styles.confirmationContainer}>
-                <Text style={styles.confirmationHeader}>Confirm Your Selection</Text>
+                <Text style={styles.confirmationHeader}>
+                  Confirm Your Selection
+                </Text>
 
                 <View style={styles.typeCard}>
                   <Text style={styles.typeLabel}>
@@ -539,11 +951,16 @@ const SignUpScreen: React.FC = () => {
                   </Text>
 
                   <Text style={styles.typeDescription}>
-                    {getSignupTypeDescription(selectedTypeInfo.value).description}
+                    {
+                      getSignupTypeDescription(selectedTypeInfo.value)
+                        .description
+                    }
                   </Text>
 
                   <View style={styles.bulletsContainer}>
-                    {getSignupTypeDescription(selectedTypeInfo.value).bullets.map((bullet, index) => (
+                    {getSignupTypeDescription(
+                      selectedTypeInfo.value,
+                    ).bullets.map((bullet, index) => (
                       <View key={index} style={styles.bulletRow}>
                         <Text style={styles.bulletPoint}>•</Text>
                         <Text style={styles.bulletText}>{bullet}</Text>
@@ -559,17 +976,16 @@ const SignUpScreen: React.FC = () => {
                 <View style={styles.confirmationButtons}>
                   <TouchableOpacity
                     style={[styles.confirmationButton, styles.confirmButton]}
-                    onPress={() => handleConfirmation(true)}
-                  >
+                    onPress={() => handleConfirmation(true)}>
                     <Text style={styles.confirmButtonText}>
-                      Continue as {getSignupTypeDescription(selectedTypeInfo.value).title}
+                      Continue as{' '}
+                      {getSignupTypeDescription(selectedTypeInfo.value).title}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[styles.confirmationButton, styles.changeButton]}
-                    onPress={() => handleConfirmation(false)}
-                  >
+                    onPress={() => handleConfirmation(false)}>
                     <Text style={styles.changeButtonText}>No, Change Type</Text>
                   </TouchableOpacity>
                 </View>
@@ -577,12 +993,22 @@ const SignUpScreen: React.FC = () => {
             ) : (
               <>
                 {renderSocialButtons()}
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={handleAppleLogin}>
+                  <Image
+                    source={require('../assets/images/a100.png')}
+                    style={styles.socialIcon}
+                  />
+                  <Text style={styles.socialText}> Apple</Text>
+                </TouchableOpacity>
                 {/* STEP 2: Show Form */}
                 <Text style={styles.header}>
-                  Register as user {SIGNUP_TYPES.find(t => t.value === signupType)?.label}
+                  Register as user{' '}
+                  {SIGNUP_TYPES.find(t => t.value === signupType)?.label}
                 </Text>
                 <View style={styles.row}>
-                  <View >
+                  <View>
                     <TextInput
                       style={[
                         styles.input1,
@@ -596,16 +1022,19 @@ const SignUpScreen: React.FC = () => {
                       placeholder="Enter first name *"
                       value={firstName}
                       placeholderTextColor={themeColors.placeholder}
-
-                      onChangeText={(text) => handleNameChange(text, setFirstName)}
+                      onChangeText={text =>
+                        handleNameChange(text, setFirstName)
+                      }
                       onBlur={() => handleBlur('firstName')}
                     />
                     {touched.firstName && errors.firstName && (
-                      <Text style={styles.fieldErrorText1}>{errors.firstName}</Text>
+                      <Text style={styles.fieldErrorText1}>
+                        {errors.firstName}
+                      </Text>
                     )}
                   </View>
 
-                  <View >
+                  <View>
                     <TextInput
                       style={[
                         styles.input1,
@@ -619,12 +1048,13 @@ const SignUpScreen: React.FC = () => {
                       placeholder="Enter last name *"
                       value={lastName}
                       placeholderTextColor={themeColors.placeholder}
-
-                      onChangeText={(text) => handleNameChange(text, setLastName)}
+                      onChangeText={text => handleNameChange(text, setLastName)}
                       onBlur={() => handleBlur('lastName')}
                     />
                     {touched.lastName && errors.lastName && (
-                      <Text style={styles.fieldErrorText}>{errors.lastName}</Text>
+                      <Text style={styles.fieldErrorText}>
+                        {errors.lastName}
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -649,7 +1079,6 @@ const SignUpScreen: React.FC = () => {
                     onBlur={() => handleBlur('email')}
                   />
 
-
                   {touched.email && errors.email && (
                     <Text style={styles.fieldErrorText}>{errors.email}</Text>
                   )}
@@ -663,14 +1092,12 @@ const SignUpScreen: React.FC = () => {
                         backgroundColor: themeColors.inputBg,
                         borderColor: themeColors.border,
                       },
-                      errors.password1 && touched.password1 && styles.errorInput,
-                    ]}
-                  >
+                      errors.password1 &&
+                        touched.password1 &&
+                        styles.errorInput,
+                    ]}>
                     <TextInput
-                      style={[
-                        styles.passwordInput,
-                        { color: themeColors.text },
-                      ]}
+                      style={[styles.passwordInput, {color: themeColors.text}]}
                       placeholder="Enter password *"
                       value={password1}
                       placeholderTextColor={themeColors.placeholder}
@@ -682,19 +1109,23 @@ const SignUpScreen: React.FC = () => {
                     <TouchableOpacity
                       onPress={() => setShowPassword1(!showPassword1)}
                       activeOpacity={0.7}
-                      style={styles.toggleBtn}
-                    >
-                      <Text style={[styles.toggleText, { color: themeColors.toggleText }]}>
+                      style={styles.toggleBtn}>
+                      <Text
+                        style={[
+                          styles.toggleText,
+                          {color: themeColors.toggleText},
+                        ]}>
                         {showPassword1 ? 'Hide' : 'Show'}
                       </Text>
                     </TouchableOpacity>
                   </View>
 
                   {touched.password1 && errors.password1 && (
-                    <Text style={styles.fieldErrorText}>{errors.password1}</Text>
+                    <Text style={styles.fieldErrorText}>
+                      {errors.password1}
+                    </Text>
                   )}
                 </View>
-
 
                 <View style={styles.inputContainer}>
                   <View
@@ -704,14 +1135,12 @@ const SignUpScreen: React.FC = () => {
                         backgroundColor: themeColors.inputBg,
                         borderColor: themeColors.border,
                       },
-                      errors.password2 && touched.password2 && styles.errorInput,
-                    ]}
-                  >
+                      errors.password2 &&
+                        touched.password2 &&
+                        styles.errorInput,
+                    ]}>
                     <TextInput
-                      style={[
-                        styles.passwordInput,
-                        { color: themeColors.text },
-                      ]}
+                      style={[styles.passwordInput, {color: themeColors.text}]}
                       placeholder="Confirm password *"
                       value={password2}
                       placeholderTextColor={themeColors.placeholder}
@@ -723,16 +1152,21 @@ const SignUpScreen: React.FC = () => {
                     <TouchableOpacity
                       onPress={() => setShowPassword2(!showPassword2)}
                       activeOpacity={0.7}
-                      style={styles.toggleBtn}
-                    >
-                      <Text style={[styles.toggleText, { color: themeColors.toggleText }]}>
+                      style={styles.toggleBtn}>
+                      <Text
+                        style={[
+                          styles.toggleText,
+                          {color: themeColors.toggleText},
+                        ]}>
                         {showPassword2 ? 'Hide' : 'Show'}
                       </Text>
                     </TouchableOpacity>
                   </View>
 
                   {touched.password2 && errors.password2 && (
-                    <Text style={styles.fieldErrorText}>{errors.password2}</Text>
+                    <Text style={styles.fieldErrorText}>
+                      {errors.password2}
+                    </Text>
                   )}
                 </View>
 
@@ -757,14 +1191,13 @@ const SignUpScreen: React.FC = () => {
                 />
 
                 {signupType === 'AGENCY_USER' && (
-                  <View style={{ marginBottom: 15 }}>
+                  <View style={{marginBottom: 15}}>
                     <Text
                       style={{
                         marginBottom: 6,
                         fontWeight: '600',
                         color: themeColors.text,
-                      }}
-                    >
+                      }}>
                       Select Agency Role *
                     </Text>
 
@@ -778,18 +1211,18 @@ const SignUpScreen: React.FC = () => {
                         backgroundColor: themeColors.inputBg,
                       }}
                       activeOpacity={0.7}
-                      onPress={() => setShowAgencyDropdown(!showAgencyDropdown)}
-                    >
+                      onPress={() =>
+                        setShowAgencyDropdown(!showAgencyDropdown)
+                      }>
                       <Text
                         style={{
                           color: selectedAgencyRole
                             ? themeColors.text
                             : themeColors.placeholder,
                           fontSize: 16,
-                        }}
-                      >
-                        {AGENCY_ROLES.find(r => r.value === selectedAgencyRole)?.label ||
-                          'Choose your role'}
+                        }}>
+                        {AGENCY_ROLES.find(r => r.value === selectedAgencyRole)
+                          ?.label || 'Choose your role'}
                       </Text>
                     </TouchableOpacity>
 
@@ -803,8 +1236,7 @@ const SignUpScreen: React.FC = () => {
                           marginTop: 5,
                           backgroundColor: themeColors.dropdownBg,
                           overflow: 'hidden',
-                        }}
-                      >
+                        }}>
                         {AGENCY_ROLES.map(role => {
                           const isSelected = selectedAgencyRole === role.value;
 
@@ -820,8 +1252,7 @@ const SignUpScreen: React.FC = () => {
                                 backgroundColor: isSelected
                                   ? themeColors.selectedBg
                                   : themeColors.dropdownBg,
-                              }}
-                            >
+                              }}>
                               <Text
                                 style={{
                                   color: isSelected
@@ -829,8 +1260,7 @@ const SignUpScreen: React.FC = () => {
                                     : themeColors.text,
                                   fontWeight: isSelected ? '700' : '400',
                                   fontSize: 15,
-                                }}
-                              >
+                                }}>
                                 {role.label}
                               </Text>
                             </TouchableOpacity>
@@ -841,18 +1271,21 @@ const SignUpScreen: React.FC = () => {
                   </View>
                 )}
 
-
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSignUp}>
+                <TouchableOpacity
+                  style={[styles.button, loading && styles.buttonDisabled]}
+                  onPress={handleSignUp}>
                   <Text style={styles.buttonText}>
-                    Register as user {SIGNUP_TYPES.find(t => t.value === signupType)?.label}
+                    Register as user{' '}
+                    {SIGNUP_TYPES.find(t => t.value === signupType)?.label}
                   </Text>
                 </TouchableOpacity>
 
                 <View style={styles.loginBox}>
                   <Text style={styles.signup}>Already have an account? </Text>
-                  <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Login')}>
                     <Text style={styles.link}>Log In</Text>
                   </TouchableOpacity>
                 </View>
@@ -860,9 +1293,10 @@ const SignUpScreen: React.FC = () => {
                 {/* Option to go back and change signup type */}
                 <TouchableOpacity
                   style={styles.changeType}
-                  onPress={() => setSignupType('')}
-                >
-                  <Text style={styles.changeTypeText}>← Change Signup Type</Text>
+                  onPress={() => setSignupType('')}>
+                  <Text style={styles.changeTypeText}>
+                    ← Change Signup Type
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -876,10 +1310,10 @@ const SignUpScreen: React.FC = () => {
 export default SignUpScreen;
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, backgroundColor: '#fff' },
-  header: { fontSize: 18, fontWeight: '600', marginBottom: 20, marginTop: 20 },
-  SignupIconContainer: { width: '100%', alignItems: 'center' },
-  SignupIcon: { width: 300, height: 200 },
+  container: {flexGrow: 1, padding: 20, backgroundColor: '#fff'},
+  header: {fontSize: 18, fontWeight: '600', marginBottom: 20, marginTop: 20},
+  SignupIconContainer: {width: '100%', alignItems: 'center'},
+  SignupIcon: {width: 300, height: 200},
   typeButton: {
     backgroundColor: '#000078',
     padding: 12,
@@ -908,7 +1342,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -1014,8 +1448,17 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
-  typeButtonText: { color: '#fff', fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  row: { flexDirection: 'row', marginBottom: 15, justifyContent: "space-between" },
+  typeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    justifyContent: 'space-between',
+  },
   input1: {
     width: 165,
     borderColor: '#ccc',
@@ -1078,13 +1521,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  loginBox: { flexDirection: 'row', justifyContent: 'center', marginTop: 25 },
-  signup: { color: '#333', fontSize: 14 },
-  link: { color: '#000078', fontWeight: '600', fontSize: 14 },
-  changeType: { marginTop: 15, alignItems: 'center' },
-  changeTypeText: { color: '#666', textDecorationLine: 'underline' },
-
+  buttonText: {color: '#fff', fontWeight: '600', fontSize: 14},
+  loginBox: {flexDirection: 'row', justifyContent: 'center', marginTop: 25},
+  signup: {color: '#333', fontSize: 14},
+  link: {color: '#000078', fontWeight: '600', fontSize: 14},
+  changeType: {marginTop: 15, alignItems: 'center'},
+  changeTypeText: {color: '#666', textDecorationLine: 'underline'},
 
   socialContainer: {
     flexDirection: 'row',

@@ -30,6 +30,10 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {CommonActions} from '@react-navigation/native';
 import CustomAlert from '../components/CustomAlert';
 import {useIsFocused} from '@react-navigation/native';
+// import appleAuth, { AppleButton } from '@invertase/react-native-apple-authentication';
+
+import { appleAuth, AppleButton } from '@invertase/react-native-apple-authentication';
+import axios from 'axios';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -86,7 +90,214 @@ const LoginScreen: React.FC = () => {
   const handleSignup = () => {
     navigation.navigate('SignUp');
   };
+// ─── DROP-IN REPLACEMENT for handleAppleLogin in LoginScreen.tsx ─────────────
+// NO BACKEND — Pure local login using AsyncStorage only
+// Mirrors your Google flow: save user data → navigate to AuthLoading
 
+// const handleAppleLogin = async () => {
+//   try {
+//     setLoading(true);
+
+//     const appleAuthRequestResponse = await appleAuth.performRequest({
+//       requestedOperation: appleAuth.Operation.LOGIN,
+//       requestedScopes: [
+//         appleAuth.Scope.EMAIL,
+//         appleAuth.Scope.FULL_NAME,
+//       ],
+//     });
+
+//     const { identityToken, email, fullName, user } = appleAuthRequestResponse;
+
+//     if (!identityToken) {
+//       setLoading(false);
+//       Toast.show({
+//         type: 'error',
+//         text1: 'Apple Sign-In Failed',
+//         text2: 'No identity token returned. Please try again.',
+//         position: 'top',
+//       });
+//       return;
+//     }
+
+//     // Apple only sends name/email on VERY FIRST login — reuse stored after that
+//     const storedFirstName = await AsyncStorage.getItem('first_Name');
+//     const storedLastName  = await AsyncStorage.getItem('last_Name');
+//     const storedEmail     = await AsyncStorage.getItem('email');
+
+//     const firstName = fullName?.givenName  || storedFirstName || 'Apple';
+//     const lastName  = fullName?.familyName || storedLastName  || 'User';
+//     const userEmail = email || storedEmail || '';
+
+//     // Save with same keys your whole app uses
+//     await AsyncStorage.multiSet([
+//       ['first_Name',  firstName],
+//       ['last_Name',   lastName],
+//       ['email',       userEmail],
+//       ['profilePic',  ''],
+//       ['Token',       identityToken],     // ✅ AuthLoading checks this
+//       ['hasLoggedIn', 'true'],
+//       ['userType',    'INDIVIDUAL_USER'], // ✅ Routes to Dashboard
+//       ['userId',      user || ''],
+//       ['isActive',    'true'],
+//       ['company',     ''],
+//       ['slug',        ''],
+//       ['appleUserId', user || ''],
+//       ['loginType',   'apple'],
+//     ]);
+
+//     Toast.show({
+//       type: 'success',
+//       text1: 'Login successful!',
+//       position: 'top',
+//     });
+
+//     setTimeout(() => {
+//       setLoading(false);
+//       navigation.dispatch(
+//         CommonActions.reset({
+//           index: 0,
+//           routes: [{ name: 'AuthLoading' }],
+//         }),
+//       );
+//     }, 1000);
+
+//   } catch (error: any) {
+//     setLoading(false);
+//     console.log('Apple Login Error:', error);
+
+//     // 1001 = user cancelled — show nothing
+//     if (error?.code === '1001' || error?.code === 1001) {
+//       return;
+//     }
+
+//     Toast.show({
+//       type: 'error',
+//       text1: 'Apple Sign-In Failed',
+//       text2: error?.message || 'Something went wrong. Please try again.',
+//       position: 'top',
+//     });
+//   }
+// };
+
+
+const handleAppleLogin = async () => {
+  try {
+    setLoading(true);
+
+    // 🔐 Step 1: Apple Login
+    const appleAuthRequestResponse = await appleAuth.performRequest({
+      requestedOperation: appleAuth.Operation.LOGIN,
+      requestedScopes: [
+        appleAuth.Scope.EMAIL,
+        appleAuth.Scope.FULL_NAME,
+      ],
+    });
+
+    console.log("Apple Response", appleAuthRequestResponse);
+
+    const { authorizationCode } = appleAuthRequestResponse;
+
+    if (!authorizationCode) {
+      Toast.show({
+        type: "error",
+        text1: "Apple Login Failed",
+        text2: "No authorization code returned",
+        position: "top",
+      });
+      return;
+    }
+
+    // 🌐 Step 2: Backend API (LOGIN)
+    const url =
+      "https://api.agreementpaper.com/accounts/dj-rest-auth/apple/mobile/";
+
+    const payload = {
+      authorization_code: authorizationCode,
+      auth_type: "login", // ✅ CHANGED (signup → login)
+     
+    };
+
+    console.log("Apple payload", payload);
+
+    const response = await axios.post(url, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("Apple login result", response.data);
+
+    const result = response?.data;
+
+    if (!result || !result?.payload) {
+      Toast.show({
+        type: "error",
+        text1: "Apple Login Failed",
+        text2: "Invalid server response",
+        position: "top",
+      });
+      return;
+    }
+
+    // ✅ Correct mapping
+    const user = result.payload;
+
+    // 🛡️ Safe values
+    const firstName = user?.first_name ?? "";
+    const lastName = user?.last_name ?? "";
+    const email = user?.email ?? "";
+    const profilePic = user?.profile?.logo ?? "";
+    const token = result?.key ?? "";
+    const userType = user?.user_type ?? "";
+
+    // 💾 Save safely
+    await AsyncStorage.multiSet([
+      ["first_Name", firstName],
+      ["last_Name", lastName],
+      ["email", email],
+      ["profilePic", profilePic],
+      ["Token", token],
+      ["hasLoggedIn", "true"],
+      ["userType", userType],
+    ]);
+
+    // 🎉 Success
+    Toast.show({
+      type: "success",
+      text1: "Login successful!",
+      position: "top",
+    });
+
+    // 🔄 Navigate
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "AuthLoading" }],
+      })
+    );
+
+  } catch (error) {
+    console.log("Apple login error", error?.response || error);
+
+    // ❌ ignore cancel error
+    if (error?.code === "1001" || error?.code === 1001) {
+      return;
+    }
+
+    Toast.show({
+      type: "error",
+      text1: "Apple Login Error",
+      text2:
+        error?.response?.data?.error ||
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Something went wrong",
+      position: "top",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
   const handleLogin = async (loginType: 'google' | 'email') => {
     try {
       setLoading(true);
@@ -392,7 +603,18 @@ const LoginScreen: React.FC = () => {
 
           {/* Social Login Buttons - Top */}
           {renderSocialButtons()}
-
+{Platform.OS === 'ios' && (
+  <AppleButton
+    buttonStyle={AppleButton.Style.BLACK}
+    buttonType={AppleButton.Type.SIGN_IN}
+    style={{
+      width: '100%',
+      height: 44,
+      marginTop: 10,
+    }}
+    onPress={() => handleAppleLogin()}
+  />
+)}
           {/* OR separator */}
           <Text style={styles.orText}>Or</Text>
 

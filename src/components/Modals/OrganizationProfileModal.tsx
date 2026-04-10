@@ -171,6 +171,7 @@ const OrganizationProfileModal: React.FC<OrganizationProfileModalProps> = ({
   const [showJurisdictionDropdown, setShowJurisdictionDropdown] = useState(false);
 
 
+console.log("coutry",countryResults);
 
   // ---- Errors (if not already present) ----
 
@@ -262,6 +263,7 @@ useEffect(() => {
     setCountryLoading(true);
 
     const res = await Services.searchCountry(text);
+console.log("ressss",res);
 
     setCountryLoading(false);
     setCountryResults(res.success ? res.data : []);

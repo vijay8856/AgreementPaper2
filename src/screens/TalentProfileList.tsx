@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -80,6 +80,7 @@ const TalentProfileList = () => {
   };
 
   const resetFilters = () => {
+     hasClickedApply.current = false;
     setSelectedSkill(null);
     setAvailability(null);
     setPayMin('');
@@ -109,39 +110,90 @@ const TalentProfileList = () => {
 
     setLoading(false);
   };
-  const applyFilters = async () => {
-    setLoading(true);
 
-    try {
-      const params: any = {
-        limit: 100,
-      };
+const hasClickedApply = useRef(false);
 
-      if (selectedSkill) params.skill = selectedSkill;
-      if (availability) params.availability = availability;
+const applyFilters = async () => {
+  const hasFilter =
+    selectedSkill ||
+    availability ||
+    payMin ||
+    payMax ||
+    expMin ||
+    expMax ||
+    selectedCountry;
 
-      if (payMin) params.pay_rate_min = payMin;
-      if (payMax) params.pay_rate_max = payMax;
-
-      if (expMin) params.experience_min = expMin;
-      if (expMax) params.experience_max = expMax;
-
-      if (selectedCountry) params.country = selectedCountry;
-
-      console.log('FILTER PARAMS 👉', params);
-
-      const res = await Services.getAllTalentUserProfile(params);
-      console.log('0000', res);
-
-      if (res.success) {
-        setProfiles(res.data.results || []);
-      }
-    } catch (e) {
-      console.log('Filter error', e);
-    } finally {
-      setLoading(false);
+  if (!hasFilter) {
+    if (hasClickedApply.current) {  // ✅ Only show toast after first apply click
+      Toast.show({
+        type: 'error',
+        text1: 'No Filter Selected',
+        text2: 'Please select at least one filter to apply.',
+      });
     }
-  };
+    hasClickedApply.current = true;
+    return;
+  }
+
+  hasClickedApply.current = true;
+  setLoading(true);
+
+  try {
+    const params: any = { limit: 100 };
+
+    if (selectedSkill) params.skill = selectedSkill;
+    if (availability) params.availability = availability;
+    if (payMin) params.pay_rate_min = payMin;
+    if (payMax) params.pay_rate_max = payMax;
+    if (expMin) params.experience_min = expMin;
+    if (expMax) params.experience_max = expMax;
+    if (selectedCountry) params.country = selectedCountry;
+
+    const res = await Services.getAllTalentUserProfile(params);
+
+    if (res.success) {
+      setProfiles(res.data.results || []);
+    }
+  } catch (e) {
+    console.log('Filter error', e);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // const applyFilters = async () => {
+  //   setLoading(true);
+
+  //   try {
+  //     const params: any = {
+  //       limit: 100,
+  //     };
+
+  //     if (selectedSkill) params.skill = selectedSkill;
+  //     if (availability) params.availability = availability;
+
+  //     if (payMin) params.pay_rate_min = payMin;
+  //     if (payMax) params.pay_rate_max = payMax;
+
+  //     if (expMin) params.experience_min = expMin;
+  //     if (expMax) params.experience_max = expMax;
+
+  //     if (selectedCountry) params.country = selectedCountry;
+
+  //     console.log('FILTER PARAMS 👉', params);
+
+  //     const res = await Services.getAllTalentUserProfile(params);
+  //     console.log('0000', res);
+
+  //     if (res.success) {
+  //       setProfiles(res.data.results || []);
+  //     }
+  //   } catch (e) {
+  //     console.log('Filter error', e);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleOpenConnect = (item: any) => {
     console.log('item', item);
 

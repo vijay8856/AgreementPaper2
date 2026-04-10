@@ -28,14 +28,14 @@ const IOSDashboardHeader = ({
 
       <View style={styles.right}>
             <Notifications />
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={onUpgradePress}
           style={styles.upgradeBtn}>
           <Text style={styles.upgradeText}>
-            {/* {hasPremiumAccess ? 'Premium' : 'Upgrade Plan'} */}
+           
             Upgrade Plan
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity onPress={onProfilePress}>
           <Icon name="account-circle" size={32} color="#fff" />

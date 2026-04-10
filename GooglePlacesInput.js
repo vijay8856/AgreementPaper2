@@ -69,8 +69,9 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { GOOGLE_API_KEY } from '@env';
 
-const GOOGLE_API_KEY = "AIzaSyB_fLvruPv1k6eLHWPsJ56oSKXghLJ-lKU";
+const GOOGLE_API_KEY = GOOGLE_API_KEY;
 
 const GooglePlacesInput = () => {
   const query = {

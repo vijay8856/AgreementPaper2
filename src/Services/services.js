@@ -3477,6 +3477,7 @@ const Services = {
     }
   },
 
+  
   updateTalentUserProfile: async formData => {
     console.log('updateTalentUserProfile', formData);
 
@@ -3650,29 +3651,29 @@ const Services = {
       };
     }
   },
-  deletePostedJob: async jobId => {
-    const headers = await AUTH_HEADERS();
-    console.log('delete', jobId);
+ deletePostedJob: async jobId => {
+  const headers = await AUTH_HEADERS();
+  console.log('delete', jobId);
 
-    try {
-      const response = await axiosInstance.delete(
-        `${API_ENDPOINTS.JOBPOST}${jobId?.id}`,
-        headers,
-      );
+  try {
+    const response = await axiosInstance.delete(
+      `${API_ENDPOINTS.JOBPOST}${jobId?.id}/`,
+      { ...headers }, // ✅ spread it as config object
+    );
 
-      console.log('delete job', response);
+    console.log('delete job', response);
 
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data || 'Failed to delete job',
-      };
-    }
-  },
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || 'Failed to delete job',
+    };
+  }
+},
 
   getTalentProfileResourceDetails: async slug => {
     console.log('getTalentProfileResourceDetails', slug);
@@ -4455,6 +4456,27 @@ const Services = {
         success: false,
         error: error.response?.data || 'Failed to Send Contract Query',
         status: error.response?.status || 500,
+      };
+    }
+  },
+    AppleLogin: async payload => {
+    console.log('createJobApplication', payload);
+
+    try {
+      const headers = await AUTH_HEADERS();
+      const response = await axiosInstance.post(
+        `${API_ENDPOINTS.APPLELOGIN}`,
+        payload,
+        headers,
+      );
+
+      console.log('AppleLogin', response);
+      return {success: true, data: response.data};
+    } catch (error) {
+      console.error('AppleLogin', error);
+      return {
+        success: false,
+        error: error.response?.data || error.message,
       };
     }
   },

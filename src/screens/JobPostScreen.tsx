@@ -48,6 +48,7 @@ const JobPostScreen = () => {
     experience: '',
     description: '',
     payRate: '',
+    showPayRate: false,
     city: '',
     companyName: '',
     companyWebsite: '',
@@ -64,6 +65,7 @@ const JobPostScreen = () => {
       experience: '',
       description: '',
       payRate: '',
+      showPayRate: false, 
       city: '',
       companyName: '',
       companyWebsite: '',
@@ -179,7 +181,6 @@ console.log("sorted currencies",currencies);
     if (!form.skills) return 'Skill is required';
     if (!form.language) return 'Language is required';
     if (!form.jobType) return 'Job type is required';
-    if (!form.payRate) return 'Pay rate is required';
     if (!form.currency) return 'Currency is required';
     if (!form.companyName) return 'Company name is required';
     // if (!form.companyWebsite) return 'Company website is required';
@@ -211,6 +212,7 @@ console.log("sorted currencies",currencies);
       language: [form.language],
       job_type: form.jobType,
       pay_rate: Number(form.payRate),
+      show_job_pay_rate: !form.showPayRate, 
       currency_code: form.currency,
       company_name: form.companyName,
       company_website: form.companyWebsite || null,
@@ -327,42 +329,53 @@ console.log("sorted currencies",currencies);
               style={styles.textArea}
             />
           </Card>
+<Card title="Compensation & Type">
+  <Dropdown
+    label="Job Type"
+    value={form.jobType}
+    items={[
+      {label: 'Full Time', value: 1},
+      {label: 'Part Time', value: 2},
+      {label: 'Contract', value: 3},
+    ]}
+    labelKey="label"
+    valueKey="value"
+    onChange={v => setForm({...form, jobType: v})}
+  />
+  <View style={styles.row}>
+    <View style={{flex: 1, marginRight: 8}}>
+      <Dropdown
+        label="Currency"
+        value={form.currency}
+        items={currencies}
+        labelKey="currency"
+        valueKey="currency"
+        onChange={(v: string) => setForm({...form, currency: v})}
+      />
+    </View>
+    <View style={{flex: 1, marginLeft: 8}}>
+      <Input
+        label="Pay Rate / Per Day"
+        placeholder="Amt as PerDay"
+        keyboardType="numeric"
+        value={form.payRate}
+        onChangeText={v => setForm({...form, payRate: v})}
+        editable={!form.showPayRate}   // ✅ disable input when hidden
+      />
+    </View>
+  </View>
 
-          <Card title="Compensation & Type">
-            <Dropdown
-              label="Job Type"
-              value={form.jobType}
-              items={[
-                {label: 'Full Time', value: 1},
-                {label: 'Part Time', value: 2},
-                {label: 'Contract', value: 3},
-              ]}
-              labelKey="label"
-              valueKey="value"
-              onChange={v => setForm({...form, jobType: v})}
-            />
-            <View style={styles.row}>
-              <View style={{flex: 1, marginRight: 8}}>
-                <Dropdown
-                  label="Currency"
-                  value={form.currency}
-                  items={currencies}
-                  labelKey="currency"
-                  valueKey="currency"
-                  onChange={(v: string) => setForm({...form, currency: v})}
-                />
-              </View>
-              <View style={{flex: 1, marginLeft: 8}}>
-                <Input
-                  label="Pay Rate / Per Day "
-                  placeholder="Amt as PerDay"
-                  keyboardType="numeric"
-                  value={form.payRate}
-                  onChangeText={v => setForm({...form, payRate: v})}
-                />
-              </View>
-            </View>
-          </Card>
+  {/* ✅ Checkbox for Do not disclose Pay Rate */}
+  <TouchableOpacity
+    style={styles.checkboxRow}
+    onPress={() => setForm(prev => ({...prev, showPayRate: !prev.showPayRate}))}
+    activeOpacity={0.7}>
+    <View style={[styles.checkbox, form.showPayRate && styles.checkboxChecked]}>
+      {form.showPayRate && <Text style={styles.checkmark}>✓</Text>}
+    </View>
+    <Text style={styles.checkboxLabel}>Do not disclose Pay Rate</Text>
+  </TouchableOpacity>
+</Card>
           <Card title="Screening Questions">
             <Text style={{color: '#ced3daff', marginBottom: 12}}>
               Ask at least one question to filter candidates
@@ -657,6 +670,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
+  },
+    checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  checkboxChecked: {
+    backgroundColor: '#0A2FFF',  // ✅ blue when checked
+    borderColor: '#0A2FFF',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  checkboxLabel: {
+    color: '#ced3daff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

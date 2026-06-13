@@ -23,14 +23,7 @@
 
 // // use AUTH_MULTYPART_HEADERS when you have passed data with image form
 
-// export const AUTH_MULTYPART_HEADERS = () => {
-//   return {
-//     headers: {
-//       'Content-Type': 'multipart/form-data',
-//       Authorization: `Token ${localStorage.getItem('access_token')}`,
-//     },
-//   };
-// };
+
 
 // // use AUTH_HEADERS when you have passed data with json and normal data object
 
@@ -53,6 +46,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// export const API_URL = "https://pointed-julissa-racemic.ngrok-free.dev/";
 export const API_URL = "https://api.agreementpaper.com/";
 export const MEDIA_URL = process.env.REACT_APP_MEDIA_URL;
 export const COPY_URL = process.env.REACT_APP_COPY_URL;
@@ -76,11 +70,25 @@ export const LINKEDIN_HEADERS = {
 };
 
 // use AUTH_MULTYPART_HEADERS when you have passed data with image form
+export const AUTH_MULTYPART_HEADERS2 = async () => {
+  const token = await AsyncStorage.getItem('Token');
+  console.log("yestoken", token);
+
+  return {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `Token ${token}`,
+    'Accept': 'application/json',
+  };
+};
+
 export const AUTH_MULTYPART_HEADERS = async () => {
   const token = await AsyncStorage.getItem('Token');
+  console.log("yestoken", token);
+
   return {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
+      Accept: "application/json",
       Authorization: `Token ${token}`,
     },
   };
@@ -89,12 +97,13 @@ export const AUTH_MULTYPART_HEADERS = async () => {
 // use AUTH_HEADERS when you have passed data with json and normal data object
 export const AUTH_HEADERS = async () => {
   const token = await AsyncStorage.getItem('Token');
-  console.log("token",token);
-  
+  console.log("token", token);
+
   return {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Token ${token}`,
+
     },
   };
 };

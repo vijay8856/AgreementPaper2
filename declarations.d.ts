@@ -9,14 +9,25 @@ declare module '*.svg' {
 }
 
 // react-native-vector-icons module support
-declare module 'react-native-vector-icons/MaterialCommunityIcons';
 declare module 'react-native-vector-icons/Ionicons' {
   const content: any;
   export default content;
 }
 
-declare module 'react-native-vector-icons/MaterialIcons' {
-  import { Icon } from 'react-native-vector-icons/Icon';
-  const content: typeof Icon;
-  export default content;
-}
+// declare module 'react-native-vector-icons/MaterialIcons' {
+//   import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+//   import { Icon } from 'react-native-vector-icons/Icon';
+//   const content: typeof Icon ,MaterialIcons;
+//   export default content;
+// }
+// react-native-vector-icons.d.ts
+
+// declare module '@env' {
+//   export const GOOGLE_WEB_CLIENT_ID: string;
+// }
+
+export type RootStackParamList = {
+  WebViewScreen: { url: string };
+    LinkedInLoginScreen: undefined;
+
+};

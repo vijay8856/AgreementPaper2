@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
-
+import Services from '../Services/services';
+import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const InviteResourceScreen = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -17,22 +21,147 @@ const InviteResourceScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTagged, setIsTagged] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [userType, setUserType] = useState('')
 
-  const handleSubmit = () => {
-    // Handle form submission
+
+  const isValidName = (name: string) => {
+    return /^[A-Za-z\s]+$/.test(name);
   };
+
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isValidPassword = (password: string) => {
+    // Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+  };
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        if (keys.length > 0) {
+          const result = await AsyncStorage.multiGet(keys);
+
+          const dataObj = result.reduce<Record<string, any>>((acc, [key, value]) => {
+            if (value !== null) {
+              try {
+                acc[key] = JSON.parse(value);
+              } catch {
+                acc[key] = value;
+              }
+            }
+            return acc;
+          }, {});
+
+          // 🔑 user_type lives inside the parsed userData object
+          const typeFromStorage =
+            dataObj.userData?.user_type || // preferred location
+            dataObj.userType;              // or the separate key if it exists
+
+          if (typeFromStorage) {
+            setUserType(typeFromStorage);
+          }
+
+          console.log("User type is:", typeFromStorage);
+        }
+      } catch (error) {
+        console.error("Error fetching all AsyncStorage data:", error);
+      }
+    };
+
+    fetchAllData();
+  }, []);
+
+
+  const handleSubmit = async () => {
+ if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      Toast.show({type: 'error', text1: 'Please fill all fields'});
+      return;
+    }
+
+    if (!isValidName(firstName)) {
+      Toast.show({
+        type: 'error',
+        text1: 'First name should contain only letters',
+      });
+      return;
+    }
+
+    if (!isValidName(lastName)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Last name should contain only letters',
+      });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Toast.show({type: 'error', text1: 'Please enter a valid email address'});
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      Toast.show({
+        type: 'error',
+        text1:
+          'Password must be 8+ characters with uppercase, lowercase & number',
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Toast.show({type: 'error', text1: 'Passwords do not match'});
+      return;
+    }
+    const payload = {
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      password: password,
+      user_type: "RESOURCE_USER",
+      is_authorized: isTagged, // true if tagged, false otherwise
+    };
+
+    try {
+      setLoading(true);
+      const res = await Services.inviteUsers(payload);
+      console.log("pay", payload);
+      console.log("res", res);
+
+      setLoading(false);
+      if (res.success) {
+        Toast.show({ type: 'success', text1: 'Resource invited successfully' });
+        // Reset form or navigate back
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setIsTagged(false);
+      } else {
+        Toast.show({ type: 'error', text1: res?.error?.message || 'Invite failed' });
+      }
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'Something went wrong' });
+    }
+  };
+
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header */}
         <LinearGradient
-          colors={['#0E3386', '#1A3B8B']}
+          colors={['#0E3386', '#0E3386']}
           style={styles.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
-          <Text style={styles.headerTitle}>Invite New Resource</Text>
         </LinearGradient>
 
         {/* Form */}
@@ -40,44 +169,59 @@ const InviteResourceScreen = () => {
           <FormField
             label="First Name *"
             value={firstName}
-            onChangeText={setFirstName}
+             onChangeText={(text:any)=> {
+                const filtered = text.replace(/[^A-Za-z\s]/g, '');
+                setFirstName(filtered);
+              }}
             placeholder="Enter first name"
+            placeholderTextColor={"Black"}
           />
-          
+
           <FormField
             label="Last Name *"
             value={lastName}
-            onChangeText={setLastName}
+            onChangeText={(text:any) => {
+                const filtered = text.replace(/[^A-Za-z\s]/g, '');
+                setLastName(filtered);
+              }}
             placeholder="Enter last name"
+            placeholderTextColor={"Black"}
+
           />
-          
+
           <FormField
             label="Email id *"
             value={email}
             onChangeText={setEmail}
             placeholder="Enter email"
             keyboardType="email-address"
+            placeholderTextColor={"Black"}
+
           />
-          
-          <FormField
+
+          <PasswordField
             label="Password *"
             value={password}
             onChangeText={setPassword}
             placeholder="Create password"
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            onToggle={() => setShowPassword(!showPassword)}
+            show={showPassword}
           />
-          
-          <FormField
+
+          <PasswordField
             label="Confirm Password *"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm password"
-            secureTextEntry
+            secureTextEntry={!showConfirmPassword}
+            onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+            show={showConfirmPassword}
           />
-          
+
           <View style={styles.toggleContainer}>
-            <Text style={styles.toggleLabel}>Tag this resource to my team</Text>
-            <TouchableOpacity 
+            <Text style={styles.toggleLabel}>Tag this Resource to my team</Text>
+            <TouchableOpacity
               style={[styles.toggleButton, isTagged && styles.toggleActive]}
               onPress={() => setIsTagged(!isTagged)}
             >
@@ -88,24 +232,29 @@ const InviteResourceScreen = () => {
       </ScrollView>
 
       {/* Submit Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.submitButton}
         onPress={handleSubmit}
+        disabled={loading}
       >
-        <Text style={styles.submitButtonText}>Invite Resource</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Invite </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
 };
 
-const FormField = ({ 
-  label, 
-  value, 
-  onChangeText, 
-  placeholder, 
+const FormField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
   secureTextEntry = false,
   keyboardType = 'default'
-} :any) => (
+}: any) => (
   <View style={styles.formField}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <TextInput
@@ -113,13 +262,46 @@ const FormField = ({
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder}
-      placeholderTextColor="#999"
+      placeholderTextColor="#141414ff"
       secureTextEntry={secureTextEntry}
       keyboardType={keyboardType}
     />
   </View>
 );
+const PasswordField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  secureTextEntry,
+  onToggle,
+  show,
+}: any) => (
+  <View style={styles.formField}>
+    <Text style={styles.fieldLabel}>{label}</Text>
 
+    <View style={styles.passwordContainer}>
+      <TextInput
+        style={styles.passwordInput}
+        value={value}
+        onChangeText={onChangeText}
+        placeholderTextColor={"black"}
+
+        placeholder={placeholder}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize="none"
+      />
+
+      <TouchableOpacity onPress={onToggle} style={styles.eyeButton}>
+        <Icon
+          name={show ? 'eye-off-outline' : 'eye-outline'}
+          size={22}
+          color="#666"
+        />
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -129,8 +311,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   header: {
-    padding: 24,
-    paddingTop: 50,
+    padding: 8,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -140,15 +321,21 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    margin: 16,
+    paddingHorizontal: 20,
+    flex: 1,
+    backgroundColor: '#ffffffff',
+    borderRadius: 12,
     padding: 16,
+    marginBottom: 10,
+
+    // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.50,
+    shadowRadius: 8,
+
+    // Android shadow
+    elevation: 10,
   },
   formField: {
     marginBottom: 20,
@@ -158,10 +345,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+
   },
   input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    height: 50,
+    padding: 10,
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    borderRadius: 5,
     paddingVertical: 8,
     fontSize: 16,
     color: '#333',
@@ -212,6 +403,29 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  dropdownItemTextSelected: {
+    fontWeight: '700',
+    color: '#0E3386',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0E3386',
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    height: 50,
+  },
+
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+
+  eyeButton: {
+    paddingLeft: 8,
   },
 });
 

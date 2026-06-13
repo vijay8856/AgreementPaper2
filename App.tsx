@@ -1,175 +1,211 @@
-// /**
-//  * Sample React Native App
-//  * https://github.com/facebook/react-native
-//  *
-//  * @format
-//  */
+// import React, {useEffect, useState} from 'react';
+// import 'react-native-get-random-values';
+// import {StatusBar} from 'react-native';
+// import {NavigationContainer} from '@react-navigation/native';
+// import {GestureHandlerRootView} from 'react-native-gesture-handler';
+// import {SafeAreaProvider} from 'react-native-safe-area-context';
+// import {StripeProvider} from '@stripe/stripe-react-native';
+// import {LoaderProvider} from './src/context/LoaderContext';
+// import AppLoader from './src/components/AppLoader';
+// import NavigationManager from './src/navigation/NavigationManager';
+// import SplashScreen from './src/components/SplashScreen';
+// import Toast from 'react-native-toast-message';
+// import {REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE} from '@env';
+// import 'react-native-gesture-handler';
+// import {Provider as PaperProvider} from 'react-native-paper';
+// import {OrganisationDrawer} from './src/components/DrawerNavigator';
+// import {IAPProvider} from './src/utils/IAPProvider';
+// import UpdateChecker from './src/components/UpdateChecker';
+// // import UpdateChecker from './UpdateChecker';
+// import {ToastProvider} from './src/components/ToastContext';
 
-// import React from 'react';
-// import type {PropsWithChildren} from 'react';
-// import {
-//   ScrollView,
-//   StatusBar,
-//   StyleSheet,
-//   Text,
-//   useColorScheme,
-//   View,
-// } from 'react-native';
-
-// import {
-//   Colors,
-//   DebugInstructions,
-//   Header,
-//   LearnMoreLinks,
-//   ReloadInstructions,
-// } from 'react-native/Libraries/NewAppScreen';
-
-// type SectionProps = PropsWithChildren<{
-//   title: string;
-// }>;
-
-// function Section({children, title}: SectionProps): React.JSX.Element {
-//   const isDarkMode = useColorScheme() === 'dark';
-//   return (
-//     <View style={styles.sectionContainer}>
-//       <Text
-//         style={[
-//           styles.sectionTitle,
-//           {
-//             color: isDarkMode ? Colors.white : Colors.black,
-//           },
-//         ]}>
-//         {title}
-//       </Text>
-//       <Text
-//         style={[
-//           styles.sectionDescription,
-//           {
-//             color: isDarkMode ? Colors.light : Colors.dark,
-//           },
-//         ]}>
-//         {children}
-//       </Text>
-//     </View>
-//   );
-// // 
 
 // function App(): React.JSX.Element {
-//   const isDarkMode = useColorScheme() === 'dark';
+//   const [isLoading, setIsLoading] = useState(true);
 
-//   const backgroundStyle = {
-//     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-//   };
+//   useEffect(() => {
+//     // Simulate initial loading delay (e.g., for 3 seconds)
+//     const timer = setTimeout(() => {
+//       setIsLoading(false);
+//     }, 3000); // 3 seconds
 
-//   /*
-//    * To keep the template simple and small we're adding padding to prevent view
-//    * from rendering under the System UI.
-//    * For bigger apps the recommendation is to use `react-native-safe-area-context`:
-//    * https://github.com/AppAndFlow/react-native-safe-area-context
-//    *
-//    * You can read more about it here:
-//    * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-//    */
-//   const safePadding = '5%';
+//     return () => clearTimeout(timer);
+//   }, []);
 
 //   return (
-//     <View style={backgroundStyle}>
-//       <StatusBar
-//         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-//         backgroundColor={backgroundStyle.backgroundColor}
-//       />
-//       <ScrollView
-//         style={backgroundStyle}>
-//         <View style={{paddingRight: safePadding}}>
-//           <Header/>
-//         </View>
-//         <View
-//           style={{
-//             backgroundColor: isDarkMode ? Colors.black : Colors.white,
-//             paddingHorizontal: safePadding,
-//             paddingBottom: safePadding,
-//           }}>
-//           <Section title="Step One">
-//             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-//             screen and then come back to see your edits.
-//           </Section>
-//           <Section title="See Your Changes">
-//             <ReloadInstructions />
-//           </Section>
-//           <Section title="Debug">
-//             <DebugInstructions />
-//           </Section>
-//           <Section title="Learn More">
-//             Read the docs to discover what to do next:
-//           </Section>
-//           <LearnMoreLinks />
-//         </View>
-//       </ScrollView>
-//     </View>
+//     <>
+//       <GestureHandlerRootView style={{flex: 1}}>
+//         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+//         <LoaderProvider>
+//           {/* <UpdateChecker /> */}
+//           <ToastProvider>
+//             <SafeAreaProvider>
+//               <PaperProvider>
+//                 {isLoading ? (
+//                   <SplashScreen />
+//                 ) : (
+//                   <IAPProvider>
+//                     <StripeProvider
+//                       publishableKey={REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE}
+//                       merchantIdentifier="merchant.com.yourapp.identifier"
+//                       urlScheme="your-url-scheme">
+//                       <NavigationContainer>
+//                         <NavigationManager />
+//                         <UpdateChecker />
+//                         <AppLoader />
+//                         <Toast />
+//                       </NavigationContainer>
+//                     </StripeProvider>
+//                   </IAPProvider>
+//                 )}
+//               </PaperProvider>
+//             </SafeAreaProvider>
+//           </ToastProvider>
+//         </LoaderProvider>
+//       </GestureHandlerRootView>
+//     </>
 //   );
 // }
 
-// const styles = StyleSheet.create({
-//   sectionContainer: {
-//     marginTop: 32,
-//     paddingHorizontal: 24,
-//   },
-//   sectionTitle: {
-//     fontSize: 24,
-//     fontWeight: '600',
-//   },
-//   sectionDescription: {
-//     marginTop: 8,
-//     fontSize: 18,
-//     fontWeight: '400',
-//   },
-//   highlight: {
-//     fontWeight: '700',
-//   },
-// });
-
 // export default App;
-import React, {useEffect, useState} from 'react';
-import {StatusBar} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
 
-import {LoaderProvider} from './src/context/LoaderContext';
+import React, { useEffect, useState } from 'react';
+import 'react-native-get-random-values';
+import { StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StripeProvider } from '@stripe/stripe-react-native';
+import { LoaderProvider } from './src/context/LoaderContext';
 import AppLoader from './src/components/AppLoader';
 import NavigationManager from './src/navigation/NavigationManager';
 import SplashScreen from './src/components/SplashScreen';
 import Toast from 'react-native-toast-message';
+import { REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE } from '@env';
+import 'react-native-gesture-handler';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { IAPProvider } from './src/utils/IAPProvider';
+import UpdateChecker from './src/components/UpdateChecker';
+import { ToastProvider } from './src/components/ToastContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { withIAPContext } from 'react-native-iap';   // ← IMPORTANT
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+// import {
+//   configure,
+//   setTokenId,
+//   setUserEmail,
+//   setUserNickname,
+//   setUserCompany,
+//   resetSession
+// } from './src/utils/crisp';
+
+
+const CRISP_WEBSITE_ID = "03838c24-284f-44fa-8de1-2702cc316c7b";
 function App(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial loading delay (e.g., for 3 seconds)
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000); // 3 seconds
-
+    const timer = setTimeout(() => setIsLoading(false), 3000);
     return () => clearTimeout(timer);
   }, []);
+// useEffect(() => {
+//   const initCrisp = async () => {
+//     try {
+//       // 1️⃣ Initialize Crisp with your website ID
+//       configure("03838c24-284f-44fa-8de1-2702cc316c7b");
 
+//       // 2️⃣ Get user details saved at login
+//       const [
+//         userId,
+//         email,
+//         firstName,
+//         lastName,
+//         company,
+//         hasLoggedIn,
+//       ] = await AsyncStorage.multiGet([
+//         "userId",
+//         "email",
+//         "first_Name",
+//         "last_Name",
+//         "company",
+//         "hasLoggedIn",
+//       ]).then((pairs) => pairs.map(p => p[1]));
+
+//       // 3️⃣ If NOT logged in → clean Crisp session
+//       if (!hasLoggedIn || !userId) {
+//         setTokenId(null);
+//         resetSession();
+//         return;
+//       }
+
+//       // 4️⃣ Bind Crisp session using userId (very important)
+//       setTokenId(userId);
+
+//       // 5️⃣ Set identity values
+//       if (email) setUserEmail(email);
+//       if (firstName || lastName)
+//         setUserNickname(`${firstName ?? ""} ${lastName ?? ""}`.trim());
+
+//       // 6️⃣ Set company info (optional)
+//       if (company) {
+//         setUserCompany({
+//           name: company,
+//         });
+//       }
+
+//     } catch (error) {
+//       console.log("CRISP INIT ERROR:", error);
+//     }
+//   };
+
+//   initCrisp();
+// }, []);
+const linking = {
+  prefixes: [
+    'https://agreementpaper.com',
+    'agreementpaper://',
+  ],
+  config: {
+    screens: {
+      LatestJobsScreen: 'job/:id',
+    },
+  },
+};
+
+
+MaterialCommunityIcons.loadFont();
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <LoaderProvider>
-        <SafeAreaProvider>
-          {isLoading ? (
-            <SplashScreen />
-          ) : (
-            <NavigationContainer>
-              <NavigationManager />
-              <AppLoader />
-                 <Toast />
-            </NavigationContainer>
-          )}
-        </SafeAreaProvider>
+        <ToastProvider>
+          <SafeAreaProvider>
+            <PaperProvider>
+              {isLoading ? (
+                <SplashScreen />
+              ) : (
+                <IAPProvider>
+                  <StripeProvider
+                    publishableKey={REACT_APP_STRIPE_PUBLISHABLE_KEY_LIVE}
+                    merchantIdentifier="merchant.com.yourapp.identifier"
+                    urlScheme="your-url-scheme">
+                    <NavigationContainer linking={linking}>
+                      <NavigationManager />
+                <UpdateChecker />
+                      
+                      <AppLoader />
+                    </NavigationContainer>
+                      <Toast />
+
+                  </StripeProvider>
+                </IAPProvider>
+              )}
+            </PaperProvider>
+          </SafeAreaProvider>
+        </ToastProvider>
       </LoaderProvider>
     </GestureHandlerRootView>
   );
 }
 
-export default App;
+export default withIAPContext(App);   // ← MUST wrap here

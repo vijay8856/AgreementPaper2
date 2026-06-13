@@ -1,49 +1,48 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text,StyleSheet } from 'react-native';
+import { View, TextInput, Text, StyleSheet } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import CommonInput from './CommonInput';
 
 const FilterBar: React.FC = () => {
-    const [text, setText] = useState('');
+  const [text, setText] = useState('');
   return (
     <View style={styles.container}>
-         <View style={styles.inputContainer}>
-            <CommonInput
-             style={styles.input}
-        placeholder="Enter your name"
-        value={text}
-        onChangeText={setText}
-        fontSize={12}
-        placeholderTextColor="#888"
-      />
-      {/* {value.length === 0 && (
-        <Text style={styles.placeholder}>Search Organization</Text>
-      )}
-      <TextInput
-        value={value}
-        onChangeText={setValue}
-        style={styles.input}
-      /> */}
-    </View>
-       <View style={styles.pickerWrapper}>
-    <RNPickerSelect
-      onValueChange={(value) => {}}
-      placeholder={{ label: 'Select Rating', value: null }}
-      items={[{ label: '5 Stars', value: '5' }, { label: '4 Stars', value: '4' }]}
-      style={pickerSelectStyles}
-      useNativeAndroidPickerStyle={false}
-    />
-  </View>
+      <View style={styles.inputContainer}>
+        <CommonInput
+          style={styles.input}
+          placeholder="Enter your name"
+          value={text}
+          onChangeText={setText}
+          fontSize={12}
+          placeholderTextColor="#888"
+        />
+     
+      </View>
+      <View style={styles.pickerWrapper}>
+        <RNPickerSelect
+          onValueChange={(value) => { }}
+          placeholder={{ label: 'Select Rating', value: null }}
+          items={[{ label: '5 Stars', value: '5' }, { label: '4 Stars', value: '4' }]}
+          style={pickerSelectStyles}
+          useNativeAndroidPickerStyle={false}
+        />
+      </View>
 
-  <View style={styles.pickerWrapper}>
-    <RNPickerSelect
-      onValueChange={(value) => {}}
-      placeholder={{ label: 'Select Location', value: null }}
-      items={[{ label: 'Delhi', value: 'delhi' }, { label: 'Mumbai', value: 'mumbai' }]}
-      style={pickerSelectStyles}
-      useNativeAndroidPickerStyle={false}
-    />
-  </View>
+      <View style={styles.pickerWrapper}>
+        <RNPickerSelect
+          onValueChange={(value) => { }}
+          placeholder={{ label: 'Select Location', value: null }}
+          items={[
+            // { label: 'Delhi', value: 'delhi' },
+            // { label: 'Mumbai', value: 'mumbai' },
+            { label: 'Australia', value: 'australia' },
+            { label: 'India', value: 'india' },
+          ]}
+          style={pickerSelectStyles}
+          useNativeAndroidPickerStyle={false}
+        />
+
+      </View>
     </View>
   );
 };
@@ -54,14 +53,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     gap: 5,
-    marginTop:10,
+    marginTop: 10,
     marginBottom: 5,
     alignItems: 'center',
   },
   pickerWrapper: {
-  flex: 1,
-},
- inputContainer: {
+    flex: 1,
+  },
+  inputContainer: {
     position: 'relative',
     justifyContent: 'center',
   },
@@ -72,9 +71,9 @@ const styles = StyleSheet.create({
     fontSize: 10, // custom font size
     color: '#888',
   },
- input: {
-    width:120,
-    
+  input: {
+    width: 120,
+
   },
 });
 
@@ -89,9 +88,9 @@ const pickerSelectStyles = {
     marginLeft: 6,
   },
   inputAndroid: {
-    width:125,
+    width: 125,
 
-    fontSize: 10, 
+    fontSize: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
     height: 33,
@@ -101,8 +100,8 @@ const pickerSelectStyles = {
 
   },
   placeholder: {
-    
-    fontSize: 10, 
+
+    fontSize: 10,
     color: '#999',
   },
 };

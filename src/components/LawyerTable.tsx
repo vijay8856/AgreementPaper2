@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,20 +7,22 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import LawyerRow from './LawyerRow';
+import LawyerCard from './LawyerRow';
 import Services from '../Services/services';
 import Toast from 'react-native-toast-message';
 
 const LawyerTable: React.FC = () => {
-  const [lawyers, setLawyers] = useState<Array<{
-    id: number;
-    name: string;
-    email: string;
-    company_name: string;
-    country: string;
-    is_active: boolean;
-  }>>([]);
-  
+  const [lawyers, setLawyers] = useState<
+    Array<{
+      id: number;
+      name: string;
+      email: string;
+      company_name: string;
+      country: string;
+      is_active: boolean;
+    }>
+  >([]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -28,21 +30,34 @@ const LawyerTable: React.FC = () => {
     if (!isRefresh) setLoading(true);
     else setRefreshing(true);
 
-    const response = await Services.getLawyerNetworkList({ limit: 1, offset: 0 });
+    try {
+      const response = await Services.getLawyerNetworkList({
+        limit: 150,
+        offset: 0,
+      });
+      console.log('lawyer', response);
 
-    if (response.success) {
-      setLawyers(response.data);
-    } else {
+      if (response.success) {
+        setLawyers(response.data);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to load lawyer list',
+          text2: response.error?.message || 'Invalid credentials',
+          position: 'top',
+        });
+      }
+    } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Failed to load lawyer list',
-        text2: response.error?.message || 'Invalid credentials',
+        text1: 'Network error',
+        text2: 'Please check your connection',
         position: 'top',
       });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    setLoading(false);
-    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -53,7 +68,7 @@ const LawyerTable: React.FC = () => {
     fetchLawyers(true);
   }, []);
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color="#000078" />
@@ -63,26 +78,26 @@ const LawyerTable: React.FC = () => {
 
   return (
     <ScrollView
-      horizontal
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
-    >
-      <View>
-        <View style={styles.header}>
-          <Text style={styles.headerCellId}>ID</Text>
-          <Text style={styles.headerCell}>Lawyer's</Text>
-          <Text style={styles.headerCellEmail}>Email</Text>
-          <Text style={styles.headerCellLocation}>Location</Text>
-          <Text style={styles.headerCellStatus}>Status</Text>
-          <Text style={styles.headerCell}>Connect</Text>
-          <Text style={styles.headerCell}>Action</Text>
+      showsVerticalScrollIndicator={false}>
+      {lawyers.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No lawyers found</Text>
         </View>
-
-        {lawyers.map((lawyer) => (
-          <LawyerRow key={lawyer.id} {...lawyer} />
-        ))}
-      </View>
+      ) : (
+        lawyers.map((lawyer, index) => (
+          <LawyerCard
+            key={lawyer.id}
+            lawyerData={lawyer}
+            index={index}
+            totalCount={lawyers.length}
+          />
+        ))
+      )}
     </ScrollView>
   );
 };
@@ -90,157 +105,30 @@ const LawyerTable: React.FC = () => {
 export default LawyerTable;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  scrollContent: {
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    flexGrow: 1,
+  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height: 200,
+    backgroundColor: '#f8f9fa',
   },
-  header: {
-    flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  headerCellId: {
-    marginLeft: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 10,
-  },
-  headerCell: {
+  emptyContainer: {
     flex: 1,
-    marginLeft: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
   },
-  headerCellEmail: {
-    flex: 1,
-    marginLeft: 100,
-    fontWeight: 'bold',
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
     textAlign: 'center',
-    fontSize: 10,
-  },
-  headerCellLocation: {
-    flex: 1,
-    marginLeft: 70,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 10,
-  },
-  headerCellStatus: {
-    flex: 1,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 10,
   },
 });
-
-// import React, { useEffect, useState } from 'react';
-// import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-// import Services from '../Services/services';
-// import Toast from 'react-native-toast-message';
-
-// const LawyerTable: React.FC = () => {
-//   const [lawyers, setLawyers] = useState<Array<{
-//     id: number;
-//     name: string;
-//     email: string;
-//     company_name: string;
-//     country: string;
-//     is_active: boolean;
-//   }>>([]);
-//   const [loading, setLoading] = useState(true);
-
-//   const fetchLawyers = async () => {
-//     setLoading(true);
-//     const response = await Services.getLawyerNetworkList({ limit: 10, offset: 0 });
-
-//     if (response.success) {
-//       setLawyers(response.data);
-//     } else {
-//       Toast.show({
-//         type: 'error',
-//         text1: 'Failed to load lawyer list',
-//         text2: response.error?.message || 'Invalid credentials',
-//         position: 'top',
-//       });
-//     }
-
-//     setLoading(false);
-//   };
-
-//   useEffect(() => {
-//     fetchLawyers();
-//   }, []);
-
-//   if (loading) {
-//     return (
-//       <View style={styles.centered}>
-//         <ActivityIndicator size="large" color="#000078" />
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <ScrollView contentContainerStyle={styles.container}>
-//       {lawyers.map((lawyer) => (
-//         <View key={lawyer.id} style={styles.card}>
-//           <Text><Text style={styles.label}>ID:</Text> {lawyer.id}</Text>
-//           <Text><Text style={styles.label}>Lawyer:</Text> {lawyer.name}</Text>
-//           <Text><Text style={styles.label}>Email:</Text> {lawyer.email}</Text>
-//           <Text><Text style={styles.label}>Location:</Text> {lawyer.country}</Text>
-//           <Text><Text style={styles.label}>Status:</Text> 
-//             <Text style={{ color: lawyer.is_active ? 'green' : 'red' }}>
-//               {lawyer.is_active ? 'Available' : 'Busy'}
-//             </Text>
-//           </Text>
-//           <TouchableOpacity style={styles.connectButton}>
-//             <Text style={styles.connectButtonText}>Connect</Text>
-//           </TouchableOpacity>
-//         </View>
-//       ))}
-//     </ScrollView>
-//   );
-// };
-
-// export default LawyerTable;
-
-// const styles = StyleSheet.create({
-//   container: {
-//     padding: 10,
-//   },
-//   card: {
-//     backgroundColor: '#fff',
-//     padding: 15,
-//     marginBottom: 12,
-//     borderRadius: 10,
-//     elevation: 2, // for Android
-//     shadowColor: '#000', // for iOS
-//     shadowOpacity: 0.1,
-//     shadowRadius: 5,
-//     shadowOffset: { width: 0, height: 2 },
-//   },
-//   label: {
-//     fontWeight: 'bold',
-//     color: '#000',
-//   },
-//   connectButton: {
-//     marginTop: 10,
-//     backgroundColor: '#000078',
-//     paddingVertical: 8,
-//     borderRadius: 6,
-//     alignItems: 'center',
-//   },
-//   connectButtonText: {
-//     color: '#fff',
-//     fontWeight: 'bold',
-//   },
-//   centered: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-// });
